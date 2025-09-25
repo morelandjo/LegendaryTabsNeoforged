@@ -1,0 +1,47 @@
+{
+	"schemaVersion": 1,
+	"id": "modtabs",
+	"version": "${version}",
+	"name": "Mod Tabs",
+	"description": "Adds a tab menu on the inventory page to quickly navigate other mods screens.",
+	"authors": [
+		"Originally developed by Sfiomn as Legendary Tabs, rewritten and enhanced by Vodmordia"
+	],
+	"contact": {
+		"homepage": "https://www.curseforge.com/minecraft/mc-mods/legendary-tabs",
+		"sources": "https://github.com/vodmordia/legendary-tabs"
+	},
+	"license": "MIT",
+	"icon": "assets/modtabs/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"vodmordia.modtabs.ModTabs"
+		],
+		"client": [
+			"vodmordia.modtabs.client.ModTabsClient"
+		]
+	},
+	"mixins": [
+		"modtabs.mixins.json"
+	],
+	"depends": {
+		"fabricloader": ">=0.15.0",
+		"fabric-api": "*",
+		"minecraft": "~1.20.1",
+		"java": ">=17",
+		"midnightlib": ">=1.4.1"
+	},
+	"suggests": {
+		"ftbquests": "*",
+		"ftbteams": "*",
+		"curios": "*",
+		"sophisticatedbackpacks": "*",
+		"travelersbackpack": "*",
+		"journeymap": "*",
+		"xaeroworldmap": "*",
+		"patchouli": "*",
+		"cosmeticarmor": "*",
+		"arsnouveau": "*"
+	}
+}

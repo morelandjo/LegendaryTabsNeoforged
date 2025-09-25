@@ -1,0 +1,15 @@
+{
+	"required": true,
+	"minVersion": "0.8",
+	"package": "vodmordia.modtabs.mixins",
+	"compatibilityLevel": "JAVA_17",
+	"refmap": "modtabs.refmap.json",
+	"mixins": [],
+	"client": [
+		"ScreenMixin",
+		"AbstractContainerScreenMixin"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	}
+}

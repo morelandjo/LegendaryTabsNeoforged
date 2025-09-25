@@ -1,26 +1,27 @@
 package vodmordia.modtabs.integration;
 
-import net.neoforged.fml.ModList;
+import net.fabricmc.loader.api.FabricLoader;
 import vodmordia.modtabs.ModTabs;
 
-import java.util.EnumSet;
-import java.util.Set;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
- * Centralized manager for mod integrations
+ * Manages integration with other mods
  */
 public class ModIntegrationManager {
-    private static final Set<ModIntegration> loadedMods = EnumSet.noneOf(ModIntegration.class);
+    private static final Map<ModIntegration, Boolean> loadedMods = new HashMap<>();
 
     /**
-     * Initialize mod detection - call during mod construction
+     * Detect which supported mods are loaded
      */
     public static void detectLoadedMods() {
-        loadedMods.clear();
+        for (ModIntegration integration : ModIntegration.values()) {
+            boolean isLoaded = FabricLoader.getInstance().isModLoaded(integration.getModId());
+            loadedMods.put(integration, isLoaded);
 
-        for (ModIntegration mod : ModIntegration.values()) {
-            if (ModList.get().isLoaded(mod.getModId())) {
-                loadedMods.add(mod);
+            if (isLoaded) {
+                ModTabs.LOGGER.info("Detected loaded mod: " + integration.getModId());
             }
         }
     }
@@ -28,15 +29,14 @@ public class ModIntegrationManager {
     /**
      * Check if a specific mod is loaded
      */
-    public static boolean isModLoaded(ModIntegration mod) {
-        return loadedMods.contains(mod);
+    public static boolean isModLoaded(ModIntegration integration) {
+        return loadedMods.getOrDefault(integration, false);
     }
 
     /**
-     * Get all loaded mods
+     * Check if a mod by ID is loaded
      */
-    public static Set<ModIntegration> getLoadedMods() {
-        return Set.copyOf(loadedMods);
+    public static boolean isModLoaded(String modId) {
+        return FabricLoader.getInstance().isModLoaded(modId);
     }
-
 }

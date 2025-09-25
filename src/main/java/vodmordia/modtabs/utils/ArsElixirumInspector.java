@@ -1,6 +1,6 @@
 package vodmordia.modtabs.utils;
 
-import net.minecraft.world.item.Item;
+import net.minecraft.item.Item;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
