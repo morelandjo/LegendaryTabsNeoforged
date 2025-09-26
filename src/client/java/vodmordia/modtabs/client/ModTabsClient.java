@@ -21,8 +21,6 @@ public class ModTabsClient implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
-        ModTabs.LOGGER.info("Initializing Mod Tabs Client");
-
         Config.Baked.bakeClient();
 
         // Register all tabs - each tab's isEnabled() method handles mod detection via @TabConfig

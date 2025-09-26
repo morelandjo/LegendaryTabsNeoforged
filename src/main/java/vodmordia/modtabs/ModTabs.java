@@ -4,9 +4,9 @@ import net.fabricmc.api.ModInitializer;
 import net.fabricmc.loader.api.FabricLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-// import vodmordia.modtabs.integration.ModIntegrationManager;
+import vodmordia.modtabs.integration.ModIntegrationManager;
 import eu.midnightdust.lib.config.MidnightConfig;
-// import vodmordia.modtabs.config.ModTabsConfig;
+import vodmordia.modtabs.config.Config;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -25,10 +25,15 @@ public class ModTabs implements ModInitializer
         LOGGER.info("Initializing Mod Tabs");
 
         // Initialize MidnightConfig
-        // MidnightConfig.init(MOD_ID, ModTabsConfig.class);
+        try {
+            MidnightConfig.init(MOD_ID, Config.class);
+            LOGGER.info("MidnightConfig initialized successfully");
+        } catch (Exception e) {
+            LOGGER.warn("Failed to initialize MidnightConfig: " + e.getMessage());
+        }
 
         // Initialize mod integration manager
-        // ModIntegrationManager.detectLoadedMods();
+        ModIntegrationManager.detectLoadedMods();
 
         LOGGER.info("Mod Tabs initialized successfully");
     }

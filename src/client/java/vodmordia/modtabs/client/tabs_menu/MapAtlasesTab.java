@@ -86,6 +86,7 @@ public class MapAtlasesTab extends TabBase {
         if (atlasItem != null) {
             renderWithItem(gui, x, y, hover, new ItemStack(atlasItem));
         } else {
+            vodmordia.modtabs.ModTabs.LOGGER.warn("MapAtlasesTab using fallback filled map - atlas item not found");
             // Fallback to filled map
             renderWithItem(gui, x, y, hover, new ItemStack(Items.FILLED_MAP));
         }

@@ -46,7 +46,32 @@ public class SophisticatedBackpacksTab extends TabBase {
 
     @Override
     public boolean isEnabled(PlayerEntity player) {
-        return ModIntegrationManager.isModLoaded(ModIntegration.SOPHISTICATED_BACKPACKS);
+        return ModIntegrationManager.isModLoaded(ModIntegration.SOPHISTICATED_BACKPACKS) && hasBackpack(player);
+    }
+
+    private boolean hasBackpack(PlayerEntity player) {
+        try {
+            Class<?> backpackItemClass = Class.forName("net.p3pp3rf1y.sophisticatedbackpacks.backpack.BackpackItem");
+
+            // Check main inventory
+            for (net.minecraft.item.ItemStack stack : player.getInventory().main) {
+                if (!stack.isEmpty() && backpackItemClass.isInstance(stack.getItem())) {
+                    return true;
+                }
+            }
+
+            // Check armor slots
+            for (net.minecraft.item.ItemStack stack : player.getInventory().armor) {
+                if (!stack.isEmpty() && backpackItemClass.isInstance(stack.getItem())) {
+                    return true;
+                }
+            }
+
+        } catch (Exception e) {
+            // If reflection fails, return false
+        }
+
+        return false;
     }
 
     @Override
@@ -86,6 +111,7 @@ public class SophisticatedBackpacksTab extends TabBase {
         if (backpackItem != null) {
             renderWithItem(gui, x, y, hover, new ItemStack(backpackItem));
         } else {
+            vodmordia.modtabs.ModTabs.LOGGER.warn("SophisticatedBackpacksTab using fallback bundle - backpack item not found");
             // Fallback to bundle (closest vanilla equivalent)
             renderWithItem(gui, x, y, hover, new ItemStack(Items.BUNDLE));
         }

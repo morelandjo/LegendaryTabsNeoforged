@@ -13,7 +13,7 @@ import vodmordia.modtabs.integration.ModIntegration;
 import vodmordia.modtabs.integration.ModIntegrationManager;
 
 /**
- * Fabric event handlers to replace NeoForge event system
+ * Fabric event handlers for screen events
  */
 public class FabricScreenEvents {
 
@@ -21,13 +21,29 @@ public class FabricScreenEvents {
      * Called when a screen is initialized (equivalent to ScreenEvent.Init.Post)
      */
     public static void onScreenInit(Screen screen) {
+        ModTabs.LOGGER.info("Screen init called for: {}", screen.getClass().getName());
+
         // Initialize tab buttons for this screen
+        ModTabs.LOGGER.info("Calling TabsMenu.initScreenButtons for screen: {}", screen.getClass().getSimpleName());
         TabsMenu.initScreenButtons(screen);
 
-        // Handle special screen positioning if needed
-        if (TabsMenu.hasCustomPositioning(screen)) {
-            // For screens with custom positioning, update button positions
-            TabsMenu.updateButtonsPosition(screen, 0, 0);
+        // Hide L2 tabs after screen initialization
+        if (ModIntegrationManager.isModLoaded(ModIntegration.L2_LIBRARY) ||
+            ModIntegrationManager.isModLoaded(ModIntegration.L2_HOSTILITY) ||
+            ModIntegrationManager.isModLoaded(ModIntegration.L2_ARTIFACTS) ||
+            ModIntegrationManager.isModLoaded(ModIntegration.MODULAR_GOLEMS)) {
+            // But don't hide tabs when we're in the Modular Golems tracker screens (they need sub-tabs)
+            boolean isModularGolemsTrackerScreen = false;
+            try {
+                Class<?> golemInfoScreenClass = Class.forName("dev.xkmc.modulargolems.content.client.tracker.GolemInfoScreen");
+                isModularGolemsTrackerScreen = golemInfoScreenClass.isInstance(screen);
+            } catch (ClassNotFoundException e) {
+                // Class not found, not a Modular Golems screen
+            }
+
+            if (!isModularGolemsTrackerScreen) {
+                hideL2Tabs(screen);
+            }
         }
     }
 
@@ -103,6 +119,32 @@ public class FabricScreenEvents {
     }
 
     /**
+     * Handle screen render pre events (equivalent to ScreenEvent.Render.Pre)
+     */
+    public static void onScreenRenderPre(Screen screen, DrawContext guiGraphics, int mouseX, int mouseY, float partialTick) {
+        // Update mouse position for tuck mode hover detection
+        TabsMenu.onMouseMove(mouseX, mouseY, screen);
+
+        if (screen instanceof HandledScreen<?> containerScreen) {
+            if (!TabsMenu.hasCustomPositioning(screen)) {
+                try {
+                    // Use reflection to access protected fields
+                    java.lang.reflect.Field xField = HandledScreen.class.getDeclaredField("x");
+                    java.lang.reflect.Field yField = HandledScreen.class.getDeclaredField("y");
+                    xField.setAccessible(true);
+                    yField.setAccessible(true);
+                    int x = xField.getInt(containerScreen);
+                    int y = yField.getInt(containerScreen);
+                    TabsMenu.updateButtonsPosition(screen, x, y);
+                } catch (Exception e) {
+                    // Fallback to default positioning if reflection fails
+                    TabsMenu.updateButtonsPosition(screen, 0, 0);
+                }
+            }
+        }
+    }
+
+    /**
      * Handle screen render post events (equivalent to ScreenEvent.Render.Post)
      */
     public static void onScreenRenderPost(Screen screen, DrawContext guiGraphics, int mouseX, int mouseY, float partialTick) {
@@ -131,35 +173,47 @@ public class FabricScreenEvents {
     /**
      * Hide L2 mod tabs from the screen
      */
-    public static void hideL2Tabs(Screen screen) {
-        // Hide L2 Hostility tabs when they conflict with our tabs
-        String screenName = screen.getClass().getName();
-
-        if (screenName.contains("l2hostility")) {
+    private static void hideL2Tabs(Screen screen) {
+        if (ModIntegrationManager.isModLoaded(ModIntegration.L2_LIBRARY) ||
+            ModIntegrationManager.isModLoaded(ModIntegration.L2_HOSTILITY) ||
+            ModIntegrationManager.isModLoaded(ModIntegration.L2_ARTIFACTS) ||
+            ModIntegrationManager.isModLoaded(ModIntegration.MODULAR_GOLEMS)) {
             try {
-                // Find and hide any L2 tab widgets
-                for (var child : screen.children()) {
-                    String childName = child.getClass().getName();
-                    if (childName.contains("l2hostility") && childName.contains("tab")) {
-                        // Try to make the L2 tab invisible using reflection
-                        try {
-                            java.lang.reflect.Field visibleField = child.getClass().getField("visible");
-                            visibleField.setAccessible(true);
-                            visibleField.set(child, false);
-                        } catch (Exception visibleEx) {
-                            // If visible field doesn't exist, try setVisible method
-                            try {
-                                java.lang.reflect.Method setVisibleMethod = child.getClass().getMethod("setVisible", boolean.class);
-                                setVisibleMethod.invoke(child, false);
-                            } catch (Exception methodEx) {
-                                // Ignore if we can't hide the widget
-                            }
-                        }
+                // Remove L2's tab buttons from the screen
+                screen.children().removeIf(widget -> {
+                    String className = widget.getClass().getName();
+                    boolean isL2Tab = className.contains("l2tabs") ||
+                                     className.contains("l2library") ||
+                                     className.contains("l2hostility") ||
+                                     className.contains("l2artifacts") ||
+                                     className.contains("modulargolems");
+                    boolean isTab = className.toLowerCase().contains("tab");
+                    return isL2Tab && isTab;
+                });
+
+                // Also try to remove from renderables using reflection
+                try {
+                    java.lang.reflect.Field renderablesField = Screen.class.getDeclaredField("renderables");
+                    renderablesField.setAccessible(true);
+                    Object renderables = renderablesField.get(screen);
+                    if (renderables instanceof java.util.List) {
+                        ((java.util.List<?>) renderables).removeIf(renderable -> {
+                            String className = renderable.getClass().getName();
+                            boolean isL2Tab = className.contains("l2tabs") ||
+                                             className.contains("l2library") ||
+                                             className.contains("l2hostility") ||
+                                             className.contains("l2artifacts") ||
+                                             className.contains("modulargolems");
+                            boolean isTab = className.toLowerCase().contains("tab");
+                            return isL2Tab && isTab;
+                        });
                     }
+                } catch (Exception e) {
+                    // Ignore if we can't access renderables field
                 }
+
             } catch (Exception e) {
                 // Ignore errors when trying to hide L2 tabs
-                ModTabs.LOGGER.debug("Could not hide L2 tabs: " + e.getMessage());
             }
         }
     }

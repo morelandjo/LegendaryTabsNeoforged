@@ -4,29 +4,62 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
 import net.minecraft.text.Text;
-import vodmordia.modtabs.api.tabs_menu.TabBase;
+import vodmordia.modtabs.api.tabs_menu.SimpleTextureTab;
+import net.minecraft.util.Identifier;
 import vodmordia.modtabs.api.tabs_menu.TabsMenu;
 import vodmordia.modtabs.integration.ModIntegration;
 import vodmordia.modtabs.integration.ModIntegrationManager;
 
-public class FtbTeamsTab extends TabBase {
+public class FtbTeamsTab extends SimpleTextureTab {
+    private static final Identifier TEAMS_TEXTURE = new Identifier("ftbteams", "textures/teams.png");
+
+    public FtbTeamsTab() {
+        super(TEAMS_TEXTURE, 12, 12);
+    }
 
     @Override
     public void openTargetScreen(PlayerEntity player) {
         try {
-            // Try to open FTB Teams main screen
             MinecraftClient minecraft = MinecraftClient.getInstance();
 
-            // Use reflection to open the teams screen
-            Class<?> teamsScreenClass = Class.forName("dev.ftb.mods.ftbteams.client.gui.MyTeamScreen");
-            Object teamsScreen = teamsScreenClass.getConstructor().newInstance();
+            // Try first approach: Direct screen creation
+            try {
+                Class<?> teamsScreenClass = Class.forName("dev.ftb.mods.ftbteams.client.gui.MyTeamScreen");
+                Object teamsScreen = teamsScreenClass.getConstructor().newInstance();
+                minecraft.setScreen((Screen) teamsScreen);
+                return;
+            } catch (Exception e1) {
+                vodmordia.modtabs.ModTabs.LOGGER.debug("Direct screen creation failed: " + e1.getMessage());
+            }
 
-            minecraft.setScreen((Screen) teamsScreen);
+            // Try second approach: Look for GUI opening methods
+            try {
+                Class<?> clientEventsClass = Class.forName("dev.ftb.mods.ftbteams.client.FTBTeamsClient");
+                java.lang.reflect.Method openMyTeamGuiMethod = clientEventsClass.getDeclaredMethod("openMyTeamGui");
+                openMyTeamGuiMethod.setAccessible(true);
+                openMyTeamGuiMethod.invoke(null);
+                return;
+            } catch (Exception e2) {
+                vodmordia.modtabs.ModTabs.LOGGER.debug("FTBTeamsClient.openMyTeamGui failed: " + e2.getMessage());
+            }
+
+            // Try third approach: Look for keybinding trigger
+            try {
+                Class<?> keybindingsClass = Class.forName("dev.ftb.mods.ftbteams.client.FTBTeamsClientConfig");
+                java.lang.reflect.Field openGuiKeyField = keybindingsClass.getDeclaredField("openGuiKey");
+                openGuiKeyField.setAccessible(true);
+                Object keyBinding = openGuiKeyField.get(null);
+
+                // Simulate key press
+                java.lang.reflect.Method setPressed = keyBinding.getClass().getMethod("setPressed", boolean.class);
+                setPressed.invoke(keyBinding, true);
+                setPressed.invoke(keyBinding, false);
+            } catch (Exception e3) {
+                vodmordia.modtabs.ModTabs.LOGGER.debug("Keybinding trigger failed: " + e3.getMessage());
+            }
+
         } catch (Exception e) {
-            // Log error for debugging
             vodmordia.modtabs.ModTabs.LOGGER.warn("Failed to open FTB Teams screen: " + e.getMessage());
         }
     }
@@ -66,11 +99,6 @@ public class FtbTeamsTab extends TabBase {
         });
     }
 
-    @Override
-    public void render(DrawContext gui, int x, int y, boolean hover) {
-        // Use player head as icon for teams
-        renderWithItem(gui, x, y, hover, new ItemStack(Items.PLAYER_HEAD));
-    }
 
     @Override
     public boolean isCurrentlyUsed(Screen currentScreen) {

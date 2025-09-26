@@ -3,91 +3,77 @@ package vodmordia.modtabs.client.screens;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.text.Text;
-import vodmordia.modtabs.api.tabs_menu.TabBase;
-import vodmordia.modtabs.api.tabs_menu.TabRenderer;
+import net.minecraft.util.Identifier;
+import org.jetbrains.annotations.NotNull;
+import vodmordia.modtabs.ModTabs;
+import vodmordia.modtabs.api.tabs_menu.TabDisplayMode;
+import vodmordia.modtabs.api.tabs_menu.TabsMenu;
 
-import java.util.List;
+import static vodmordia.modtabs.api.tabs_menu.TabBase.TAB_HEIGHT;
+import static vodmordia.modtabs.api.tabs_menu.TabBase.TAB_WIDTH;
 
-/**
- * Button for navigating between pages when there are too many tabs to display
- */
 public class NextTabsButton extends ButtonWidget {
+    private final Identifier TAB_ICONS = new Identifier(ModTabs.MOD_ID, "textures/gui/tab_menu_buttons.png");
+    public static final int NEXT_TABS_ICON_TEX_X = 135;
+    public static final int NEXT_TABS_ICON_TEX_Y = 0;
+    public static final int NEXT_TABS_BUTTON_WIDTH = 12;
+    public static final int NEXT_TABS_BUTTON_HEIGHT = 21;
+    public int tabPositionIndex;
+    public TabDisplayMode displayMode;
 
-    private final List<TabBase> allTabs;
-    private final Runnable onPageChange;
-    private int currentPage = 0;
-    private final int tabsPerPage;
-
-    public NextTabsButton(int x, int y, List<TabBase> allTabs, int tabsPerPage, Runnable onPageChange) {
-        super(x, y, TabBase.TAB_WIDTH, TabBase.TAB_HEIGHT, Text.literal("→"),
-              button -> ((NextTabsButton) button).nextPage(), DEFAULT_NARRATION_SUPPLIER);
-        this.allTabs = allTabs;
-        this.tabsPerPage = tabsPerPage;
-        this.onPageChange = onPageChange;
+    public NextTabsButton(int tabPositionIndex, int leftScreenPos, int topScreenPos, ButtonWidget.PressAction press) {
+        super(leftScreenPos + tabPositionIndex * (TAB_WIDTH + 1), topScreenPos, NEXT_TABS_BUTTON_WIDTH, NEXT_TABS_BUTTON_HEIGHT, Text.empty(), press, DEFAULT_NARRATION_SUPPLIER);
+        this.tabPositionIndex = tabPositionIndex;
+        this.displayMode = TabDisplayMode.NORMAL; // Default for backward compatibility
     }
 
-    private void nextPage() {
-        if (allTabs == null || allTabs.isEmpty()) return;
-
-        int maxPages = (int) Math.ceil((double) allTabs.size() / tabsPerPage);
-        currentPage = (currentPage + 1) % maxPages;
-
-        if (onPageChange != null) {
-            onPageChange.run();
-        }
+    public NextTabsButton(int tabPositionIndex, int leftScreenPos, int topScreenPos, TabDisplayMode displayMode, ButtonWidget.PressAction press) {
+        super(leftScreenPos + tabPositionIndex * (TAB_WIDTH + 1),
+              calculateYPosition(topScreenPos, displayMode),
+              NEXT_TABS_BUTTON_WIDTH, NEXT_TABS_BUTTON_HEIGHT, Text.empty(), press, DEFAULT_NARRATION_SUPPLIER);
+        this.tabPositionIndex = tabPositionIndex;
+        this.displayMode = displayMode;
     }
 
-    public void renderWidget(DrawContext context, int mouseX, int mouseY, float delta) {
-        if (allTabs == null || allTabs.isEmpty()) return;
-
-        boolean isHovered = isMouseOver(mouseX, mouseY);
-        boolean shouldShow = allTabs.size() > tabsPerPage;
-
-        if (!shouldShow) {
-            this.visible = false;
-            return;
-        }
-
-        this.visible = true;
-
-        // Render using TabRenderer for consistency
-        TabRenderer.builder()
-                .withBackground()
-                .withCustomIcon(ctx -> {
-                    // Render a simple arrow icon
-                    int centerX = ctx.x + TabBase.TAB_WIDTH / 2;
-                    int centerY = ctx.y + TabBase.TAB_HEIGHT / 2;
-
-                    // Simple arrow made of filled rectangles
-                    ctx.gui.fill(centerX - 2, centerY - 3, centerX, centerY + 3, 0xFF000000);
-                    ctx.gui.fill(centerX - 4, centerY - 1, centerX - 2, centerY + 1, 0xFF000000);
-                })
-                .render(context, getX(), getY(), isHovered, false);
+    private static int calculateYPosition(int topScreenPos, TabDisplayMode displayMode) {
+        // Use the same positioning logic as TabButton
+        return displayMode == TabDisplayMode.INVERTED ?
+            topScreenPos :
+            topScreenPos - TAB_HEIGHT;
     }
 
-    public int getCurrentPage() {
-        return currentPage;
+    @Override
+    public void render(DrawContext gui, int mouseX, int mouseY, float partial) {
+        // Apply animation offset for tuck mode
+        int animatedY = this.getY() + TabsMenu.getAnimatedYOffset();
+
+        // Check if mouse is over the animated position
+        boolean isMouseOverAnimated = mouseX >= this.getX() && mouseX < this.getX() + this.width &&
+                                     mouseY >= animatedY && mouseY < animatedY + this.height;
+
+        int texOffsetX = 0;
+        if (isMouseOverAnimated)
+            texOffsetX = 54;
+
+        gui.drawTexture(TAB_ICONS, this.getX(), animatedY, NEXT_TABS_ICON_TEX_X + texOffsetX, NEXT_TABS_ICON_TEX_Y, NEXT_TABS_BUTTON_WIDTH, NEXT_TABS_BUTTON_HEIGHT, 256, 256);
+
+        // Don't call super.render() to avoid default button rendering
     }
 
-    public void setCurrentPage(int page) {
-        if (allTabs == null || allTabs.isEmpty()) return;
-
-        int maxPages = (int) Math.ceil((double) allTabs.size() / tabsPerPage);
-        this.currentPage = Math.max(0, Math.min(page, maxPages - 1));
+    public void renderWidget(@NotNull DrawContext gui, int mouseX, int mouseY, float partial) {
+        // This method is left empty to prevent default button widget rendering
     }
 
-    public int getTabsPerPage() {
-        return tabsPerPage;
+    public void updatePosition(int leftScreenPos, int topScreenPos) {
+        setX(leftScreenPos + tabPositionIndex * (TAB_WIDTH + 1));
+        setY(calculateYPosition(topScreenPos, displayMode));
     }
 
-    public List<TabBase> getTabsForCurrentPage() {
-        if (allTabs == null || allTabs.isEmpty()) return List.of();
-
-        int startIndex = currentPage * tabsPerPage;
-        int endIndex = Math.min(startIndex + tabsPerPage, allTabs.size());
-
-        if (startIndex >= allTabs.size()) return List.of();
-
-        return allTabs.subList(startIndex, endIndex);
+    @Override
+    public boolean isMouseOver(double mouseX, double mouseY) {
+        // Override to account for animation offset in tuck mode
+        int animatedY = this.getY() + TabsMenu.getAnimatedYOffset();
+        return mouseX >= this.getX() && mouseX < this.getX() + this.width &&
+               mouseY >= animatedY && mouseY < animatedY + this.height;
     }
 }

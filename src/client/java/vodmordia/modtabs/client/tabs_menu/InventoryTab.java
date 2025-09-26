@@ -1,17 +1,22 @@
 package vodmordia.modtabs.client.tabs_menu;
 
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.ingame.InventoryScreen;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
 import net.minecraft.text.Text;
-import vodmordia.modtabs.api.tabs_menu.TabBase;
+import net.minecraft.util.Identifier;
+import vodmordia.modtabs.ModTabs;
+import vodmordia.modtabs.api.tabs_menu.SimpleTextureTab;
 import vodmordia.modtabs.api.tabs_menu.TabsMenu;
+import vodmordia.modtabs.config.Config;
 
-public class InventoryTab extends TabBase {
+public class InventoryTab extends SimpleTextureTab {
+    private static final Identifier INVENTORY_ICON = new Identifier(ModTabs.MOD_ID, "textures/gui/inventory.png");
+
+    public InventoryTab() {
+        super(INVENTORY_ICON);
+    }
 
     @Override
     public void openTargetScreen(PlayerEntity player) {
@@ -21,7 +26,7 @@ public class InventoryTab extends TabBase {
 
     @Override
     public boolean isEnabled(PlayerEntity player) {
-        return true; // Always enabled
+        return Config.Baked.inventoryTabEnabled;
     }
 
     @Override
@@ -45,11 +50,6 @@ public class InventoryTab extends TabBase {
         }
     }
 
-    @Override
-    public void render(DrawContext gui, int x, int y, boolean hover) {
-        // Render with chest icon
-        renderWithItem(gui, x, y, hover, new ItemStack(Items.CHEST));
-    }
 
     @Override
     public boolean isCurrentlyUsed(Screen currentScreen) {
@@ -58,6 +58,6 @@ public class InventoryTab extends TabBase {
 
     @Override
     public Text getTooltip() {
-        return Text.translatable("container.inventory");
+        return Text.translatable("tooltip." + ModTabs.MOD_ID + ".tab.inventory.description");
     }
 }

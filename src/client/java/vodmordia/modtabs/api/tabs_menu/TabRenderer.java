@@ -109,7 +109,6 @@ public class TabRenderer {
      * Renders the tab with all specified components
      */
     public void render(DrawContext gui, int x, int y, boolean hover, boolean inverted) {
-
         if (hasBackground) {
             renderBackground(gui, x, y, hover, inverted);
         }
@@ -121,7 +120,6 @@ public class TabRenderer {
         } else if (customIconRenderer != null) {
             renderCustomIcon(gui, x, y, hover, inverted);
         }
-
     }
 
     private void renderBackground(DrawContext gui, int x, int y, boolean hover, boolean inverted) {
@@ -133,11 +131,11 @@ public class TabRenderer {
             gui.getMatrices().translate(x + TabBase.TAB_WIDTH / 2.0f, y + TabBase.TAB_HEIGHT / 2.0f, 0);
             gui.getMatrices().multiply(net.minecraft.util.math.RotationAxis.POSITIVE_Z.rotationDegrees(180));
             gui.getMatrices().translate(-TabBase.TAB_WIDTH / 2.0f, -TabBase.TAB_HEIGHT / 2.0f, 0);
-            gui.drawTexture(TAB_TEXTURE, 0, 0, TAB_BACKGROUND_U + hoverOffset, TAB_BACKGROUND_V, TabBase.TAB_WIDTH, TabBase.TAB_HEIGHT);
+            gui.drawTexture(TAB_TEXTURE, 0, 0, TAB_BACKGROUND_U + hoverOffset, TAB_BACKGROUND_V, TabBase.TAB_WIDTH, TabBase.TAB_HEIGHT, 256, 256);
             gui.getMatrices().pop();
         } else {
             // Render normal background
-            gui.drawTexture(TAB_TEXTURE, x, y, TAB_BACKGROUND_U + hoverOffset, TAB_BACKGROUND_V, TabBase.TAB_WIDTH, TabBase.TAB_HEIGHT);
+            gui.drawTexture(TAB_TEXTURE, x, y, TAB_BACKGROUND_U + hoverOffset, TAB_BACKGROUND_V, TabBase.TAB_WIDTH, TabBase.TAB_HEIGHT, 256, 256);
         }
     }
 

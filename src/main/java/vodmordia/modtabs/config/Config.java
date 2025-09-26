@@ -4,7 +4,7 @@ import eu.midnightdust.lib.config.MidnightConfig;
 
 public class Config extends MidnightConfig {
     @Entry(category = "general", name = "enableDebugLogging")
-    public static boolean enableDebugLogging = false;
+    public static boolean enableDebugLogging = true;
 
     @Entry(category = "general", name = "customTabsDebugLogging")
     public static boolean customTabsDebugLogging = false;
@@ -18,12 +18,20 @@ public class Config extends MidnightConfig {
     @Entry(category = "general", name = "tabOrder")
     public static int tabOrder = 0;
 
+    @Entry(category = "general", name = "stickyInventoryTab")
+    public static boolean stickyInventoryTab = true;
+
+    @Entry(category = "general", name = "inventoryTabEnabled")
+    public static boolean inventoryTabEnabled = true;
+
     public static class Baked {
         public static boolean enableDebugLogging = false;
         public static boolean customTabsDebugLogging = false;
         public static boolean customTabsEnabled = true;
         public static String tabDisplayMode = "AUTO";
         public static int tabOrder = 0;
+        public static boolean stickyInventoryTab = true;
+        public static boolean inventoryTabEnabled = true;
 
         public static void bake() {
             enableDebugLogging = Config.enableDebugLogging;
@@ -31,6 +39,8 @@ public class Config extends MidnightConfig {
             customTabsEnabled = Config.customTabsEnabled;
             tabDisplayMode = Config.tabDisplayMode;
             tabOrder = Config.tabOrder;
+            stickyInventoryTab = Config.stickyInventoryTab;
+            inventoryTabEnabled = Config.inventoryTabEnabled;
         }
 
         public static void bakeClient() {

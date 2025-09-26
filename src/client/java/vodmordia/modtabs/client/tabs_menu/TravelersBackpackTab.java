@@ -17,16 +17,20 @@ public class TravelersBackpackTab extends TabBase {
 
     @Override
     public void openTargetScreen(PlayerEntity player) {
+        vodmordia.modtabs.ModTabs.LOGGER.info("TravelersBackpackTab.openTargetScreen called");
         try {
             // Try to get and use a traveler's backpack item
             Item backpackItem = getBackpackItem();
+            vodmordia.modtabs.ModTabs.LOGGER.info("Got backpack item: {}", backpackItem != null ? backpackItem.toString() : "null");
             if (backpackItem != null) {
                 try {
                     ItemStack backpackStack = new ItemStack(backpackItem);
                     // Use item interaction to open the backpack screen
+                    vodmordia.modtabs.ModTabs.LOGGER.info("Attempting to use backpack item");
                     backpackStack.getItem().use(player.getWorld(), player, net.minecraft.util.Hand.MAIN_HAND);
                     return;
                 } catch (Exception ex) {
+                    vodmordia.modtabs.ModTabs.LOGGER.warn("Failed to use backpack item: " + ex.getMessage());
                     // Continue to reflection fallback
                 }
             }
@@ -46,7 +50,45 @@ public class TravelersBackpackTab extends TabBase {
 
     @Override
     public boolean isEnabled(PlayerEntity player) {
-        return ModIntegrationManager.isModLoaded(ModIntegration.TRAVELERS_BACKPACK);
+        return ModIntegrationManager.isModLoaded(ModIntegration.TRAVELERS_BACKPACK) && hasBackpack(player);
+    }
+
+    private boolean hasBackpack(PlayerEntity player) {
+        try {
+            Class<?> backpackItemClass = Class.forName("com.tiviacz.travelersbackpack.items.TravelersBackpackItem");
+
+            // Check main inventory
+            for (net.minecraft.item.ItemStack stack : player.getInventory().main) {
+                if (!stack.isEmpty() && backpackItemClass.isInstance(stack.getItem())) {
+                    return true;
+                }
+            }
+
+            // Check armor slots
+            for (net.minecraft.item.ItemStack stack : player.getInventory().armor) {
+                if (!stack.isEmpty() && backpackItemClass.isInstance(stack.getItem())) {
+                    return true;
+                }
+            }
+
+            // Fallback to original AttachmentUtils check
+            try {
+                Class<?> attachmentUtilsClass = Class.forName("com.tiviacz.travelersbackpack.capability.AttachmentUtils");
+                java.lang.reflect.Method isWearingBackpackMethod = attachmentUtilsClass.getMethod("isWearingBackpack", net.minecraft.entity.player.PlayerEntity.class);
+                return (Boolean) isWearingBackpackMethod.invoke(null, player);
+            } catch (Exception ex) {
+                return false;
+            }
+        } catch (Exception e) {
+            // If reflection fails, fall back to original method
+            try {
+                Class<?> attachmentUtilsClass = Class.forName("com.tiviacz.travelersbackpack.capability.AttachmentUtils");
+                java.lang.reflect.Method isWearingBackpackMethod = attachmentUtilsClass.getMethod("isWearingBackpack", net.minecraft.entity.player.PlayerEntity.class);
+                return (Boolean) isWearingBackpackMethod.invoke(null, player);
+            } catch (Exception ex) {
+                return false;
+            }
+        }
     }
 
     @Override
@@ -86,6 +128,7 @@ public class TravelersBackpackTab extends TabBase {
         if (backpackItem != null) {
             renderWithItem(gui, x, y, hover, new ItemStack(backpackItem));
         } else {
+            vodmordia.modtabs.ModTabs.LOGGER.warn("TravelersBackpackTab using fallback leather chestplate - backpack item not found");
             // Fallback to leather backpack texture
             renderWithItem(gui, x, y, hover, new ItemStack(Items.LEATHER_CHESTPLATE));
         }

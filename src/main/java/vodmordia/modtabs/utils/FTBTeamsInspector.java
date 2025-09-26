@@ -76,9 +76,9 @@ public class FTBTeamsInspector {
             "dev.ftb.mods.ftbteams.registry.ModItems",
             "dev.ftb.mods.ftbteams.item.ModItems",
             "dev.ftb.mods.ftbteams.FTBTeamsItems",
-            "dev.ftb.mods.ftbteams.neoforge.ModItems",
-            "dev.ftb.mods.ftbteams.neoforge.FTBTeamsItems",
-            "dev.ftb.mods.ftbteams.neoforge.Items",
+            "dev.ftb.mods.ftbteams.fabric.ModItems",
+            "dev.ftb.mods.ftbteams.fabric.FTBTeamsItems",
+            "dev.ftb.mods.ftbteams.fabric.Items",
             "dev.ftb.mods.ftblibrary.items.ModItems",
             "dev.ftb.mods.ftblibrary.registry.ModItems",
             "dev.ftb.mods.ftblibrary.FTBLibraryItems"
