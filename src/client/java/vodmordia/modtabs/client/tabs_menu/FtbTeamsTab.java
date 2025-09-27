@@ -19,50 +19,28 @@ public class FtbTeamsTab extends SimpleTextureTab {
     }
 
     @Override
+    public void render(DrawContext gui, int x, int y, boolean hover) {
+        // Custom positioning: 2 pixels right, 1 pixel down from default (5, 4)
+        vodmordia.modtabs.api.tabs_menu.TabRenderer.builder()
+            .withBackground()
+            .withTextureIcon(getIconTexture(), 7, 5, 12, 12)
+            .render(gui, x, y, hover, false);
+    }
+
+    @Override
     public void openTargetScreen(PlayerEntity player) {
         try {
             MinecraftClient minecraft = MinecraftClient.getInstance();
 
-            // Try first approach: Direct screen creation
-            try {
-                Class<?> teamsScreenClass = Class.forName("dev.ftb.mods.ftbteams.client.gui.MyTeamScreen");
-                Object teamsScreen = teamsScreenClass.getConstructor().newInstance();
-                minecraft.setScreen((Screen) teamsScreen);
-                return;
-            } catch (Exception e1) {
-                vodmordia.modtabs.ModTabs.LOGGER.debug("Direct screen creation failed: " + e1.getMessage());
-            }
-
-            // Try second approach: Look for GUI opening methods
-            try {
-                Class<?> clientEventsClass = Class.forName("dev.ftb.mods.ftbteams.client.FTBTeamsClient");
-                java.lang.reflect.Method openMyTeamGuiMethod = clientEventsClass.getDeclaredMethod("openMyTeamGui");
-                openMyTeamGuiMethod.setAccessible(true);
-                openMyTeamGuiMethod.invoke(null);
-                return;
-            } catch (Exception e2) {
-                vodmordia.modtabs.ModTabs.LOGGER.debug("FTBTeamsClient.openMyTeamGui failed: " + e2.getMessage());
-            }
-
-            // Try third approach: Look for keybinding trigger
-            try {
-                Class<?> keybindingsClass = Class.forName("dev.ftb.mods.ftbteams.client.FTBTeamsClientConfig");
-                java.lang.reflect.Field openGuiKeyField = keybindingsClass.getDeclaredField("openGuiKey");
-                openGuiKeyField.setAccessible(true);
-                Object keyBinding = openGuiKeyField.get(null);
-
-                // Simulate key press
-                java.lang.reflect.Method setPressed = keyBinding.getClass().getMethod("setPressed", boolean.class);
-                setPressed.invoke(keyBinding, true);
-                setPressed.invoke(keyBinding, false);
-            } catch (Exception e3) {
-                vodmordia.modtabs.ModTabs.LOGGER.debug("Keybinding trigger failed: " + e3.getMessage());
-            }
-
+            // Direct screen creation approach
+            Class<?> teamsScreenClass = Class.forName("dev.ftb.mods.ftbteams.client.gui.MyTeamScreen");
+            Object teamsScreen = teamsScreenClass.getConstructor().newInstance();
+            minecraft.setScreen((Screen) teamsScreen);
         } catch (Exception e) {
-            vodmordia.modtabs.ModTabs.LOGGER.warn("Failed to open FTB Teams screen: " + e.getMessage());
+            // FTB Teams not present or failed to open screen
         }
     }
+
 
     @Override
     public boolean isEnabled(PlayerEntity player) {

@@ -27,7 +27,7 @@ public enum ModIntegration {
     // Skills and progression mods
     LEVELZ("levelz"),
     ORIGINS("origins"),
-    SKILLS_FABRIC("skills"),
+    PUFFERFISH_SKILLS("puffish_skills"),
 
     // Equipment and inventory mods
     SOPHISTICATED_BACKPACKS("sophisticatedbackpacks"),

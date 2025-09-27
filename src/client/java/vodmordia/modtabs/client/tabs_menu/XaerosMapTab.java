@@ -13,39 +13,43 @@ import vodmordia.modtabs.integration.ModIntegration;
 import vodmordia.modtabs.integration.ModIntegrationManager;
 
 public class XaerosMapTab extends TabBase {
+    private static net.minecraft.util.Identifier cachedTexture = null;
+    private static boolean textureSearchCompleted = false;
 
     @Override
     public void openTargetScreen(PlayerEntity player) {
         try {
-            // Try to open Xaero's World Map GUI
             MinecraftClient minecraft = MinecraftClient.getInstance();
 
-            // Use reflection to open the world map screen
-            Class<?> guiMapClass = Class.forName("xaero.map.gui.GuiMap");
+            // Use the same approach as working NeoForge version
+            Class<?> worldMapSessionClass = Class.forName("xaero.map.WorldMapSession");
+            java.lang.reflect.Method getCurrentSessionMethod = worldMapSessionClass.getMethod("getCurrentSession");
+            Object currentSession = getCurrentSessionMethod.invoke(null);
 
-            // Try different constructor patterns that Xaero's might use
-            try {
-                // Try constructor with parent screen parameter
-                Object guiMap = guiMapClass.getConstructor(Screen.class).newInstance(minecraft.currentScreen);
-                minecraft.setScreen((Screen) guiMap);
-                return;
-            } catch (Exception e1) {
-                try {
-                    // Try default constructor
-                    Object guiMap = guiMapClass.getConstructor().newInstance();
-                    minecraft.setScreen((Screen) guiMap);
+            if (currentSession != null) {
+                java.lang.reflect.Method getMapProcessorMethod = currentSession.getClass().getMethod("getMapProcessor");
+                Object mapProcessor = getMapProcessorMethod.invoke(currentSession);
+
+                if (mapProcessor != null) {
+                    Class<?> guiMapClass = Class.forName("xaero.map.gui.GuiMap");
+
+                    Screen guiMap = (Screen) guiMapClass.getDeclaredConstructor(
+                        Screen.class,
+                        Screen.class,
+                        mapProcessor.getClass(),
+                        net.minecraft.entity.Entity.class
+                    ).newInstance(null, null, mapProcessor, minecraft.getCameraEntity());
+
+                    minecraft.setScreen(guiMap);
                     return;
-                } catch (Exception e2) {
-                    // Try constructor with different parameters
-                    vodmordia.modtabs.ModTabs.LOGGER.warn("Failed to create Xaero's World Map GUI with standard constructors");
                 }
             }
 
         } catch (Exception e) {
-            // Log error for debugging
-            vodmordia.modtabs.ModTabs.LOGGER.warn("Failed to open Xaero's World Map screen: " + e.getMessage());
+            // Xaero's World Map not present or failed to open map
         }
     }
+
 
     @Override
     public boolean isEnabled(PlayerEntity player) {
@@ -84,8 +88,31 @@ public class XaerosMapTab extends TabBase {
 
     @Override
     public void render(DrawContext gui, int x, int y, boolean hover) {
-        // Use compass as icon for world map
-        renderWithItem(gui, x, y, hover, new ItemStack(Items.COMPASS));
+        // Try to get Xaero's map texture/icon only once, then use compass fallback
+        if (!textureSearchCompleted) {
+            cachedTexture = getXaerosMapTexture();
+            textureSearchCompleted = true;
+        }
+
+        if (cachedTexture != null) {
+            // Use texture rendering like FtbTeamsTab
+            vodmordia.modtabs.api.tabs_menu.TabRenderer.builder()
+                .withBackground()
+                .withTextureIcon(cachedTexture, 5, 4, 16, 16)
+                .render(gui, x, y, hover, false);
+        } else {
+            // Fallback to compass item (texture not found or doesn't exist)
+            renderWithItem(gui, x, y, hover, new ItemStack(Items.COMPASS));
+        }
+    }
+
+    private net.minecraft.util.Identifier getXaerosMapTexture() {
+        try {
+            // Use the actual Xaero's World Map icon texture
+            return new net.minecraft.util.Identifier("xaeroworldmap", "icon.png");
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     @Override

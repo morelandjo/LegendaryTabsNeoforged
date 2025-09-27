@@ -17,36 +17,92 @@ public class MapAtlasesTab extends TabBase {
 
     @Override
     public void openTargetScreen(PlayerEntity player) {
+        vodmordia.modtabs.ModTabs.LOGGER.info("=== MapAtlasesTab Debug: Attempting to open screen ===");
+
         try {
             // Try to get and use a map atlas item
             Item atlasItem = getAtlasItem();
+            vodmordia.modtabs.ModTabs.LOGGER.info("Atlas item found: {}", atlasItem != null ? atlasItem.toString() : "null");
+
             if (atlasItem != null) {
                 try {
                     ItemStack atlasStack = new ItemStack(atlasItem);
+                    vodmordia.modtabs.ModTabs.LOGGER.info("Trying to use atlas item: {}", atlasStack.getItem().toString());
                     // Use item interaction to open the atlas screen
                     atlasStack.getItem().use(player.getWorld(), player, net.minecraft.util.Hand.MAIN_HAND);
+                    vodmordia.modtabs.ModTabs.LOGGER.info("SUCCESS: Atlas item use worked!");
                     return;
                 } catch (Exception ex) {
-                    // Continue to reflection fallback
+                    vodmordia.modtabs.ModTabs.LOGGER.info("Atlas item use failed: " + ex.getMessage());
                 }
             }
 
             // Fallback: Try to open atlas overview screen directly via reflection
-            MinecraftClient minecraft = MinecraftClient.getInstance();
-            Class<?> atlasScreenClass = Class.forName("pepjebs.mapatlases.client.screen.AtlasOverviewScreen");
+            try {
+                MinecraftClient minecraft = MinecraftClient.getInstance();
+                vodmordia.modtabs.ModTabs.LOGGER.info("Trying to open AtlasOverviewScreen via reflection...");
+                Class<?> atlasScreenClass = Class.forName("pepjebs.mapatlases.client.screen.AtlasOverviewScreen");
+                vodmordia.modtabs.ModTabs.LOGGER.info("Found AtlasOverviewScreen class: {}", atlasScreenClass.getName());
 
-            // This might require specific constructor parameters - for now, log the attempt
-            vodmordia.modtabs.ModTabs.LOGGER.info("Trying to open Map Atlases screen via reflection");
+                // Try different constructor approaches
+                try {
+                    Object atlasScreen = atlasScreenClass.getConstructor().newInstance();
+                    minecraft.setScreen((net.minecraft.client.gui.screen.Screen) atlasScreen);
+                    vodmordia.modtabs.ModTabs.LOGGER.info("SUCCESS: Direct screen creation worked!");
+                    return;
+                } catch (Exception e1) {
+                    vodmordia.modtabs.ModTabs.LOGGER.info("Direct screen creation failed: " + e1.getMessage());
+                }
+
+            } catch (Exception e) {
+                vodmordia.modtabs.ModTabs.LOGGER.info("Reflection approach failed: " + e.getMessage());
+            }
 
         } catch (Exception e) {
             // Log error for debugging
             vodmordia.modtabs.ModTabs.LOGGER.warn("Failed to open Map Atlases screen: " + e.getMessage());
         }
+
+        vodmordia.modtabs.ModTabs.LOGGER.info("=== MapAtlasesTab Debug: All methods failed ===");
     }
 
     @Override
     public boolean isEnabled(PlayerEntity player) {
-        return ModIntegrationManager.isModLoaded(ModIntegration.MAP_ATLASES);
+        return ModIntegrationManager.isModLoaded(ModIntegration.MAP_ATLASES) && hasMapAtlas(player);
+    }
+
+    private boolean hasMapAtlas(PlayerEntity player) {
+        try {
+            // Try Map Atlases access utility method first
+            Class<?> mapAtlasesAccessUtilsClass = Class.forName("pepjebs.mapatlases.utils.MapAtlasesAccessUtils");
+            java.lang.reflect.Method getAtlasMethod = mapAtlasesAccessUtilsClass.getMethod("getAtlasFromPlayerByConfig", net.minecraft.entity.player.PlayerEntity.class);
+            net.minecraft.item.ItemStack atlas = (net.minecraft.item.ItemStack) getAtlasMethod.invoke(null, player);
+
+            Class<?> mapAtlasItemClass = Class.forName("pepjebs.mapatlases.item.MapAtlasItem");
+            return mapAtlasItemClass.isInstance(atlas.getItem());
+        } catch (Exception e) {
+            // Fallback: Check player inventory manually
+            try {
+                Class<?> mapAtlasItemClass = Class.forName("pepjebs.mapatlases.item.MapAtlasItem");
+
+                // Check main inventory
+                for (net.minecraft.item.ItemStack stack : player.getInventory().main) {
+                    if (!stack.isEmpty() && mapAtlasItemClass.isInstance(stack.getItem())) {
+                        return true;
+                    }
+                }
+
+                // Check offhand
+                if (!player.getOffHandStack().isEmpty() && mapAtlasItemClass.isInstance(player.getOffHandStack().getItem())) {
+                    return true;
+                }
+
+            } catch (Exception ex) {
+                // If reflection fails completely, return false
+            }
+        }
+
+        return false;
     }
 
     @Override
@@ -86,7 +142,6 @@ public class MapAtlasesTab extends TabBase {
         if (atlasItem != null) {
             renderWithItem(gui, x, y, hover, new ItemStack(atlasItem));
         } else {
-            vodmordia.modtabs.ModTabs.LOGGER.warn("MapAtlasesTab using fallback filled map - atlas item not found");
             // Fallback to filled map
             renderWithItem(gui, x, y, hover, new ItemStack(Items.FILLED_MAP));
         }

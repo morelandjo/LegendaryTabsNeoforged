@@ -32,7 +32,7 @@ public abstract class SimpleTextureTab extends TabBase {
     public void render(DrawContext gui, int x, int y, boolean hover) {
         TabRenderer.builder()
             .withBackground()
-            .withTextureIcon(iconTexture, 5, 3, iconWidth, iconHeight)
+            .withTextureIcon(iconTexture, 5, 4, iconWidth, iconHeight)
             .render(gui, x, y, hover, false);
     }
 
@@ -40,7 +40,7 @@ public abstract class SimpleTextureTab extends TabBase {
     protected void renderInverted(DrawContext gui, int x, int y, boolean hover) {
         TabRenderer.builder()
             .withBackground()
-            .withTextureIcon(iconTexture, 5, 3, iconWidth, iconHeight)
+            .withTextureIcon(iconTexture, 5, 4, iconWidth, iconHeight)
             .render(gui, x, y, hover, true);
     }
 

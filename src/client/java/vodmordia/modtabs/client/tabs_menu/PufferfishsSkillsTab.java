@@ -1,66 +1,57 @@
 package vodmordia.modtabs.client.tabs_menu;
 
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
 import net.minecraft.text.Text;
-import vodmordia.modtabs.api.tabs_menu.TabBase;
+import net.minecraft.util.Identifier;
+import vodmordia.modtabs.ModTabs;
+import vodmordia.modtabs.api.tabs_menu.SimpleTextureTab;
 import vodmordia.modtabs.api.tabs_menu.TabsMenu;
 import vodmordia.modtabs.integration.ModIntegration;
 import vodmordia.modtabs.integration.ModIntegrationManager;
 
-public class PufferfishsSkillsTab extends TabBase {
+import java.util.Optional;
+
+public class PufferfishsSkillsTab extends SimpleTextureTab {
+    private static final Identifier PUFFER_ICON = Identifier.of(ModTabs.MOD_ID, "textures/gui/puffer.png");
+
+    public PufferfishsSkillsTab() {
+        super(PUFFER_ICON);
+    }
 
     @Override
     public void openTargetScreen(PlayerEntity player) {
-        try {
-            // Try to open Pufferfish's Skills GUI
-            MinecraftClient minecraft = MinecraftClient.getInstance();
-
-            // Use reflection to open the skills screen
-            Class<?> skillsScreenClass = Class.forName("net.puffish.skillsmod.client.gui.SkillsScreen");
-
-            // Try different constructor patterns that the mod might use
+        if (player.getWorld().isClient) {
             try {
-                // Try constructor with parent screen parameter
-                Object skillsScreen = skillsScreenClass.getConstructor(Screen.class).newInstance(minecraft.currentScreen);
-                minecraft.setScreen((Screen) skillsScreen);
-                return;
-            } catch (Exception e1) {
-                try {
-                    // Try default constructor
-                    Object skillsScreen = skillsScreenClass.getConstructor().newInstance();
-                    minecraft.setScreen((Screen) skillsScreen);
-                    return;
-                } catch (Exception e2) {
-                    // Try constructor with player parameter
-                    try {
-                        Object skillsScreen = skillsScreenClass.getConstructor(PlayerEntity.class).newInstance(player);
-                        minecraft.setScreen((Screen) skillsScreen);
-                        return;
-                    } catch (Exception e3) {
-                        vodmordia.modtabs.ModTabs.LOGGER.warn("Failed to create Pufferfish's Skills screen with standard constructors");
-                    }
-                }
+                // Use the proper SkillsClientMod.openScreen method like the NeoForge version
+                Class<?> clientModClass = Class.forName("net.puffish.skillsmod.client.SkillsClientMod");
+                Object clientModInstance = clientModClass.getMethod("getInstance").invoke(null);
+                clientModClass.getMethod("openScreen", Optional.class).invoke(clientModInstance, Optional.empty());
+            } catch (Exception e) {
+                vodmordia.modtabs.ModTabs.LOGGER.warn("Failed to open Pufferfish's Skills screen: " + e.getMessage());
             }
-
-        } catch (Exception e) {
-            // Log error for debugging
-            vodmordia.modtabs.ModTabs.LOGGER.warn("Failed to open Pufferfish's Skills screen: " + e.getMessage());
         }
     }
 
     @Override
     public boolean isEnabled(PlayerEntity player) {
-        return ModIntegrationManager.isModLoaded(ModIntegration.SKILLS_FABRIC);
+        return ModIntegrationManager.isModLoaded(ModIntegration.PUFFERFISH_SKILLS);
+    }
+
+    @Override
+    public boolean isCurrentlyUsed(Screen currentScreen) {
+        // Always return false so this tab is never disabled - we want it visible on all screens including SkillsScreen
+        return false;
+    }
+
+    @Override
+    public Text getTooltip() {
+        return Text.literal("Pufferfish's Skills");
     }
 
     @Override
     public void initTabOnScreens() {
-        if (!ModIntegrationManager.isModLoaded(ModIntegration.SKILLS_FABRIC)) return;
+        if (!ModIntegrationManager.isModLoaded(ModIntegration.PUFFERFISH_SKILLS)) return;
 
         TabsMenu.addPendingRegistration(() -> {
             // Register for common screens
@@ -82,29 +73,17 @@ public class PufferfishsSkillsTab extends TabBase {
                         // Screen class not found, continue
                     }
                 }
+
+                // Also register for the skills screen itself
+                try {
+                    Class<?> skillsScreenClass = Class.forName("net.puffish.skillsmod.client.gui.SkillsScreen");
+                    TabsMenu.registerScreenForTabs((Class<? extends Screen>) skillsScreenClass, this);
+                } catch (ClassNotFoundException e) {
+                    // Skills screen not found
+                }
             } catch (Exception e) {
                 // Registration failed
             }
         });
-    }
-
-    @Override
-    public void render(DrawContext gui, int x, int y, boolean hover) {
-        // Use experience bottle as icon for skills
-        renderWithItem(gui, x, y, hover, new ItemStack(Items.EXPERIENCE_BOTTLE));
-    }
-
-    @Override
-    public boolean isCurrentlyUsed(Screen currentScreen) {
-        if (currentScreen == null) return false;
-
-        // Check if current screen is a Pufferfish's Skills screen
-        String screenName = currentScreen.getClass().getName();
-        return screenName.contains("puffish") && screenName.contains("skillsmod") && screenName.contains("gui");
-    }
-
-    @Override
-    public Text getTooltip() {
-        return Text.literal("Pufferfish's Skills");
     }
 }
