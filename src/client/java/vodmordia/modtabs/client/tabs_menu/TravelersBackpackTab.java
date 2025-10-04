@@ -17,35 +17,59 @@ public class TravelersBackpackTab extends TabBase {
 
     @Override
     public void openTargetScreen(PlayerEntity player) {
-        vodmordia.modtabs.ModTabs.LOGGER.info("TravelersBackpackTab.openTargetScreen called");
         try {
-            // Try to get and use a traveler's backpack item
-            Item backpackItem = getBackpackItem();
-            vodmordia.modtabs.ModTabs.LOGGER.info("Got backpack item: {}", backpackItem != null ? backpackItem.toString() : "null");
-            if (backpackItem != null) {
-                try {
-                    ItemStack backpackStack = new ItemStack(backpackItem);
-                    // Use item interaction to open the backpack screen
-                    vodmordia.modtabs.ModTabs.LOGGER.info("Attempting to use backpack item");
-                    backpackStack.getItem().use(player.getWorld(), player, net.minecraft.util.Hand.MAIN_HAND);
-                    return;
-                } catch (Exception ex) {
-                    vodmordia.modtabs.ModTabs.LOGGER.warn("Failed to use backpack item: " + ex.getMessage());
-                    // Continue to reflection fallback
-                }
+            // Check if wearing backpack (use OPEN_SCREEN action) or in inventory (use OPEN_BACKPACK action)
+            Class<?> componentUtilsClass = Class.forName("com.tiviacz.travelersbackpack.component.ComponentUtils");
+            java.lang.reflect.Method isWearingMethod = componentUtilsClass.getMethod("isWearingBackpack", net.minecraft.entity.player.PlayerEntity.class);
+            boolean isWearing = (Boolean) isWearingMethod.invoke(null, player);
+
+            Class<?> actionPacketClass = Class.forName("com.tiviacz.travelersbackpack.network.ServerboundActionTagPacket");
+            java.lang.reflect.Method createPacketTagMethod = actionPacketClass.getDeclaredMethod("createPacketTag", int.class, Object[].class);
+
+            Object compoundTag;
+            if (isWearing) {
+                // OPEN_SCREEN = 1 (for wearing backpack)
+                compoundTag = createPacketTagMethod.invoke(null, 1, new Object[0]);
+            } else {
+                // OPEN_BACKPACK = 2 (for backpack in inventory)
+                int backpackSlot = findBackpackSlot(player);
+                if (backpackSlot == -1) return;
+                compoundTag = createPacketTagMethod.invoke(null, 2, new Object[]{backpackSlot, false});
             }
 
-            // Fallback: Try to open backpack screen directly via reflection
-            MinecraftClient minecraft = MinecraftClient.getInstance();
-            Class<?> backpackScreenClass = Class.forName("com.tiviacz.travelersbackpack.client.screens.BackpackScreen");
+            // Create and send packet
+            Object packet = actionPacketClass.getDeclaredConstructor(compoundTag.getClass()).newInstance(compoundTag);
+            java.lang.reflect.Method getPacketIdMethod = actionPacketClass.getMethod("getPacketId");
+            Object packetId = getPacketIdMethod.invoke(packet);
 
-            // This might require specific constructor parameters - for now, log the attempt
-            vodmordia.modtabs.ModTabs.LOGGER.info("Trying to open Traveler's Backpack screen via reflection");
+            Class<?> packetByteBufsClass = Class.forName("net.fabricmc.fabric.api.networking.v1.PacketByteBufs");
+            java.lang.reflect.Method createMethod = packetByteBufsClass.getMethod("create");
+            Object byteBuf = createMethod.invoke(null);
 
+            java.lang.reflect.Method encodeMethod = actionPacketClass.getMethod("encode", actionPacketClass, byteBuf.getClass());
+            encodeMethod.invoke(packet, packet, byteBuf);
+
+            net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking.send((net.minecraft.util.Identifier) packetId, (net.minecraft.network.PacketByteBuf) byteBuf);
         } catch (Exception e) {
-            // Log error for debugging
-            vodmordia.modtabs.ModTabs.LOGGER.warn("Failed to open Traveler's Backpack screen: " + e.getMessage());
+            // Silent fail - backpack mod not present or packet send failed
         }
+    }
+
+    private int findBackpackSlot(PlayerEntity player) {
+        try {
+            Class<?> backpackItemClass = Class.forName("com.tiviacz.travelersbackpack.items.TravelersBackpackItem");
+
+            // Check main inventory (slots 0-35)
+            for (int i = 0; i < player.getInventory().main.size(); i++) {
+                ItemStack stack = player.getInventory().main.get(i);
+                if (!stack.isEmpty() && backpackItemClass.isInstance(stack.getItem())) {
+                    return i;
+                }
+            }
+        } catch (Exception e) {
+            // Ignore
+        }
+        return -1;
     }
 
     @Override
@@ -93,32 +117,11 @@ public class TravelersBackpackTab extends TabBase {
 
     @Override
     public void initTabOnScreens() {
-        if (!ModIntegrationManager.isModLoaded(ModIntegration.TRAVELERS_BACKPACK)) return;
-
-        TabsMenu.addPendingRegistration(() -> {
-            // Register for common screens
-            try {
-                TabsMenu.registerScreenForTabs(net.minecraft.client.gui.screen.ingame.InventoryScreen.class, this);
-
-                // Try to register for other common container screens
-                String[] screenClasses = {
-                    "net.minecraft.client.gui.screen.ingame.GenericContainerScreen",
-                    "net.minecraft.client.gui.screen.ingame.ShulkerBoxScreen",
-                    "net.minecraft.client.gui.screen.ingame.ChestScreen"
-                };
-
-                for (String className : screenClasses) {
-                    try {
-                        Class<?> screenClass = Class.forName(className);
-                        TabsMenu.registerScreenForTabs((Class<? extends Screen>) screenClass, this);
-                    } catch (ClassNotFoundException e) {
-                        // Screen class not found, continue
-                    }
-                }
-            } catch (Exception e) {
-                // Registration failed
-            }
-        });
+        // Register Traveler's Backpack screen with GUI-relative positioning
+        vodmordia.modtabs.api.tabs_menu.ScreenRegistry.builder()
+            .withStandardDimensions()
+            .withPositioning(vodmordia.modtabs.api.tabs_menu.TabPositioning.GUI_RELATIVE)
+            .registerAllTabs("com.tiviacz.travelersbackpack.client.screens.BackpackScreen");
     }
 
     @Override

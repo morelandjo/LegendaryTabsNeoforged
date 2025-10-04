@@ -5,11 +5,7 @@
 	"compatibilityLevel": "JAVA_17",
 	"refmap": "modtabs.refmap.json",
 	"mixins": [],
-	"client": [
-		"ScreenMixin",
-		"AbstractContainerScreenMixin",
-		"HandledScreenMixin"
-	],
+	"client": [],
 	"injectors": {
 		"defaultRequire": 1
 	}

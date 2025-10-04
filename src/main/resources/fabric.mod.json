@@ -25,6 +25,7 @@
 	"mixins": [
 		"modtabs.mixins.json"
 	],
+	"accessWidener": "modtabs.accesswidener",
 	"depends": {
 		"fabricloader": ">=0.15.0",
 		"fabric-api": "*",

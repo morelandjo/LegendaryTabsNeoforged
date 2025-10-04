@@ -8,6 +8,7 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.text.Text;
+import vodmordia.modtabs.api.tabs_menu.ScreenRegistry;
 import vodmordia.modtabs.api.tabs_menu.TabBase;
 import vodmordia.modtabs.api.tabs_menu.TabsMenu;
 import vodmordia.modtabs.integration.ModIntegration;
@@ -53,32 +54,26 @@ public class FtbQuestsTab extends TabBase {
 
     @Override
     public void initTabOnScreens() {
-        if (!ModIntegrationManager.isModLoaded(ModIntegration.FTB_QUESTS)) return;
+        // Register FTB Quests screen classes with inverted display at the top
+        ScreenRegistry.builder()
+            .withStandardDimensions()
+            .inverted()
+            .atTop()
+            .registerAllTabs(
+                "dev.ftb.mods.ftblibrary.ui.ScreenWrapper", // Main FTB Quests screen
+                "dev.ftb.mods.ftbquests.client.gui.quests.QuestScreen",
+                "dev.ftb.mods.ftbquests.client.gui.QuestionScreen",
+                "dev.ftb.mods.ftbquests.client.gui.QuestsScreen",
+                "dev.ftb.mods.ftbquests.client.screens.QuestScreen",
+                "dev.ftb.mods.ftbquests.client.QuestScreen"
+            );
 
-        TabsMenu.addPendingRegistration(() -> {
-            // Register for common screens
-            try {
-                TabsMenu.registerScreenForTabs(net.minecraft.client.gui.screen.ingame.InventoryScreen.class, this);
-
-                // Try to register for other common container screens
-                String[] screenClasses = {
-                    "net.minecraft.client.gui.screen.ingame.GenericContainerScreen",
-                    "net.minecraft.client.gui.screen.ingame.ShulkerBoxScreen",
-                    "net.minecraft.client.gui.screen.ingame.ChestScreen"
-                };
-
-                for (String className : screenClasses) {
-                    try {
-                        Class<?> screenClass = Class.forName(className);
-                        TabsMenu.registerScreenForTabs((Class<? extends Screen>) screenClass, this);
-                    } catch (ClassNotFoundException e) {
-                        // Screen class not found, continue
-                    }
-                }
-            } catch (Exception e) {
-                // Registration failed
-            }
-        });
+        // Force register ScreenWrapper to override any existing registration from FTB Teams
+        ScreenRegistry.builder()
+            .withStandardDimensions()
+            .inverted()
+            .atTop()
+            .forceRegisterAllTabs("dev.ftb.mods.ftblibrary.ui.ScreenWrapper");
     }
 
     @Override
@@ -91,6 +86,18 @@ public class FtbQuestsTab extends TabBase {
             // Fallback to written book
             renderWithItem(gui, x, y, hover, new ItemStack(Items.WRITTEN_BOOK));
         }
+    }
+
+    @Override
+    protected void renderInverted(DrawContext gui, int x, int y, boolean hover) {
+        // Try to get the FTB Quests book item for rendering
+        Item questBook = FTBQuestsInspector.tryGetBookItem();
+        ItemStack stack = questBook != null ? new ItemStack(questBook) : new ItemStack(Items.WRITTEN_BOOK);
+
+        vodmordia.modtabs.api.tabs_menu.TabRenderer.builder()
+            .withBackground()
+            .withItemIcon(stack, 5, 3)
+            .render(gui, x, y, hover, true);
     }
 
     @Override

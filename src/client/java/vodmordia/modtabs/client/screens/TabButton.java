@@ -56,7 +56,7 @@ public class TabButton extends ButtonWidget {
     }
 
     @Override
-    public void render(DrawContext gui, int mouseX, int mouseY, float partial) {
+    public void renderButton(DrawContext gui, int mouseX, int mouseY, float partial) {
         // Apply animation offset for tuck mode
         int animatedY = this.getY() + TabsMenu.getAnimatedYOffset();
 
@@ -64,13 +64,13 @@ public class TabButton extends ButtonWidget {
         boolean isMouseOverAnimated = mouseX >= this.getX() && mouseX < this.getX() + this.width &&
                                      mouseY >= animatedY && mouseY < animatedY + this.height;
 
+        // Render the tab icon/graphics
         this.tabBase.render(gui, this.getX(), animatedY, this.isDisabled || isMouseOverAnimated, this.displayMode);
-
-        // Don't call super.render() to avoid default button rendering
     }
 
+    // Provide renderWidget for compatibility with FabricScreenEvents
     public void renderWidget(DrawContext gui, int mouseX, int mouseY, float partial) {
-        // This method is left empty to prevent default button widget rendering
+        renderButton(gui, mouseX, mouseY, partial);
     }
 
     public void updatePosition(int leftScreenPos, int topScreenPos) {

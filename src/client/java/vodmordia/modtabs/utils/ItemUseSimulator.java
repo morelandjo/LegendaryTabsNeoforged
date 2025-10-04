@@ -65,7 +65,6 @@ public class ItemUseSimulator {
             ItemStack itemStack = new ItemStack(item);
             World world = player.getWorld();
 
-            ModTabs.LOGGER.debug("Attempting to simulate use of item: " + itemId);
 
             // Strategy 1: Try to call the item's use method directly
             if (tryDirectItemUse(itemStack, world, player)) {
@@ -77,7 +76,6 @@ public class ItemUseSimulator {
                 return true;
             }
 
-            ModTabs.LOGGER.debug("All item use simulation strategies failed for: " + itemId);
             return false;
 
         } catch (Exception e) {
@@ -97,11 +95,9 @@ public class ItemUseSimulator {
                 result.getResult() == ActionResult.CONSUME ||
                 result.getResult() == ActionResult.CONSUME_PARTIAL) {
 
-                ModTabs.LOGGER.debug("Direct item use succeeded with result: " + result.getResult());
                 return true;
             }
         } catch (Exception e) {
-            ModTabs.LOGGER.debug("Direct item use failed: " + e.getMessage());
         }
         return false;
     }
@@ -129,12 +125,10 @@ public class ItemUseSimulator {
                     result == ActionResult.CONSUME ||
                     result == ActionResult.CONSUME_PARTIAL) {
 
-                    ModTabs.LOGGER.debug("Simulated right-click succeeded with result: " + result);
                     return true;
                 }
             }
         } catch (Exception e) {
-            ModTabs.LOGGER.debug("Simulated right-click failed: " + e.getMessage());
         }
         return false;
     }
@@ -161,13 +155,11 @@ public class ItemUseSimulator {
                 try {
                     screen = (Screen) screenClass.getConstructor(PlayerEntity.class).newInstance(player);
                 } catch (Exception e2) {
-                    ModTabs.LOGGER.debug("Could not create screen with standard constructors: " + screenClassName);
                 }
             }
 
             if (screen != null) {
                 MinecraftClient.getInstance().setScreen(screen);
-                ModTabs.LOGGER.debug("Successfully opened screen: " + screenClassName);
                 return true;
             }
 
@@ -195,7 +187,6 @@ public class ItemUseSimulator {
                 String cleanCommand = command.startsWith("/") ? command.substring(1) : command;
 
                 minecraft.player.networkHandler.sendCommand(cleanCommand);
-                ModTabs.LOGGER.debug("Executed command: " + cleanCommand);
                 return true;
             }
         } catch (Exception e) {
@@ -218,7 +209,6 @@ public class ItemUseSimulator {
 
             // This is a simplified implementation - in a full implementation,
             // you would map keybind names to actual KeyBinding objects and trigger them
-            ModTabs.LOGGER.debug("Keybind simulation not fully implemented: " + keybind);
 
             // For now, just return false to indicate it's not implemented
             return false;
@@ -251,18 +241,13 @@ public class ItemUseSimulator {
             }
 
             if (!PatchouliIntegration.isValidBookId(bookId)) {
-                if (vodmordia.modtabs.config.Config.Baked.customTabsDebugLogging) {
-                    ModTabs.LOGGER.info("Patchouli book not found in registry: " + bookId + ", using fallback item simulation");
-                }
                 return tryFallbackItemUse(bookId, player);
             }
 
             boolean success = PatchouliIntegration.openBook(bookId, player);
             if (success) {
-                ModTabs.LOGGER.debug("Successfully opened Patchouli book: " + bookId);
                 return true;
             } else {
-                ModTabs.LOGGER.debug("Patchouli API failed, trying fallback item use");
                 return tryFallbackItemUse(bookId, player);
             }
 
@@ -282,18 +267,12 @@ public class ItemUseSimulator {
 
         // For Ars Nouveau specifically, try the worn_notebook item
         if ("ars_nouveau".equals(bookId.getNamespace()) && "worn_notebook".equals(bookId.getPath())) {
-            if (vodmordia.modtabs.config.Config.Baked.customTabsDebugLogging) {
-                ModTabs.LOGGER.info("Using fallback item simulation for Ars Nouveau worn notebook");
-            }
             return simulateItemUse("ars_nouveau:worn_notebook", player);
         }
 
         // For other mods, try to use the book ID as an item ID
         // Many Patchouli books have the same ID for both the book registration and the item
         String itemId = bookId.toString();
-        if (vodmordia.modtabs.config.Config.Baked.customTabsDebugLogging) {
-            ModTabs.LOGGER.info("Using fallback item simulation with ID: " + itemId);
-        }
         return simulateItemUse(itemId, player);
     }
 }

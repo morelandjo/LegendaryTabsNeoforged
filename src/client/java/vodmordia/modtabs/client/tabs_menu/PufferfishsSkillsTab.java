@@ -51,39 +51,10 @@ public class PufferfishsSkillsTab extends SimpleTextureTab {
 
     @Override
     public void initTabOnScreens() {
-        if (!ModIntegrationManager.isModLoaded(ModIntegration.PUFFERFISH_SKILLS)) return;
-
-        TabsMenu.addPendingRegistration(() -> {
-            // Register for common screens
-            try {
-                TabsMenu.registerScreenForTabs(net.minecraft.client.gui.screen.ingame.InventoryScreen.class, this);
-
-                // Try to register for other common container screens
-                String[] screenClasses = {
-                    "net.minecraft.client.gui.screen.ingame.GenericContainerScreen",
-                    "net.minecraft.client.gui.screen.ingame.ShulkerBoxScreen",
-                    "net.minecraft.client.gui.screen.ingame.ChestScreen"
-                };
-
-                for (String className : screenClasses) {
-                    try {
-                        Class<?> screenClass = Class.forName(className);
-                        TabsMenu.registerScreenForTabs((Class<? extends Screen>) screenClass, this);
-                    } catch (ClassNotFoundException e) {
-                        // Screen class not found, continue
-                    }
-                }
-
-                // Also register for the skills screen itself
-                try {
-                    Class<?> skillsScreenClass = Class.forName("net.puffish.skillsmod.client.gui.SkillsScreen");
-                    TabsMenu.registerScreenForTabs((Class<? extends Screen>) skillsScreenClass, this);
-                } catch (ClassNotFoundException e) {
-                    // Skills screen not found
-                }
-            } catch (Exception e) {
-                // Registration failed
-            }
-        });
+        vodmordia.modtabs.api.tabs_menu.ScreenRegistry.builder()
+            .withStandardDimensions()
+            .inverted()
+            .atTop()
+            .registerAllTabs("net.puffish.skillsmod.client.gui.SkillsScreen");
     }
 }

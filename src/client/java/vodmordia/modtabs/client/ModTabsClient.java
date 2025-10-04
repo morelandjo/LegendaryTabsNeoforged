@@ -3,9 +3,12 @@ package vodmordia.modtabs.client;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.loader.api.FabricLoader;
 import vodmordia.modtabs.ModTabs;
 import vodmordia.modtabs.api.tabs_menu.TabsMenu;
+import vodmordia.modtabs.client.events.FabricScreenEvents;
+import vodmordia.modtabs.client.keybinds.ModKeybinds;
 import vodmordia.modtabs.client.tabs_menu.*;
 import vodmordia.modtabs.config.Config;
 import vodmordia.modtabs.config.CustomTabDefinition;
@@ -21,7 +24,26 @@ public class ModTabsClient implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
+        ModTabs.LOGGER.info("========== ModTabsClient.onInitializeClient() CALLED ==========");
+
         Config.Baked.bakeClient();
+
+        // Register keybinds
+        ModKeybinds.register();
+
+        // Register keybind handler for tab cycling
+        ClientTickEvents.END_CLIENT_TICK.register(client -> {
+            while (ModKeybinds.TAB_CYCLE.wasPressed()) {
+                if (client.currentScreen != null) {
+                    TabsMenu.cycleToNextTab(client.currentScreen);
+                }
+            }
+        });
+
+        // Register Fabric screen events using global registration
+        net.fabricmc.fabric.api.client.screen.v1.ScreenEvents.AFTER_INIT.register((client, screen, scaledWidth, scaledHeight) -> {
+            FabricScreenEvents.onScreenInit(screen);
+        });
 
         // Register all tabs - each tab's isEnabled() method handles mod detection via @TabConfig
         TabsMenu.register(new InventoryTab());
@@ -84,7 +106,6 @@ public class ModTabsClient implements ClientModInitializer {
         // Finalize all pending screen registrations now that all tabs are registered
         TabsMenu.finalizePendingRegistrations();
 
-        ModTabs.LOGGER.info("Mod Tabs Client initialized successfully");
     }
 
     /**
@@ -94,16 +115,10 @@ public class ModTabsClient implements ClientModInitializer {
         // Run in a separate thread to avoid blocking the mod loading
         new Thread(() -> {
             try {
-                if (Config.Baked.customTabsDebugLogging) {
-                    ModTabs.LOGGER.info("Waiting for Patchouli books to be loaded...");
-                }
 
                 // Wait for Patchouli books to be loaded using their synchronization mechanism
                 waitForPatchouliBooksLoaded();
 
-                if (Config.Baked.customTabsDebugLogging) {
-                    ModTabs.LOGGER.info("Patchouli books loaded! Loading custom tabs now.");
-                }
 
                 customTabsLoaded = true;
                 loadCustomTabs();
@@ -124,9 +139,6 @@ public class ModTabsClient implements ClientModInitializer {
         try {
             // Check if Patchouli is loaded first
             if (!FabricLoader.getInstance().isModLoaded("patchouli")) {
-                if (Config.Baked.customTabsDebugLogging) {
-                    ModTabs.LOGGER.info("Patchouli not loaded, proceeding without waiting");
-                }
                 return;
             }
 
@@ -141,7 +153,6 @@ public class ModTabsClient implements ClientModInitializer {
                 Thread.sleep(3000); // Wait 3 seconds for books to load
 
             } catch (ClassNotFoundException e) {
-                ModTabs.LOGGER.info("Patchouli Fabric client initializer not found, using fallback wait");
                 Thread.sleep(3000);
             }
 
@@ -164,11 +175,9 @@ public class ModTabsClient implements ClientModInitializer {
      */
     public static void forceLoadCustomTabs() {
         if (!customTabsLoaded) {
-            ModTabs.LOGGER.info("Manually forcing custom tabs loading");
             customTabsLoaded = true;
             loadCustomTabs();
         } else {
-            ModTabs.LOGGER.info("Custom tabs already loaded");
         }
     }
 
@@ -176,40 +185,20 @@ public class ModTabsClient implements ClientModInitializer {
      * Load and register custom tabs from JSON configuration files
      */
     private static void loadCustomTabs() {
-        if (Config.Baked.customTabsDebugLogging) {
-            ModTabs.LOGGER.info("loadCustomTabs() called - customTabsEnabled: " + Config.Baked.customTabsEnabled);
-        }
 
         if (!Config.Baked.customTabsEnabled) {
-            ModTabs.LOGGER.info("Custom tabs are disabled in configuration");
             return;
         }
 
         try {
-            if (Config.Baked.customTabsDebugLogging) {
-                ModTabs.LOGGER.info("Loading custom tab definitions from JSON files...");
-            }
 
             List<CustomTabDefinition> customTabDefinitions = CustomTabLoader.loadCustomTabs();
 
-            if (Config.Baked.customTabsDebugLogging) {
-                ModTabs.LOGGER.info("Found " + customTabDefinitions.size() + " custom tab definitions");
-            }
 
             for (CustomTabDefinition definition : customTabDefinitions) {
                 try {
-                    if (Config.Baked.customTabsDebugLogging) {
-                        ModTabs.LOGGER.info("Processing custom tab: " + definition.tabId +
-                                " (enabled: " + definition.enabled +
-                                ", action type: " + (definition.action != null ? definition.action.type : "null") + ")");
-                    }
-
                     CustomJsonTab customTab = new CustomJsonTab(definition);
                     TabsMenu.register(customTab);
-
-                    if (Config.Baked.customTabsDebugLogging) {
-                        ModTabs.LOGGER.info("Successfully registered custom tab: " + definition.tabId + " (order: " + definition.order + ")");
-                    }
                 } catch (Exception e) {
                     ModTabs.LOGGER.error("Failed to register custom tab " + definition.tabId + ": " + e.getMessage());
                     if (Config.Baked.customTabsDebugLogging) {
@@ -218,12 +207,8 @@ public class ModTabsClient implements ClientModInitializer {
                 }
             }
 
-            ModTabs.LOGGER.info("Loaded " + customTabDefinitions.size() + " custom tab(s)");
 
             // Re-finalize registrations to ensure custom tabs are properly integrated
-            if (Config.Baked.customTabsDebugLogging) {
-                ModTabs.LOGGER.info("Re-finalizing tab registrations for custom tabs");
-            }
             TabsMenu.finalizePendingRegistrations();
 
             // Refresh the current screen to show newly loaded custom tabs
@@ -249,9 +234,6 @@ public class ModTabsClient implements ClientModInitializer {
 
                 // Check if this screen supports tabs
                 if (TabsMenu.hasTabsForScreen(currentScreen.getClass())) {
-                    if (Config.Baked.customTabsDebugLogging) {
-                        ModTabs.LOGGER.info("Refreshing screen " + currentScreen.getClass().getSimpleName() + " to show new custom tabs");
-                    }
 
                     // Force a refresh by closing and reopening the screen
                     // This will trigger the tab building process again

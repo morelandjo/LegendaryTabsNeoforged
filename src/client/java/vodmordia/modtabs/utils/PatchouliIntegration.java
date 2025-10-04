@@ -43,11 +43,9 @@ public class PatchouliIntegration {
             if (player.getWorld().isClient) {
                 apiClass.getMethod("openBookGUI", Identifier.class)
                         .invoke(apiInstance, bookId);
-                ModTabs.LOGGER.debug("Opened Patchouli book: " + bookId + " (client-side)");
                 return true;
             } else {
                 // Server-side version would need ServerPlayer, but we're primarily client-side
-                ModTabs.LOGGER.debug("Patchouli book opening attempted on server side - may not work correctly");
                 return false;
             }
 
@@ -65,49 +63,28 @@ public class PatchouliIntegration {
      */
     public static ItemStack getPatchouliBookStack(Identifier bookId) {
         if (!isPatchouliLoaded()) {
-            if (vodmordia.modtabs.config.Config.Baked.customTabsDebugLogging) {
-                ModTabs.LOGGER.info("Attempted to get Patchouli book ItemStack but Patchouli is not loaded");
-            }
             return ItemStack.EMPTY;
         }
 
-        if (vodmordia.modtabs.config.Config.Baked.customTabsDebugLogging) {
-            ModTabs.LOGGER.info("Attempting to get Patchouli book ItemStack for: " + bookId);
-        }
 
         try {
             // Use reflection to call Patchouli API
             Class<?> apiClass = Class.forName("vazkii.patchouli.api.PatchouliAPI");
             Object apiInstance = apiClass.getMethod("get").invoke(null);
 
-            if (vodmordia.modtabs.config.Config.Baked.customTabsDebugLogging) {
-                ModTabs.LOGGER.info("Successfully accessed Patchouli API");
-                debugListRegisteredBooks(apiInstance, apiClass);
-            }
 
             // Get the book ItemStack
             Object bookStack = apiClass.getMethod("getBookStack", Identifier.class)
                     .invoke(apiInstance, bookId);
 
             if (bookStack instanceof ItemStack) {
-                if (vodmordia.modtabs.config.Config.Baked.customTabsDebugLogging) {
-                    ModTabs.LOGGER.info("Successfully created Patchouli book ItemStack for: " + bookId);
-                }
                 return (ItemStack) bookStack;
-            } else {
-                if (vodmordia.modtabs.config.Config.Baked.customTabsDebugLogging) {
-                    ModTabs.LOGGER.info("getBookStack returned null or non-ItemStack for: " + bookId + " - will use fallback");
-                }
             }
 
         } catch (ClassNotFoundException e) {
             ModTabs.LOGGER.error("Patchouli API not found - mod may not be loaded correctly");
         } catch (Exception e) {
-            if (vodmordia.modtabs.config.Config.Baked.customTabsDebugLogging) {
-                ModTabs.LOGGER.info("Failed to get Patchouli book ItemStack for " + bookId + ": " + e.getMessage() + " - will use fallback");
-            } else {
-                ModTabs.LOGGER.error("Failed to get Patchouli book ItemStack for " + bookId + ": " + e.getMessage());
-            }
+            ModTabs.LOGGER.error("Failed to get Patchouli book ItemStack for " + bookId + ": " + e.getMessage());
         }
 
         return ItemStack.EMPTY;
@@ -127,10 +104,8 @@ public class PatchouliIntegration {
             return itemModBookClass.isInstance(itemStack.getItem());
 
         } catch (ClassNotFoundException e) {
-            ModTabs.LOGGER.debug("Could not check if item is Patchouli book - class not found");
             return false;
         } catch (Exception e) {
-            ModTabs.LOGGER.debug("Error checking if item is Patchouli book: " + e.getMessage());
             return false;
         }
     }
@@ -160,7 +135,6 @@ public class PatchouliIntegration {
             }
 
         } catch (Exception e) {
-            ModTabs.LOGGER.debug("Error extracting book ID from Patchouli book: " + e.getMessage());
         }
 
         return null;
@@ -180,7 +154,6 @@ public class PatchouliIntegration {
             return !bookStack.isEmpty();
 
         } catch (Exception e) {
-            ModTabs.LOGGER.debug("Error validating Patchouli book ID " + bookId + ": " + e.getMessage());
             return false;
         }
     }
@@ -209,7 +182,6 @@ public class PatchouliIntegration {
         try {
             // Try to access the book registry through the BookRegistry class directly
             Class<?> bookRegistryClass = Class.forName("vazkii.patchouli.common.book.BookRegistry");
-            ModTabs.LOGGER.info("Found BookRegistry class: " + bookRegistryClass);
 
             // Try to access static fields or methods that might contain the registry
             try {
@@ -224,7 +196,6 @@ public class PatchouliIntegration {
                         try {
                             booksField = bookRegistryClass.getDeclaredField("registry");
                         } catch (NoSuchFieldException e3) {
-                            ModTabs.LOGGER.debug("Could not find books field in BookRegistry");
                         }
                     }
                 }
@@ -234,17 +205,13 @@ public class PatchouliIntegration {
                     Object booksMap = booksField.get(null);
 
                     if (booksMap != null) {
-                        ModTabs.LOGGER.info("Books registry type: " + booksMap.getClass());
 
                         // Try to get keys if it's a map
                         if (booksMap instanceof java.util.Map) {
                             java.util.Set<?> keys = ((java.util.Map<?, ?>) booksMap).keySet();
-                            ModTabs.LOGGER.info("Registered Patchouli books: " + keys);
 
                             // Also log the size
-                            ModTabs.LOGGER.info("Number of registered books: " + ((java.util.Map<?, ?>) booksMap).size());
                         } else {
-                            ModTabs.LOGGER.info("Books registry content: " + booksMap);
                         }
                     } else {
                         ModTabs.LOGGER.warn("Books registry is null");
@@ -255,34 +222,26 @@ public class PatchouliIntegration {
                 try {
                     java.lang.reflect.Method getAllBooksMethod = bookRegistryClass.getMethod("getAllBooks");
                     Object allBooks = getAllBooksMethod.invoke(null);
-                    ModTabs.LOGGER.info("getAllBooks() result: " + allBooks);
                 } catch (NoSuchMethodException e) {
-                    ModTabs.LOGGER.debug("getAllBooks() method not found");
                 }
 
             } catch (Exception e) {
-                ModTabs.LOGGER.debug("Error accessing BookRegistry internals: " + e.getMessage());
             }
 
         } catch (ClassNotFoundException e) {
-            ModTabs.LOGGER.debug("BookRegistry class not found");
 
             // Fallback: try the API method
             try {
                 Object bookRegistry = apiClass.getMethod("getBookRegistry").invoke(apiInstance);
                 if (bookRegistry != null) {
-                    ModTabs.LOGGER.info("API getBookRegistry() result: " + bookRegistry);
 
                     // Try to get keys if it's a map-like object
                     try {
                         Object keys = bookRegistry.getClass().getMethod("keySet").invoke(bookRegistry);
-                        ModTabs.LOGGER.info("Registry keys: " + keys);
                     } catch (Exception e2) {
-                        ModTabs.LOGGER.debug("Could not get keys from registry");
                     }
                 }
             } catch (Exception e2) {
-                ModTabs.LOGGER.debug("API getBookRegistry() also failed: " + e2.getMessage());
             }
         }
     }

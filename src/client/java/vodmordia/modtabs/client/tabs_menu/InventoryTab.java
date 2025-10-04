@@ -7,6 +7,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import vodmordia.modtabs.ModTabs;
+import vodmordia.modtabs.api.tabs_menu.ScreenRegistry;
 import vodmordia.modtabs.api.tabs_menu.SimpleTextureTab;
 import vodmordia.modtabs.api.tabs_menu.TabsMenu;
 import vodmordia.modtabs.config.Config;
@@ -31,23 +32,8 @@ public class InventoryTab extends SimpleTextureTab {
 
     @Override
     public void initTabOnScreens() {
-        // Register this tab for common container screens
-        try {
-            TabsMenu.addPendingRegistration(() -> {
-                // Inventory screen
-                TabsMenu.registerScreenForTabs(InventoryScreen.class, this);
-
-                // Other common screens that should show inventory tab
-                try {
-                    Class<?> creativeScreen = Class.forName("net.minecraft.client.gui.screen.ingame.CreativeInventoryScreen");
-                    TabsMenu.registerScreenForTabs((Class<? extends Screen>) creativeScreen, this);
-                } catch (ClassNotFoundException e) {
-                    // Creative screen not found, skip
-                }
-            });
-        } catch (Exception e) {
-            // Ignore registration errors
-        }
+        // Register standard screens with all tabs
+        ScreenRegistry.registerStandardScreens(InventoryScreen.class);
     }
 
 

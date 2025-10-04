@@ -8,6 +8,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.text.Text;
 import vodmordia.modtabs.api.tabs_menu.TabBase;
+import vodmordia.modtabs.api.tabs_menu.TabDisplayMode;
 import vodmordia.modtabs.api.tabs_menu.TabsMenu;
 import vodmordia.modtabs.integration.ModIntegration;
 import vodmordia.modtabs.integration.ModIntegrationManager;
@@ -58,32 +59,22 @@ public class XaerosMapTab extends TabBase {
 
     @Override
     public void initTabOnScreens() {
-        if (!ModIntegrationManager.isModLoaded(ModIntegration.XAEROS_WORLDMAP)) return;
+        // Register Xaero's World Map screen with custom bottom-left positioning
+        try {
+            @SuppressWarnings("unchecked")
+            Class<? extends Screen> guiMapClass = (Class<? extends Screen>) Class.forName("xaero.map.gui.GuiMap");
 
-        TabsMenu.addPendingRegistration(() -> {
-            // Register for common screens
-            try {
-                TabsMenu.registerScreenForTabs(net.minecraft.client.gui.screen.ingame.InventoryScreen.class, this);
+            // Register with custom positioning - bottom-left positioning
+            TabsMenu.registerScreenWithCustomPosition(guiMapClass,
+                (player) -> 176, // Standard GUI width
+                (player) -> 166, // Standard GUI height
+                TabDisplayMode.NORMAL, // Normal display mode (not inverted)
+                (screen) -> 16, // Left position - 16px offset from left edge
+                (screen) -> screen.height); // Bottom position
 
-                // Try to register for other common container screens
-                String[] screenClasses = {
-                    "net.minecraft.client.gui.screen.ingame.GenericContainerScreen",
-                    "net.minecraft.client.gui.screen.ingame.ShulkerBoxScreen",
-                    "net.minecraft.client.gui.screen.ingame.ChestScreen"
-                };
-
-                for (String className : screenClasses) {
-                    try {
-                        Class<?> screenClass = Class.forName(className);
-                        TabsMenu.registerScreenForTabs((Class<? extends Screen>) screenClass, this);
-                    } catch (ClassNotFoundException e) {
-                        // Screen class not found, continue
-                    }
-                }
-            } catch (Exception e) {
-                // Registration failed
-            }
-        });
+        } catch (ClassNotFoundException e) {
+            // Xaero's World Map mod not available
+        }
     }
 
     @Override
@@ -95,11 +86,8 @@ public class XaerosMapTab extends TabBase {
         }
 
         if (cachedTexture != null) {
-            // Use texture rendering like FtbTeamsTab
-            vodmordia.modtabs.api.tabs_menu.TabRenderer.builder()
-                .withBackground()
-                .withTextureIcon(cachedTexture, 5, 4, 16, 16)
-                .render(gui, x, y, hover, false);
+            // Use renderWithIcon helper to support inverted mode
+            renderWithIcon(gui, x, y, hover, cachedTexture);
         } else {
             // Fallback to compass item (texture not found or doesn't exist)
             renderWithItem(gui, x, y, hover, new ItemStack(Items.COMPASS));

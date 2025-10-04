@@ -33,8 +33,19 @@ public abstract class TabBase {
     }
 
     protected void renderInverted(DrawContext gui, int x, int y, boolean hover) {
-        // Default: use TabRenderer for inverted rendering
-        getTabRenderer().render(gui, x, y, hover, true);
+        // Default: call regular render() which subclasses override
+        // Subclasses can override this method to handle inverted rendering differently
+        // or they can use the invertedMode flag in their render logic
+        this.invertedMode = true;
+        render(gui, x, y, hover);
+        this.invertedMode = false;
+    }
+
+    // Track if currently rendering in inverted mode
+    private boolean invertedMode = false;
+
+    protected boolean isInvertedMode() {
+        return invertedMode;
     }
 
     /**
@@ -53,7 +64,7 @@ public abstract class TabBase {
         TabRenderer.builder()
                 .withBackground()
                 .withTextureIcon(iconTexture, 5, 3, 16, 16)
-                .render(gui, x, y, hover, false);
+                .render(gui, x, y, hover, isInvertedMode());
     }
 
     /**
@@ -63,7 +74,7 @@ public abstract class TabBase {
         TabRenderer.builder()
                 .withBackground()
                 .withItemIcon(itemStack, 5, 3)
-                .render(gui, x, y, hover, false);
+                .render(gui, x, y, hover, isInvertedMode());
     }
 
 

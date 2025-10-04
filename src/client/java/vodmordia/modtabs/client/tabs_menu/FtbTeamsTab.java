@@ -28,16 +28,25 @@ public class FtbTeamsTab extends SimpleTextureTab {
     }
 
     @Override
-    public void openTargetScreen(PlayerEntity player) {
-        try {
-            MinecraftClient minecraft = MinecraftClient.getInstance();
+    protected void renderInverted(DrawContext gui, int x, int y, boolean hover) {
+        // Custom positioning for inverted tab
+        vodmordia.modtabs.api.tabs_menu.TabRenderer.builder()
+            .withBackground()
+            .withTextureIcon(getIconTexture(), 7, 5, 12, 12)
+            .render(gui, x, y, hover, true);
+    }
 
-            // Direct screen creation approach
-            Class<?> teamsScreenClass = Class.forName("dev.ftb.mods.ftbteams.client.gui.MyTeamScreen");
-            Object teamsScreen = teamsScreenClass.getConstructor().newInstance();
-            minecraft.setScreen((Screen) teamsScreen);
-        } catch (Exception e) {
-            // FTB Teams not present or failed to open screen
+    @Override
+    public void openTargetScreen(PlayerEntity player) {
+        if (ModIntegrationManager.isModLoaded(ModIntegration.FTB_TEAMS) && player.getWorld().isClient) {
+            try {
+                Class<?> openGUIMessageClass = Class.forName("dev.ftb.mods.ftbteams.net.OpenGUIMessage");
+                Object openGUIMessage = openGUIMessageClass.getConstructor().newInstance();
+                java.lang.reflect.Method sendToServerMethod = openGUIMessageClass.getMethod("sendToServer");
+                sendToServerMethod.invoke(openGUIMessage);
+            } catch (Exception e) {
+                // FTB Teams not present or failed to open screen
+            }
         }
     }
 
@@ -49,32 +58,24 @@ public class FtbTeamsTab extends SimpleTextureTab {
 
     @Override
     public void initTabOnScreens() {
-        if (!ModIntegrationManager.isModLoaded(ModIntegration.FTB_TEAMS)) return;
+        // Register FTB Teams screen classes with inverted display at the top
+        vodmordia.modtabs.api.tabs_menu.ScreenRegistry.builder()
+            .withStandardDimensions()
+            .inverted()
+            .atTop()
+            .registerAllTabs(
+                "dev.ftb.mods.ftblibrary.ui.ScreenWrapper",
+                "dev.ftb.mods.ftbteams.client.gui.TeamsScreen",
+                "dev.ftb.mods.ftbteams.client.screens.TeamsScreen",
+                "dev.ftb.mods.ftbteams.client.TeamsScreen"
+            );
 
-        TabsMenu.addPendingRegistration(() -> {
-            // Register for common screens
-            try {
-                TabsMenu.registerScreenForTabs(net.minecraft.client.gui.screen.ingame.InventoryScreen.class, this);
-
-                // Try to register for other common container screens
-                String[] screenClasses = {
-                    "net.minecraft.client.gui.screen.ingame.GenericContainerScreen",
-                    "net.minecraft.client.gui.screen.ingame.ShulkerBoxScreen",
-                    "net.minecraft.client.gui.screen.ingame.ChestScreen"
-                };
-
-                for (String className : screenClasses) {
-                    try {
-                        Class<?> screenClass = Class.forName(className);
-                        TabsMenu.registerScreenForTabs((Class<? extends Screen>) screenClass, this);
-                    } catch (ClassNotFoundException e) {
-                        // Screen class not found, continue
-                    }
-                }
-            } catch (Exception e) {
-                // Registration failed
-            }
-        });
+        // Force register ScreenWrapper to override any existing registration from FTB Quests
+        vodmordia.modtabs.api.tabs_menu.ScreenRegistry.builder()
+            .withStandardDimensions()
+            .inverted()
+            .atTop()
+            .forceRegisterAllTabs("dev.ftb.mods.ftblibrary.ui.ScreenWrapper");
     }
 
 

@@ -61,7 +61,8 @@ public class NextTabsButton extends ButtonWidget {
     }
 
     public void renderWidget(@NotNull DrawContext gui, int mouseX, int mouseY, float partial) {
-        // This method is left empty to prevent default button widget rendering
+        // Call the regular render method for compatibility with manual rendering
+        render(gui, mouseX, mouseY, partial);
     }
 
     public void updatePosition(int leftScreenPos, int topScreenPos) {

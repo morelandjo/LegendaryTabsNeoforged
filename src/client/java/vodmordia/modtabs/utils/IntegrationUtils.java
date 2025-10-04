@@ -82,7 +82,6 @@ public class IntegrationUtils {
                 return wider ? (tanksVisible ? 256 : 212) : (tanksVisible ? 220 : 176);
             }
         } catch (Exception e) {
-            ModTabs.LOGGER.debug("Could not get Traveler's Backpack width via reflection: " + e.getMessage());
         }
 
         return 176; // Default width
@@ -115,7 +114,6 @@ public class IntegrationUtils {
                 return 17 + slotsHeight + playerInventoryHeight;
             }
         } catch (Exception e) {
-            ModTabs.LOGGER.debug("Could not get Traveler's Backpack height via reflection: " + e.getMessage());
         }
 
         return 7 * 18 + 96 + 17; // Default height

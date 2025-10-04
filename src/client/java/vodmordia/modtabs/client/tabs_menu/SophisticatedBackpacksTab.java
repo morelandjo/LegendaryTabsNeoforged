@@ -25,137 +25,18 @@ public class SophisticatedBackpacksTab extends SimpleItemTab {
 
     @Override
     public void openTargetScreen(PlayerEntity player) {
-        vodmordia.modtabs.ModTabs.LOGGER.info("SophisticatedBackpacksTab.openTargetScreen() called");
-
-        // Debug: Try to find available classes
-        String[] possiblePackageNames = {
-            "net.p3pp3rf1y.sophisticatedbackpacks.network",
-            "net.p3pp3rf1y.sophisticatedbackpacks.common.network",
-            "net.p3pp3rf1y.sophisticatedbackpacks.client.network",
-            "net.p3pp3rf1y.sophisticatedbackpacks.fabric.network"
-        };
-
-        String[] possibleClassNames = {
-            "BackpackOpenPayload",
-            "OpenBackpackPayload",
-            "BackpackOpenMessage",
-            "OpenBackpackMessage",
-            "BackpackMessage"
-        };
-
-        vodmordia.modtabs.ModTabs.LOGGER.info("Debugging: Searching for Sophisticated Backpacks network classes...");
-
-        Class<?> foundPayloadClass = null;
-        String foundClassName = null;
-
-        // Try to find the correct payload class
-        for (String packageName : possiblePackageNames) {
-            for (String className : possibleClassNames) {
-                String fullClassName = packageName + "." + className;
-                try {
-                    Class<?> testClass = Class.forName(fullClassName);
-                    vodmordia.modtabs.ModTabs.LOGGER.info("Found class: " + fullClassName);
-                    if (foundPayloadClass == null) {
-                        foundPayloadClass = testClass;
-                        foundClassName = fullClassName;
-                    }
-                } catch (ClassNotFoundException e) {
-                    // Continue searching
-                }
-            }
-        }
-
-        if (foundPayloadClass == null) {
-            vodmordia.modtabs.ModTabs.LOGGER.warn("No Sophisticated Backpacks network payload class found!");
-            return;
-        }
-
-        vodmordia.modtabs.ModTabs.LOGGER.info("Using payload class: " + foundClassName);
-
         try {
-            // Try to find PacketDistributor or alternative networking
-            Class<?> packetDistributorClass = null;
-            String[] packetDistributorPackages = {
-                "net.p3pp3rf1y.sophisticatedcore.network.PacketDistributor",
-                "net.p3pp3rf1y.sophisticatedbackpacks.network.PacketDistributor",
-                "net.p3pp3rf1y.sophisticatedcore.network.NetworkHandler",
-                "net.p3pp3rf1y.sophisticatedbackpacks.network.NetworkHandler",
-                "net.p3pp3rf1y.sophisticatedbackpacks.network.SBPNetworking"
-            };
+            // Create BackpackOpenMessage
+            Class<?> messageClass = Class.forName("net.p3pp3rf1y.sophisticatedbackpacks.network.BackpackOpenMessage");
+            Object message = messageClass.getDeclaredConstructor().newInstance();
 
-            for (String packetClassName : packetDistributorPackages) {
-                try {
-                    packetDistributorClass = Class.forName(packetClassName);
-                    vodmordia.modtabs.ModTabs.LOGGER.info("Found networking class: " + packetClassName);
-                    break;
-                } catch (ClassNotFoundException e) {
-                    vodmordia.modtabs.ModTabs.LOGGER.info("Class not found: " + packetClassName);
-                }
-            }
-
-            if (packetDistributorClass == null) {
-                vodmordia.modtabs.ModTabs.LOGGER.warn("No networking class found! Trying Fabric networking directly...");
-
-                // Try direct Fabric networking as fallback
-                try {
-                    // Use Fabric's ClientPlayNetworking directly
-                    ClientPlayNetworking.send(
-                        Identifier.of("sophisticatedbackpacks", "open_backpack"),
-                        new PacketByteBuf(io.netty.buffer.Unpooled.buffer())
-                    );
-                    vodmordia.modtabs.ModTabs.LOGGER.info("Sent via direct Fabric networking");
-                    return;
-                } catch (Exception e) {
-                    vodmordia.modtabs.ModTabs.LOGGER.warn("Direct Fabric networking failed: " + e.getMessage());
-                }
-                return;
-            }
-
-            // Try different constructor patterns
-            Object payload = null;
-
-            // Pattern 1: No-args constructor
-            try {
-                payload = foundPayloadClass.getDeclaredConstructor().newInstance();
-                vodmordia.modtabs.ModTabs.LOGGER.info("Created payload with no-args constructor");
-            } catch (Exception e) {
-                vodmordia.modtabs.ModTabs.LOGGER.info("No-args constructor failed: " + e.getMessage());
-            }
-
-            // Pattern 2: Three-args constructor (int, String, String)
-            if (payload == null) {
-                try {
-                    payload = foundPayloadClass.getDeclaredConstructor(int.class, String.class, String.class).newInstance(-1, "", "");
-                    vodmordia.modtabs.ModTabs.LOGGER.info("Created payload with (int, String, String) constructor");
-                } catch (Exception e) {
-                    vodmordia.modtabs.ModTabs.LOGGER.info("Three-args constructor failed: " + e.getMessage());
-                }
-            }
-
-            // Pattern 3: Single int constructor
-            if (payload == null) {
-                try {
-                    payload = foundPayloadClass.getDeclaredConstructor(int.class).newInstance(-1);
-                    vodmordia.modtabs.ModTabs.LOGGER.info("Created payload with (int) constructor");
-                } catch (Exception e) {
-                    vodmordia.modtabs.ModTabs.LOGGER.info("Single int constructor failed: " + e.getMessage());
-                }
-            }
-
-            if (payload == null) {
-                vodmordia.modtabs.ModTabs.LOGGER.warn("Could not create payload instance with any constructor pattern!");
-                return;
-            }
-
-            // Send it via PacketDistributor.sendToServer()
-            Method sendToServerMethod = packetDistributorClass.getMethod("sendToServer", Object.class);
-            sendToServerMethod.invoke(null, payload);
-
-            vodmordia.modtabs.ModTabs.LOGGER.info("Successfully sent payload to server");
-            return;
+            // Use SBPPacketHandler.sendToServer()
+            Class<?> packetHandlerClass = Class.forName("net.p3pp3rf1y.sophisticatedbackpacks.network.SBPPacketHandler");
+            java.lang.reflect.Method sendToServerMethod = packetHandlerClass.getMethod("sendToServer", Object.class);
+            sendToServerMethod.invoke(null, message);
 
         } catch (Exception e) {
-            vodmordia.modtabs.ModTabs.LOGGER.warn("Failed to send payload: " + e.getMessage());
+            vodmordia.modtabs.ModTabs.LOGGER.error("Failed to open Sophisticated Backpacks: " + e.getMessage());
             e.printStackTrace();
         }
     }
@@ -268,32 +149,11 @@ public class SophisticatedBackpacksTab extends SimpleItemTab {
 
     @Override
     public void initTabOnScreens() {
-        if (!ModIntegrationManager.isModLoaded(ModIntegration.SOPHISTICATED_BACKPACKS)) return;
-
-        TabsMenu.addPendingRegistration(() -> {
-            // Register for common screens
-            try {
-                TabsMenu.registerScreenForTabs(net.minecraft.client.gui.screen.ingame.InventoryScreen.class, this);
-
-                // Try to register for other common container screens
-                String[] screenClasses = {
-                    "net.minecraft.client.gui.screen.ingame.GenericContainerScreen",
-                    "net.minecraft.client.gui.screen.ingame.ShulkerBoxScreen",
-                    "net.minecraft.client.gui.screen.ingame.ChestScreen"
-                };
-
-                for (String className : screenClasses) {
-                    try {
-                        Class<?> screenClass = Class.forName(className);
-                        TabsMenu.registerScreenForTabs((Class<? extends Screen>) screenClass, this);
-                    } catch (ClassNotFoundException e) {
-                        // Screen class not found, continue
-                    }
-                }
-            } catch (Exception e) {
-                // Registration failed
-            }
-        });
+        // Register the backpack screen with tabs
+        vodmordia.modtabs.api.tabs_menu.ScreenRegistry.builder()
+            .withStandardDimensions()
+            .withPositioning(vodmordia.modtabs.api.tabs_menu.TabPositioning.GUI_RELATIVE)
+            .registerAllTabs("net.p3pp3rf1y.sophisticatedbackpacks.client.gui.BackpackScreen");
     }
 
     @Override

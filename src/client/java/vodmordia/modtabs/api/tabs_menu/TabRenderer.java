@@ -24,6 +24,8 @@ public class TabRenderer {
     private Identifier iconTexture = null;
     private int iconX, iconY, iconWidth, iconHeight;
     private int iconU, iconV, iconTextureWidth, iconTextureHeight;
+    private int sourceWidth, sourceHeight;
+    private boolean useScaling = false;
     private ItemStack iconItem = null;
     private int itemX, itemY;
     private float itemScale = 1.0f;
@@ -72,6 +74,25 @@ public class TabRenderer {
         this.iconHeight = height;
         this.iconTextureWidth = textureWidth;
         this.iconTextureHeight = textureHeight;
+        return this;
+    }
+
+    /**
+     * Adds a texture icon with custom UV coordinates and separate display size
+     */
+    public TabRenderer withTextureIcon(Identifier texture, int x, int y, int displayWidth, int displayHeight, int u, int v, int sourceWidth, int sourceHeight, int textureWidth, int textureHeight) {
+        this.iconTexture = texture;
+        this.iconX = x;
+        this.iconY = y;
+        this.iconU = u;
+        this.iconV = v;
+        this.iconWidth = displayWidth;
+        this.iconHeight = displayHeight;
+        this.sourceWidth = sourceWidth;
+        this.sourceHeight = sourceHeight;
+        this.iconTextureWidth = textureWidth;
+        this.iconTextureHeight = textureHeight;
+        this.useScaling = true;
         return this;
     }
 
@@ -143,7 +164,19 @@ public class TabRenderer {
         // Icons always render upright, regardless of tab orientation
         // Move icon up 3px when tabs are inverted
         int yOffset = inverted ? -3 : 0;
-        gui.drawTexture(iconTexture, x + iconX, y + iconY + yOffset, iconU, iconV, iconWidth, iconHeight, iconTextureWidth, iconTextureHeight);
+
+        if (useScaling) {
+            // Use scaling to render sourceWidth x sourceHeight region at displayWidth x displayHeight size
+            gui.getMatrices().push();
+            float scaleX = (float) iconWidth / sourceWidth;
+            float scaleY = (float) iconHeight / sourceHeight;
+            gui.getMatrices().translate(x + iconX, y + iconY + yOffset, 0);
+            gui.getMatrices().scale(scaleX, scaleY, 1.0f);
+            gui.drawTexture(iconTexture, 0, 0, iconU, iconV, sourceWidth, sourceHeight, iconTextureWidth, iconTextureHeight);
+            gui.getMatrices().pop();
+        } else {
+            gui.drawTexture(iconTexture, x + iconX, y + iconY + yOffset, iconU, iconV, iconWidth, iconHeight, iconTextureWidth, iconTextureHeight);
+        }
     }
 
     private void renderItemIcon(DrawContext gui, int x, int y, boolean inverted) {
