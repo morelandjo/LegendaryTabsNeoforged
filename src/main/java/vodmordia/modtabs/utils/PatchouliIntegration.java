@@ -3,7 +3,7 @@ package vodmordia.modtabs.utils;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.neoforged.fml.ModList;
+import net.minecraftforge.fml.ModList;
 import vodmordia.modtabs.ModTabs;
 
 /**
@@ -194,7 +194,7 @@ public class PatchouliIntegration {
         }
 
         try {
-            return ResourceLocation.parse(bookIdString.trim());
+            return ResourceLocation.tryParse(bookIdString.trim());
         } catch (Exception e) {
             ModTabs.LOGGER.warn("Invalid book ID format: " + bookIdString);
             return null;

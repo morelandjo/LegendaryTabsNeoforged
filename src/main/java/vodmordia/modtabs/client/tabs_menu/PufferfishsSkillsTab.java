@@ -2,7 +2,6 @@ package vodmordia.modtabs.client.tabs_menu;
 
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
-import net.puffish.skillsmod.client.SkillsClientMod;
 import vodmordia.modtabs.ModTabs;
 import vodmordia.modtabs.api.tabs_menu.IntegrationIconTab;
 import vodmordia.modtabs.api.tabs_menu.TabConfig;
@@ -16,7 +15,7 @@ import java.util.Optional;
 @TabConfig(configKey = "pufferfishSkillsTab", defaultEnabled = true, defaultOrder = 0)
 public class PufferfishsSkillsTab extends IntegrationIconTab {
     private static final ResourceLocation PUFFER_ICON =
-            ResourceLocation.fromNamespaceAndPath(ModTabs.MOD_ID, "textures/gui/puffer.png");
+            new ResourceLocation(ModTabs.MOD_ID, "textures/gui/puffer.png");
 
     private static final TabSpec SPEC = TabSpec.withoutCurrentScreen(
             "pufferfishSkillsTab",
@@ -35,7 +34,12 @@ public class PufferfishsSkillsTab extends IntegrationIconTab {
     @Override
     public void openTargetScreen(Player player) {
         if (Config.Baked.pufferfishSkillsTabEnabled && player.level().isClientSide) {
-            SkillsClientMod.getInstance().openScreen(Optional.empty());
+            try {
+                Class<?> skillsClientClass = Class.forName("net.puffish.skillsmod.client.SkillsClientMod");
+                Object instance = skillsClientClass.getMethod("getInstance").invoke(null);
+                instance.getClass().getMethod("openScreen", Optional.class).invoke(instance, Optional.empty());
+            } catch (Exception ignored) {
+            }
         }
     }
 }

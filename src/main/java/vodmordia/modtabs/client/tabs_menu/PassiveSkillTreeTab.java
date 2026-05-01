@@ -15,7 +15,7 @@ import vodmordia.modtabs.utils.ScreenClasses;
 @TabConfig(configKey = "passiveSkillTreeTab", defaultEnabled = true, defaultOrder = 0)
 public class PassiveSkillTreeTab extends IntegrationIconTab {
     private static final ResourceLocation SKILL_TREE_ICON =
-            ResourceLocation.fromNamespaceAndPath(ModTabs.MOD_ID, "textures/gui/skill_tree.png");
+            new ResourceLocation(ModTabs.MOD_ID, "textures/gui/skill_tree.png");
 
     private static final TabSpec SPEC = new TabSpec(
             "passiveSkillTreeTab",
@@ -37,7 +37,7 @@ public class PassiveSkillTreeTab extends IntegrationIconTab {
         if (Config.Baked.passiveSkillTreeTabEnabled && player.level().isClientSide) {
             try {
                 Class<?> skillTreeScreenClass = Class.forName(ScreenClasses.PASSIVE_SKILL_TREE);
-                ResourceLocation mainTreeLocation = ResourceLocation.fromNamespaceAndPath("skilltree", "main_tree");
+                ResourceLocation mainTreeLocation = new ResourceLocation("skilltree", "main_tree");
                 Screen skillTreeScreen = (Screen) skillTreeScreenClass.getDeclaredConstructor(ResourceLocation.class)
                         .newInstance(mainTreeLocation);
                 Minecraft.getInstance().setScreen(skillTreeScreen);

@@ -1,25 +1,42 @@
 package vodmordia.modtabs.network;
 
-import net.minecraft.network.RegistryFriendlyByteBuf;
-import net.minecraft.network.codec.StreamCodec;
-import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.item.ItemStack;
-import vodmordia.modtabs.ModTabs;
 
-public record TomeConvertPayload(int tomeSlot, ItemStack selectedBook) implements CustomPacketPayload {
-    public static final Type<TomeConvertPayload> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(ModTabs.MOD_ID, "tome_convert"));
+/**
+ * Client → server request to convert an Eccentric Tome in the player's inventory
+ * back into the book the player selected from the tome screen.
+ *
+ * <p>Plain message class for Forge 1.20.1 SimpleChannel. The 1.21.1 NeoForge
+ * variant of this code used {@code CustomPacketPayload} + {@code StreamCodec};
+ * neither exists on 1.20.1.
+ */
+public class TomeConvertPayload {
 
-    public static final StreamCodec<RegistryFriendlyByteBuf, TomeConvertPayload> STREAM_CODEC = StreamCodec.composite(
-        net.minecraft.network.codec.ByteBufCodecs.VAR_INT,
-        TomeConvertPayload::tomeSlot,
-        ItemStack.STREAM_CODEC,
-        TomeConvertPayload::selectedBook,
-        TomeConvertPayload::new
-    );
+    private final int tomeSlot;
+    private final ItemStack selectedBook;
 
-    @Override
-    public Type<? extends CustomPacketPayload> type() {
-        return TYPE;
+    public TomeConvertPayload(int tomeSlot, ItemStack selectedBook) {
+        this.tomeSlot = tomeSlot;
+        this.selectedBook = selectedBook;
+    }
+
+    public int tomeSlot() {
+        return tomeSlot;
+    }
+
+    public ItemStack selectedBook() {
+        return selectedBook;
+    }
+
+    public static void encode(TomeConvertPayload msg, FriendlyByteBuf buf) {
+        buf.writeVarInt(msg.tomeSlot);
+        buf.writeItem(msg.selectedBook);
+    }
+
+    public static TomeConvertPayload decode(FriendlyByteBuf buf) {
+        int slot = buf.readVarInt();
+        ItemStack stack = buf.readItem();
+        return new TomeConvertPayload(slot, stack);
     }
 }

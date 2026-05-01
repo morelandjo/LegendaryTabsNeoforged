@@ -30,7 +30,7 @@ public class IconResolver {
         // Check if it's a ResourceLocation (contains ':')
         if (trimmed.contains(":")) {
             try {
-                ResourceLocation resourceLocation = ResourceLocation.parse(trimmed);
+                ResourceLocation resourceLocation = ResourceLocation.tryParse(trimmed);
                 // Validate the texture exists in resources
                 if (DynamicTextureLoader.validateResourceTexture(resourceLocation)) {
                     ModTabs.LOGGER.info("Resolved icon '" + iconConfig + "' as resource texture for tab: " + tabId);

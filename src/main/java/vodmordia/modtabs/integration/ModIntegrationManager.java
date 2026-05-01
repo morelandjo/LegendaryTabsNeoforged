@@ -1,6 +1,6 @@
 package vodmordia.modtabs.integration;
 
-import net.neoforged.fml.ModList;
+import net.minecraftforge.fml.ModList;
 import vodmordia.modtabs.ModTabs;
 
 import java.util.EnumSet;

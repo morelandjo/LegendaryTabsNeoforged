@@ -32,13 +32,9 @@ public enum ModIntegration {
     ARS_ELIXIRUM("elixirum", "Ars Elixirum"),
     ARS_NOUVEAU("ars_nouveau", "Ars Nouveau"),
     DRACONIC_EVOLUTION("draconicevolution", "Draconic Evolution"),
-    BRASSWORKS_MISSIONS("brassworksmissions", "Create: Brassworks Missions"),
     ECCENTRIC_TOME("eccentrictome", "Eccentric Tome"),
     BETTER_ADVANCEMENTS("betteradvancements", "Better Advancements"),
-    RPG_CRAFTING("rpgcrafting", "RPG Crafting"),
-    MOTP("memory_of_the_past", "MOTP - RPG Player Leveling"),
-    BIOLOGY_DICTIONARY("biologydictionary", "Biology Dictionary"),
-    RELIABLE_BACKPACKS("reliable_backpacks", "Reliable Backpacks");
+    MOTP("memory_of_the_past", "MOTP - RPG Player Leveling");
 
     private final String modId;
     private final String displayName;

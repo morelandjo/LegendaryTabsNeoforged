@@ -2,320 +2,213 @@ plugins {
     id 'eclipse'
     id 'idea'
     id 'maven-publish'
-    id 'net.neoforged.moddev' version '2.0.48-beta'
+    id 'net.minecraftforge.gradle' version '[6.0,6.2)'
 }
 
-version = minecraft_version + '-' + mod_version
+version = mod_version
 group = mod_group_id
 
 base {
     archivesName = mod_id
 }
 
-// Mojang ships Java 21 to end users in 1.21+, so your mod should target Java 21.
-java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+// 1.20.1 targets Java 17.
+java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 
 println "Java: ${System.getProperty 'java.version'}, JVM: ${System.getProperty 'java.vm.version'} (${System.getProperty 'java.vendor'}), Arch: ${System.getProperty 'os.arch'}"
-neoForge {
-    // The version of NeoForge to use.
-    version = project.neo_version
+minecraft {
+    mappings channel: mapping_channel, version: mapping_version
 
-    parchment {
-        minecraftVersion = project.parchment_minecraft_version
-        mappingsVersion = project.parchment_mappings_version
-    }
+    // Required by ForgeGradle 6 to copy resources to IDE output before launching.
+    copyIdeResources = true
 
-    // Set the mappings to use for deobfuscated access to Minecraft.
-    accessTransformers {
-        // Currently, this location cannot be changed from the default.
-        file('src/main/resources/META-INF/accesstransformer.cfg')
-        // However, the following line can be used to specify an additional file to read access transformers from. These files must be in the same format as the main access transformer file.
-        // file('src/main/resources/META-INF/accesstransformer_extra.cfg')
-    }
+    // accessTransformer = file('src/main/resources/META-INF/accesstransformer.cfg')
 
-    // Default run configurations.
-    // These can be tweaked, removed, or duplicated as needed.
     runs {
-        // applies to all the run configs below
         configureEach {
-            // Recommended logging data for a userdev environment
-            // The markers can be added/remove as needed separated by commas.
-            // "SCAN": For mods scan.
-            // "REGISTRIES": For firing of registry events.
-            // "REGISTRYDUMP": For getting the contents of all registries.
-            systemProperty 'neoforge.logging.markers', 'REGISTRIES'
+            workingDirectory project.file('run')
 
-            // Recommended logging level for the console
-            // You can set various levels here.
-            // Please read: https://stackoverflow.com/questions/2031163/when-to-use-the-different-log-levels
-            systemProperty 'neoforge.logging.console.level', 'debug'
+            property 'forge.logging.markers', 'REGISTRIES'
+            property 'forge.logging.console.level', 'debug'
+
+            // Mixin refmap remap for the dev environment.
+            //
+            // Production mods (Xaero's World Map, Selene/Moonlight, l2library, etc.) ship their
+            // mixin refmap JSONs containing only SRG names like 'm_91383_'. The dev environment
+            // uses Mojang official names ('runTick'), so without remapping, every mixin from those
+            // mods fails with "Critical injection failure: ... could not find any targets".
+            //
+            // Pointing Mixin at the SRG→official mapping file ForgeGradle generates fixes all of
+            // them at once.
+            property 'mixin.env.remapRefMap', 'true'
+            property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
+
+            mods {
+                "${mod_id}" {
+                    source sourceSets.main
+                }
+            }
         }
 
         client {
-            type = "client"
-            // Comma-separated list of namespaces to load gametests from. Empty = all namespaces.
-            systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+            property 'forge.enabledGameTestNamespaces', mod_id
         }
 
         server {
-            type = "server"
-            systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
-            programArgument '--nogui'
+            property 'forge.enabledGameTestNamespaces', mod_id
+            args '--nogui'
         }
 
-        // This run config launches GameTestServer and runs all registered gametests, then exits.
-        // By default, the server will crash when no gametests are provided.
-        // The gametest system is also enabled by default for other run configs under the /test command.
         gameTestServer {
-            type = "gameTestServer"
-            systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+            property 'forge.enabledGameTestNamespaces', mod_id
         }
 
         data {
-            type = "data"
-            // example of overriding the workingDirectory set in configureEach above, uncomment if you want to use it
-            // workingDirectory project.file('run-data')
-
-            // Specify the modid for data generation, where to output the resulting resource, and where to look for existing resources.
-            programArguments.addAll '--mod', project.mod_id, '--all', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath()
-        }
-    }
-
-    mods {
-        // define mod <-> source mappings
-        // these are used to determine which sources are compiled against which mods
-        // in multi-mod projects, this allows you to have multiple mods in a single project
-        // note that a mod is identified by the name used for the run configuration
-        "${mod_id}" {
-            sourceSet sourceSets.main
+            workingDirectory project.file('run-data')
+            args '--mod', mod_id, '--all', '--output', file('src/generated/resources/'), '--existing', file('src/main/resources/')
         }
     }
 }
-
 
 // Include resources generated by data generators.
 sourceSets.main.resources { srcDir 'src/generated/resources' }
 
 repositories {
-    // Put repositories for dependencies here
-    // ForgeGradle automatically adds the Forge maven and Maven Central for you
-
-    // Curseforge repository
     maven {
         url = "https://www.cursemaven.com"
         content {
             includeGroup "curse.maven"
         }
     }
-    // curios repository
-
     maven {
         name = "CurseForge"
         url = "https://minecraft.curseforge.com/api/maven/"
     }
-
     maven { url "https://api.modrinth.com/maven" }
-
-    // Midnight Lib repository
     maven {
         url "https://maven.terraformersmc.com/releases/"
     }
-
-    // Sinytra repository
-    maven {
-        name = "Sinytra"
-        url = "https://maven.sinytra.org/releases"
-    }
-
-    // Local flat directory for external JARs
     flatDir {
         dirs 'libs'
     }
 }
 
-// Define configurations before dependencies
-configurations {
-    fabricMods
-}
-
+// =============================================================================
+//  Integration mod dependencies (Forge 1.20.1)
+// =============================================================================
+// All file IDs are pinned to the latest 1.20.1 Forge build at the time the
+// 1.20.1 branch was cut. Bump as needed — each project's CurseForge "Files"
+// page (filtered to 1.20.1 + Forge) is the source of truth.
+//
+// DROPPED on 1.20.1 (no Forge build exists):
+//   - Reliable Backpacks (1484454) — NeoForge-era only
+//   - Create: Brassworks Missions (1348982) — NeoForge 1.21.1 only
+//   - Biology Dictionary (1426515) — no 1.20.1 build
+//   - Sinytra Connector + Forgified Fabric API + RPG Crafting (Fabric)
+// =============================================================================
 dependencies {
-    // External libraries.
+    minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
 
-    // Midnight Lib - Required dependency for in-game config
-    implementation "maven.modrinth:midnightlib:${project.midnightlib_version}"
+    // Required at compile time — drives the in-game config UI.
+    // fg.deobf() so ForgeGradle remaps SRG → official for both bytecode and the embedded mixin
+    // refmap. Without that, MidnightLib's MixinOptionsScreen targets the production SRG name
+    // 'm_7856_' which doesn't exist in the dev environment, and the dev client crashes during
+    // the title-screen resource reload.
+    implementation fg.deobf("maven.modrinth:midnightlib:${project.midnightlib_version}")
 
-    implementation("curse.maven:curios-309927:6529130")
+    // Core libs / equipment / books.
+    implementation fg.deobf("curse.maven:curios-309927:6418456")
+    implementation fg.deobf("curse.maven:patchouli-306770:7731017")
+    implementation fg.deobf("curse.maven:architectury-api-419699:5137938")
+    implementation fg.deobf("curse.maven:better-advancements-272515:5454907")
+    implementation fg.deobf("curse.maven:eccentric-tome-597522:7285203")
+    implementation fg.deobf("curse.maven:cloth-config-348521:5729105")
 
-    // Legendary Survival Overhaul is a soft / runtime dependency. Body damage tab
-    // resolves all LSO classes via reflection at runtime so the project compiles
-    // without the LSO jar on the classpath.
-    implementation("curse.maven:reskillable-reimagined-1170464:6599973")
-    implementation("curse.maven:architectury-api-419699:5786327")
-    implementation("curse.maven:ftb-quests-forge-289412:6721642")
-    implementation("curse.maven:ftb-teams-forge-404468:6119437")
-    implementation("curse.maven:ftb-chunks-forge-314906:6295696")
-    implementation("curse.maven:backpacked-352835:6918854")
-    implementation("curse.maven:framework-549225:6531439")
-    implementation("curse.maven:map-atlases-forge-519759:6782726")
-    implementation("curse.maven:selene-499980:6800719")
-    implementation("curse.maven:better-advancements-272515:5850587")
-    //implementation("curse.maven:diet-443570:4813904") // Not updated to NeoForge 1.21.1 yet
-    //implementation("curse.maven:passiveskill-850298:5715659") // Not updated to NeoForge 1.21.1 yet
-    //implementation("curse.maven:itemproductionlib-950401:5114036") // Not updated to NeoForge 1.21.1 yet
-    //implementation("curse.maven:attributefix-280510:5824104")
-    implementation("curse.maven:puffish-skills-835091:6798466")
-    //implementation("curse.maven:justlevelingfork-1073400:6189891")
-    implementation("curse.maven:travelers-backpack-321117:6687139")
+    // Skills / progression.
+    implementation fg.deobf("curse.maven:puffish-skills-835091:7672794")
+    implementation fg.deobf("curse.maven:reskillable-reimagined-1170464:7958820")
+    // Project 1079687 was renamed from "memories-of-the-past" → "rpg-attribute-system" on CurseForge.
+    implementation fg.deobf("curse.maven:rpg-attribute-system-1079687:8008921")
+    implementation fg.deobf("curse.maven:jauml-1281310:7835241")
 
-    runtimeOnly("curse.maven:ftb-library-forge-404465:6798283")
-    //runtimeOnly("curse.maven:yetanotherconfig-667299:6336646")
+    // Backpacks.
+    implementation fg.deobf("curse.maven:sophisticated-core-618298:8014107")
+    implementation fg.deobf("curse.maven:sophisticated-backpacks-422301:8007547")
+    implementation fg.deobf("curse.maven:travelers-backpack-321117:7816782")
+    implementation fg.deobf("curse.maven:backpacked-352835:7866682")
+    implementation fg.deobf("curse.maven:cosmetic-armor-reworked-237307:4600191")
 
-    //implementation("curse.maven:quark-243121:6427817") // Not updated to NeoForge 1.21.1 yet
-    //implementation("curse.maven:zeta-968868:6432578") // Not updated to NeoForge 1.21.1 yet
-    implementation("curse.maven:xaeros-world-map-317780:6778114")
-    implementation("curse.maven:journeymap-32274:6689206")
-    implementation("curse.maven:cosmetic-armor-reworked-237307:5610814")
+    // FTB suite.
+    implementation fg.deobf("curse.maven:ftb-quests-forge-289412:7909594")
+    implementation fg.deobf("curse.maven:ftb-teams-forge-404468:7499810")
+    implementation fg.deobf("curse.maven:ftb-chunks-forge-314906:7880858")
+    implementation fg.deobf("curse.maven:ftb-library-forge-404465:7296748")
+    implementation fg.deobf("curse.maven:framework-549225:7573740")
 
-    // L2 Hostility compatibility dependencies
-    implementation("curse.maven:l2hostility-909207:6610946")
-    implementation("curse.maven:l2library-620203:6820079")
-    implementation("curse.maven:l2-complements-758349:6939788")
-    implementation("curse.maven:l2-artifacts-659547:6515998")
-    implementation("curse.maven:patchouli-306770:6842247")
+    // Map mods.
+    implementation fg.deobf("curse.maven:journeymap-32274:5789363")
+    implementation fg.deobf("curse.maven:xaeros-world-map-317780:7598469")
+    implementation fg.deobf("curse.maven:map-atlases-forge-519759:7660146")
 
-    // Sophisticated Backpacks
-    implementation("curse.maven:sophisticated-core-618298:6982394")
-    implementation("curse.maven:sophisticated-backpacks-422301:7000062")
+    // L2 stack (xkmc) + Modular Golems.
+    implementation fg.deobf("curse.maven:l2library-620203:6806000")
+    implementation fg.deobf("curse.maven:l2hostility-909207:7815389")
+    implementation fg.deobf("curse.maven:l2-complements-758349:7606338")
+    implementation fg.deobf("curse.maven:l2-artifacts-659547:6801939")
+    implementation fg.deobf("curse.maven:modulargolems-690937:7948763")
 
-    // Cobblemon. CurseForge file id is sourced from gradle.properties so it can be
-    // overridden via -PcobblemonFileId=<id> for testing the tab integration against
-    // newer Cobblemon releases without editing this file.
-    implementation("curse.maven:kotlin-for-forge-351264:6994056")
-    implementation("curse.maven:cobblemon-687131:${project.findProperty('cobblemonFileId') ?: '7273151'}")
+    // Cobblemon (+ Kotlin for Forge runtime requirement).
+    implementation fg.deobf("curse.maven:kotlin-for-forge-351264:7291067")
+    implementation fg.deobf("curse.maven:cobblemon-687131:5375390")
 
-    // Biology Dictionary. Reflection-only integration; CurseForge file id sourced from
-    // gradle.properties so it can be swapped via -PbiologyDictionaryFileId=<id>.
-    // Default 8001520 is the last build that targets MC 1.21.1 + architectury 13.
-    implementation("curse.maven:biology-dictionary-1426515:${project.findProperty('biologyDictionaryFileId') ?: '8001520'}")
-    // Cloth Config — required at runtime by Biology Dictionary.
-    implementation("curse.maven:cloth-config-348521:5729127")
+    // Magic / spellcasting.
+    implementation fg.deobf("curse.maven:geckolib-388172:7553267")
+    implementation fg.deobf("curse.maven:ars-nouveau-401955:6688854")
+    // Ars Elixirum on 1.20.1 lives at ars-elixirum-forge (project 620870), not the NeoForge slug.
+    implementation fg.deobf("curse.maven:ars-elixirum-forge-620870:7985649")
+    implementation fg.deobf("curse.maven:fragmentum-1123970:7983969")
 
-    // Reliable Backpacks
-    implementation("curse.maven:reliable-backpacks-1484454:7946525")
+    // Tech / automation.
+    implementation fg.deobf("curse.maven:create-328085:7178761")
+    implementation fg.deobf("curse.maven:brandons-core-231382:5422013")
+    implementation fg.deobf("curse.maven:codechicken-lib-1-8-242818:5753868")
+    implementation fg.deobf("curse.maven:draconic-evolution-223565:6793843")
 
-    // Modular Golems
-    implementation("curse.maven:modulargolems-690937:6965174")
-
-    // Ars Elixirum
-    implementation("curse.maven:fragmentum-neoforge-1123977:5852645")
-    implementation("curse.maven:ars-elixirum-neoforge-638419:5827505")
-
-    // Ars Nouveau
-    implementation("curse.maven:geckolib-388172:7013768")
-    implementation("curse.maven:ars-nouveau-401955:6954892")
-
-    // Draconic Evolution
-    implementation("curse.maven:brandons-core-231382:6769922")
-    implementation("curse.maven:codechicken-lib-1-8-242818:6583751")
-    implementation("curse.maven:draconic-evolution-223565:6943035")
-
-    // Create: Brassworks Missions
-    implementation("curse.maven:create-brassworks-missions-1348982:7030551")
-    implementation("curse.maven:create-328085:6641610")
-
-    // Eccentric Tome
-    implementation("curse.maven:eccentric-tome-597522:6008768")
-
-    // MOTP - RPG Player Leveling System
-    implementation("curse.maven:memories-of-the-past-1079687:6990820")
-    implementation("curse.maven:jauml-1281310:6928711")
-
-    // Sinytra Connector (for Fabric mod compatibility)
-    runtimeOnly "curse.maven:sinytra-connector-890127:6944771"
-
-    // Forgified Fabric API (required by Sinytra Connector)
-    runtimeOnly "curse.maven:forgified-fabric-api-889079:7009993"
-
-    // RPG Crafting (Fabric mod) and its dependencies - production only
-    fabricMods "curse.maven:rpg-crafting-1081787:7029233"
-    fabricMods "curse.maven:fzzy-config-1005914:6843479"
-    fabricMods "curse.maven:slot-customization-api-1061163:6726624"
-    fabricMods "curse.maven:fabric-language-kotlin-308769:6985480"
-
+    // Misc.
+    implementation fg.deobf("curse.maven:selene-499980:7945711")
+    implementation fg.deobf("curse.maven:archivist-1513409:7979569")
 }
 
-// This block of code expands all declared replace properties in the specified resource targets.
-// A missing property will result in an error. Properties are expanded using ${} Groovy notation.
-// When "copyIdeResources" is enabled, this will also run before the game launches in IDE environments.
-// See https://docs.gradle.org/current/dsl/org.gradle.language.jvm.tasks.ProcessResources.html
 tasks.named('processResources', ProcessResources).configure {
     var replaceProperties = [
             minecraft_version: minecraft_version, minecraft_version_range: minecraft_version_range,
-            neo_version: neo_version, neo_version_range: neo_version_range,
+            forge_version: forge_version, forge_version_range: forge_version_range,
             loader_version_range: loader_version_range,
-            mod_id: mod_id, mod_name: mod_name, mod_license: mod_license, mod_version: version,
+            mod_id: mod_id, mod_name: mod_name, mod_license: mod_license, mod_version: mod_version,
             mod_authors: mod_authors, mod_description: mod_description,
     ]
     inputs.properties replaceProperties
 
-    filesMatching(['META-INF/neoforge.mods.toml', 'pack.mcmeta']) {
-        expand replaceProperties
+    filesMatching(['META-INF/mods.toml', 'pack.mcmeta']) {
+        expand replaceProperties + [project: project]
     }
 }
 
-// Example for how to get properties into the manifest for reading at runtime.
 tasks.named('jar', Jar).configure {
     manifest {
         attributes([
                 'Specification-Title'     : mod_id,
                 'Specification-Vendor'    : mod_authors,
-                'Specification-Version'   : '1', // We are version 1 of ourselves
+                'Specification-Version'   : '1',
                 'Implementation-Title'    : project.name,
                 'Implementation-Version'  : project.jar.archiveVersion,
                 'Implementation-Vendor'   : mod_authors,
                 'Implementation-Timestamp': new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
         ])
     }
+    finalizedBy 'reobfJar'
 }
 
-// Task to download runtime mods for dev environment
-configurations {
-    devMods
-}
-
-dependencies {
-    devMods "curse.maven:sinytra-connector-890127:6944771"
-    devMods "curse.maven:forgified-fabric-api-889079:7009993"
-    // Fabric mods removed from devMods - they're in fabricMods configuration instead
-}
-
-task copyDevMods(type: Copy) {
-    from configurations.devMods
-    into file('run/mods')
-    doFirst {
-        file('run/mods').mkdirs()
-    }
-}
-
-// Run copyDevMods before running the client (will auto-run when needed)
-tasks.whenTaskAdded { task ->
-    if (task.name == 'runClient' || task.name == 'prepareRun') {
-        task.dependsOn copyDevMods
-    }
-}
-
-// Note: Fabric mods are NOT bundled in the jar for production
-// They should be installed separately alongside Sinytra Connector
-// Bundling them causes class loading issues with intermediary mappings
-tasks.named('jar', Jar).configure {
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    // Don't bundle fabricMods - they need to be separate mods
-}
-
-// NeoForge 1.21.1 doesn't require reobfuscation like older Forge versions
-// The jar task produces the final mod jar directly
-
-// Example configuration to allow publishing using the maven-publish plugin
 publishing {
     publications {
         register('mavenJava', MavenPublication) {
@@ -330,5 +223,5 @@ publishing {
 }
 
 tasks.withType(JavaCompile).configureEach {
-    options.encoding = 'UTF-8' // Use the UTF-8 charset for Java compilation
+    options.encoding = 'UTF-8'
 }

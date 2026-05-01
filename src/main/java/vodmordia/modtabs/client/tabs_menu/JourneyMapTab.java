@@ -13,7 +13,7 @@ import vodmordia.modtabs.integration.ModIntegration;
 @TabConfig(configKey = "journeyMapTab", defaultEnabled = true, defaultOrder = 0)
 public class JourneyMapTab extends IntegrationIconTab {
     private static final ResourceLocation JOURNEYMAP_ICON =
-            ResourceLocation.fromNamespaceAndPath(ModTabs.MOD_ID, "textures/gui/journeymap.png");
+            new ResourceLocation(ModTabs.MOD_ID, "textures/gui/journeymap.png");
 
     // JourneyMap opens its UI programmatically, so screenFqns is empty —
     // no auto-registration. The tab still attaches to every other registered screen.

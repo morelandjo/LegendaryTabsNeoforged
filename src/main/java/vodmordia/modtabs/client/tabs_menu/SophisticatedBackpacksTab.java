@@ -43,7 +43,7 @@ public class SophisticatedBackpacksTab extends ConfigurableItemTab {
     @Override
     public void openTargetScreen(Player player) {
         try {
-            Class<?> packetDistributorClass = Class.forName("net.neoforged.neoforge.network.PacketDistributor");
+            Class<?> packetDistributorClass = Class.forName("net.minecraftforge.network.PacketDistributor");
             Class<?> payloadClass = Class.forName("net.p3pp3rf1y.sophisticatedbackpacks.network.BackpackOpenPayload");
             Class<?> backpackItemClass = Class.forName("net.p3pp3rf1y.sophisticatedbackpacks.backpack.BackpackItem");
 

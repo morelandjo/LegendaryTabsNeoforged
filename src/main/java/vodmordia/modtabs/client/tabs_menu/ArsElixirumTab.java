@@ -43,13 +43,30 @@ public class ArsElixirumTab extends ConfigurableItemTab {
 
     @Override
     public void openTargetScreen(Player player) {
+        // 1.20.1 Ars Elixirum: the keybind handler KeyMappings.collectionPressed() bails early
+        // when Minecraft.screen != null, so we can't go through it from inside the inventory tab.
+        // Call PageKind.COLLECTION.open() directly — that's what the keybind ultimately invokes.
+        try {
+            Class<?> pageKindClass = Class.forName("dev.obscuria.elixirum.client.screen.widgets.pages.PageKind");
+            Object collection = null;
+            for (Object constant : pageKindClass.getEnumConstants()) {
+                if ("COLLECTION".equals(((Enum<?>) constant).name())) {
+                    collection = constant;
+                    break;
+                }
+            }
+            if (collection != null) {
+                pageKindClass.getMethod("open").invoke(collection);
+                return;
+            }
+        } catch (Exception ignored) {
+        }
         try {
             Class<?> screenClass = Class.forName("dev.obscuria.elixirum.client.screen.ElixirumScreen");
             java.lang.reflect.Constructor<?> constructor = screenClass.getDeclaredConstructor();
             constructor.setAccessible(true);
             Object screen = constructor.newInstance();
 
-            // Set the section to COLLECTION by setting the static selectedSection field
             try {
                 Class<?> sectionTypeClass = Class.forName("dev.obscuria.elixirum.client.screen.section.AbstractSection$Type");
                 Field collectionField = sectionTypeClass.getField("COLLECTION");
@@ -58,11 +75,11 @@ public class ArsElixirumTab extends ConfigurableItemTab {
                 Field selectedSectionField = screenClass.getDeclaredField("selectedSection");
                 selectedSectionField.setAccessible(true);
                 selectedSectionField.set(null, collectionSection);
-            } catch (Exception e) {
+            } catch (Exception ignored) {
             }
 
             Minecraft.getInstance().setScreen((Screen) screen);
-        } catch (Exception e) {
+        } catch (Exception ignored) {
         }
     }
 
@@ -73,12 +90,10 @@ public class ArsElixirumTab extends ConfigurableItemTab {
 
     @Override
     public boolean isCurrentlyUsed(Screen currentScreen) {
-        try {
-            Class<?> screenClass = Class.forName("dev.obscuria.elixirum.client.screen.ElixirumScreen");
-            return screenClass.isInstance(currentScreen);
-        } catch (Exception e) {
-            return false;
-        }
+        // On 1.20.1 the active page is a generated PageKind screen, not a single ElixirumScreen
+        // class — checking by package prefix covers both branches.
+        return currentScreen != null
+                && currentScreen.getClass().getName().startsWith("dev.obscuria.elixirum.");
     }
 
     @Override

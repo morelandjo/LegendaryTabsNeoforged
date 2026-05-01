@@ -18,7 +18,7 @@ import java.util.Collection;
 @TabConfig(configKey = "cobblemonTab", defaultEnabled = true, defaultOrder = 0)
 public class CobblemonTab extends IntegrationIconTab {
     private static final ResourceLocation POKEBALL_ICON =
-            ResourceLocation.fromNamespaceAndPath("cobblemon", "textures/item/poke_balls/poke_ball.png");
+            new ResourceLocation("cobblemon", "textures/item/poke_balls/poke_ball.png");
 
     private static final String FQN_COBBLEMON_CLIENT = "com.cobblemon.mod.common.client.CobblemonClient";
     private static final String FQN_SUMMARY = "com.cobblemon.mod.common.client.gui.summary.Summary";

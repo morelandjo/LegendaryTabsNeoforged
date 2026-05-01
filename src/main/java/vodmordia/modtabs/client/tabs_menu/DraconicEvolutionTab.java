@@ -15,7 +15,7 @@ import vodmordia.modtabs.utils.ScreenClasses;
 @TabConfig(configKey = "draconicEvolutionTab", defaultEnabled = true, defaultOrder = 0)
 public class DraconicEvolutionTab extends IntegrationIconTab {
     private static final ResourceLocation INFO_TABLET_ICON =
-            ResourceLocation.fromNamespaceAndPath("draconicevolution", "textures/item/info_tablet.png");
+            new ResourceLocation("draconicevolution", "textures/item/info_tablet.png");
 
     // Layout/registration for this tab is non-standard (custom dimensions + forceRegister),
     // so we override initTabOnScreens below; the spec only carries declarative metadata.
@@ -62,10 +62,14 @@ public class DraconicEvolutionTab extends IntegrationIconTab {
 
     private boolean hasCapability(ItemStack stack, Object capability) {
         try {
-            Class<?> itemCapabilityClass = ClassCache.resolve("net.neoforged.neoforge.capabilities.ItemCapability");
-            if (itemCapabilityClass == null) return false;
-            java.lang.reflect.Method getCapabilityMethod = ItemStack.class.getMethod("getCapability", itemCapabilityClass);
-            return getCapabilityMethod.invoke(stack, capability) != null;
+            Class<?> capabilityClass = ClassCache.resolve("net.minecraftforge.common.capabilities.Capability");
+            if (capabilityClass == null) return false;
+            // Forge 1.20.1 returns LazyOptional, not the value or null. The 1.21.1 NeoForge port of
+            // this code could check `!= null`; on Forge we have to ask the LazyOptional itself.
+            java.lang.reflect.Method getCapabilityMethod = ItemStack.class.getMethod("getCapability", capabilityClass);
+            Object lazyOptional = getCapabilityMethod.invoke(stack, capability);
+            if (lazyOptional == null) return false;
+            return (Boolean) lazyOptional.getClass().getMethod("isPresent").invoke(lazyOptional);
         } catch (Exception e) {
             return false;
         }
@@ -89,7 +93,7 @@ public class DraconicEvolutionTab extends IntegrationIconTab {
                 Class<?> draconicNetworkClass = Class.forName("com.brandon3055.draconicevolution.network.DraconicNetwork");
                 java.lang.reflect.Method sendOpenItemConfigMethod = draconicNetworkClass.getMethod(
                         "sendOpenItemConfig", net.minecraft.core.RegistryAccess.class, boolean.class);
-                sendOpenItemConfigMethod.invoke(null, player.registryAccess(), false);
+                sendOpenItemConfigMethod.invoke(null, player.level().registryAccess(), false);
             } catch (Exception ignored) {}
         }
     }

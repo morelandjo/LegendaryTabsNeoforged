@@ -21,8 +21,14 @@ public class ArsElixirumInspector {
         searchAttempted = true;
 
         try {
-            // Get Ars Elixirum glass cauldron item: dev.obscuria.elixirum.registry.ElixirumItems.GLASS_CAULDRON
-            Class<?> itemsClass = Class.forName("dev.obscuria.elixirum.registry.ElixirumItems");
+            // 1.20.1 Forge build has the Items class under .common.registry. (1.21.1 NeoForge
+            // moved it up one level — try both for safety.)
+            Class<?> itemsClass;
+            try {
+                itemsClass = Class.forName("dev.obscuria.elixirum.common.registry.ElixirumItems");
+            } catch (ClassNotFoundException ignored) {
+                itemsClass = Class.forName("dev.obscuria.elixirum.registry.ElixirumItems");
+            }
             Field itemField = itemsClass.getField("GLASS_CAULDRON");
             Object registryObject = itemField.get(null);
 

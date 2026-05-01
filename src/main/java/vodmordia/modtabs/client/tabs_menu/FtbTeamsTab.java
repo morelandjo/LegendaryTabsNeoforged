@@ -1,6 +1,5 @@
 package vodmordia.modtabs.client.tabs_menu;
 
-import dev.ftb.mods.ftbteams.net.OpenGUIMessage;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -15,7 +14,7 @@ import vodmordia.modtabs.integration.ModIntegrationManager;
 
 @TabConfig(configKey = "ftbTeamsTab", defaultEnabled = true, defaultOrder = 0)
 public class FtbTeamsTab extends ConfigurableIconTab {
-    private static final ResourceLocation TEAMS_TEXTURE = ResourceLocation.fromNamespaceAndPath("ftbteams", "textures/teams.png");
+    private static final ResourceLocation TEAMS_TEXTURE = new ResourceLocation("ftbteams", "textures/teams.png");
 
     public FtbTeamsTab() {
         super(TEAMS_TEXTURE, Config.Baked.ftbTeamsTabCustomIcon, "ftbTeams");
@@ -24,7 +23,12 @@ public class FtbTeamsTab extends ConfigurableIconTab {
     @Override
     public void openTargetScreen(Player player) {
         if (ModIntegrationManager.isModLoaded(ModIntegration.FTB_TEAMS) && player.level().isClientSide) {
-            (new OpenGUIMessage()).sendToServer();
+            try {
+                Class<?> openGuiMessageClass = Class.forName("dev.ftb.mods.ftbteams.net.OpenGUIMessage");
+                Object msg = openGuiMessageClass.getDeclaredConstructor().newInstance();
+                openGuiMessageClass.getMethod("sendToServer").invoke(msg);
+            } catch (Exception ignored) {
+            }
         }
     }
 

@@ -427,7 +427,7 @@ public class EccentricTomeTab extends ConfigurableItemTab {
                         vodmordia.modtabs.network.TomeConvertPayload payload =
                             new vodmordia.modtabs.network.TomeConvertPayload(tomeSlot, selectedBook);
 
-                        net.neoforged.neoforge.network.PacketDistributor.sendToServer(payload);
+                        ModTabs.CHANNEL.sendToServer(payload);
 
                         ModTabs.LOGGER.info("Sent TomeConvertPayload: slot={}, book={}", tomeSlot, selectedBook);
                     }
@@ -488,7 +488,7 @@ public class EccentricTomeTab extends ConfigurableItemTab {
                 Method sendMethod = channel.getClass().getMethod("send", Object.class, Object.class);
 
                 // Get PacketDistributor.SERVER
-                Class<?> packetDistClass = Class.forName("net.neoforged.neoforge.network.PacketDistributor");
+                Class<?> packetDistClass = Class.forName("net.minecraftforge.network.PacketDistributor");
                 Field serverField = packetDistClass.getDeclaredField("SERVER");
                 serverField.setAccessible(true);
                 Object serverDist = serverField.get(null);

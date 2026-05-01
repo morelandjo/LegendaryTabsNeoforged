@@ -12,8 +12,10 @@ import vodmordia.modtabs.utils.ScreenClasses;
 
 @TabConfig(configKey = "ftbChunksTab", defaultEnabled = true, defaultOrder = 0)
 public class FtbChunksTab extends IntegrationIconTab {
+    // 1.20.1 FTB Chunks doesn't ship a single minimap_info.png; only fragments like
+    // square_border, circle_border, waypoint_*, etc. Use a vanilla map item icon as a stand-in.
     private static final ResourceLocation FTB_CHUNKS_ICON =
-            ResourceLocation.fromNamespaceAndPath("ftbchunks", "textures/minimap_info.png");
+            new ResourceLocation("minecraft", "textures/item/filled_map.png");
 
     private static final TabSpec SPEC = new TabSpec(
             "ftbChunksTab",

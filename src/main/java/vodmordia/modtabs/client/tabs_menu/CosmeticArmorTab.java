@@ -15,7 +15,7 @@ import vodmordia.modtabs.integration.ModIntegrationManager;
 
 @TabConfig(configKey = "cosmeticArmorTab", defaultEnabled = true, defaultOrder = 0)
 public class CosmeticArmorTab extends ConfigurableIconTab {
-    private static final ResourceLocation COSMETIC_ARMOR_ICON = ResourceLocation.fromNamespaceAndPath(ModTabs.MOD_ID, "textures/gui/cosmeticarmor.png");
+    private static final ResourceLocation COSMETIC_ARMOR_ICON = new ResourceLocation(ModTabs.MOD_ID, "textures/gui/cosmeticarmor.png");
 
     public CosmeticArmorTab() {
         super(COSMETIC_ARMOR_ICON, Config.Baked.cosmeticArmorTabCustomIcon, "cosmeticArmor");
@@ -23,28 +23,21 @@ public class CosmeticArmorTab extends ConfigurableIconTab {
 
     @Override
     public void openTargetScreen(Player player) {
-        if (Config.Baked.cosmeticArmorTabEnabled) {
-            try {
-                // Use reflection to send the PayloadOpenCosArmorInventory packet
-                Class<?> packetDistributorClass = Class.forName("net.neoforged.neoforge.network.PacketDistributor");
-                Class<?> payloadClass = Class.forName("lain.mods.cos.impl.network.payload.PayloadOpenCosArmorInventory");
+        if (!Config.Baked.cosmeticArmorTabEnabled) return;
+        // 1.20.1 Cosmetic Armor Reworked uses a SimpleChannel-based NetworkManager
+        // (lain.mods.cos.impl.network.NetworkManager) stored on lain.mods.cos.impl.ModObjects.network.
+        // The packet is PacketOpenCosArmorInventory (not "PayloadOpen..." as on NeoForge 1.21+).
+        try {
+            Class<?> modObjectsClass = Class.forName("lain.mods.cos.impl.ModObjects");
+            java.lang.reflect.Field networkField = modObjectsClass.getField("network");
+            Object network = networkField.get(null);
 
-                // Create the payload using default constructor
-                Object payload = payloadClass.getDeclaredConstructor().newInstance();
+            Class<?> packetClass = Class.forName("lain.mods.cos.impl.network.packet.PacketOpenCosArmorInventory");
+            Object packet = packetClass.getDeclaredConstructor().newInstance();
 
-                // Find the sendToServer method
-                for (java.lang.reflect.Method method : packetDistributorClass.getDeclaredMethods()) {
-                    if (method.getName().equals("sendToServer") && method.getParameterCount() == 2) {
-                        Class<?>[] paramTypes = method.getParameterTypes();
-                        // Create empty array for the second parameter
-                        Object[] emptyArray = (Object[]) java.lang.reflect.Array.newInstance(paramTypes[1].getComponentType(), 0);
-                        method.invoke(null, payload, emptyArray);
-                        return;
-                    }
-                }
-            } catch (Exception e) {
-                // Silent fail if packet sending doesn't work
-            }
+            Class<?> packetSuper = Class.forName("lain.mods.cos.impl.network.NetworkManager$NetworkPacket");
+            network.getClass().getMethod("sendToServer", packetSuper).invoke(network, packet);
+        } catch (Exception ignored) {
         }
     }
 

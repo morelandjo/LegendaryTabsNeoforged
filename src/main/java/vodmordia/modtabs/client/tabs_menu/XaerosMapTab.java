@@ -21,7 +21,7 @@ public class XaerosMapTab extends ConfigurableCustomIconTab {
     public XaerosMapTab() {
         super((context) -> {
             try {
-                context.gui.blit(ResourceLocation.fromNamespaceAndPath("xaeroworldmap", "icon.png"),
+                context.gui.blit(new ResourceLocation("xaeroworldmap", "icon.png"),
                     context.x + 6, context.y + 5, 0, 0, 14, 14, 16, 16);
             } catch (Exception e) {
                 context.gui.fill(context.x + 7, context.y + 5, context.x + 19, context.y + 17, 0xFF8B4513);

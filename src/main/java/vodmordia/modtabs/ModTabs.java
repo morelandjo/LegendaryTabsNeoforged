@@ -1,16 +1,19 @@
 package vodmordia.modtabs;
 
 import com.mojang.logging.LogUtils;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.neoforge.common.NeoForge;
-import net.neoforged.bus.api.IEventBus;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.ModList;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.fml.common.Mod;
-import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
-import net.neoforged.fml.ModContainer;
-import net.neoforged.fml.loading.FMLPaths;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.eventbus.api.IEventBus;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.ModList;
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
+import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.minecraftforge.fml.loading.FMLPaths;
+import net.minecraftforge.network.NetworkRegistry;
+import net.minecraftforge.network.simple.SimpleChannel;
 import org.slf4j.Logger;
 import vodmordia.modtabs.api.tabs_menu.TabsMenu;
 import vodmordia.modtabs.client.tabs_menu.*;
@@ -22,13 +25,13 @@ import vodmordia.modtabs.config.ModTabsConfig;
 import vodmordia.modtabs.integration.ModIntegrationManager;
 import vodmordia.modtabs.utils.CustomTabLoader;
 import vodmordia.modtabs.config.CustomTabDefinition;
+import vodmordia.modtabs.network.TomeConvertHandler;
+import vodmordia.modtabs.network.TomeConvertPayload;
 import eu.midnightdust.lib.config.MidnightConfig;
-import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
 
 import java.lang.reflect.Method;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 
 @Mod(ModTabs.MOD_ID)
 public class ModTabs
@@ -39,12 +42,21 @@ public class ModTabs
     public static Path configPath = FMLPaths.CONFIGDIR.get();
     public static Path modConfigPath = Paths.get(configPath.toAbsolutePath().toString(), "modtabs");
 
+    private static final String PROTOCOL_VERSION = "1.0";
+    public static final SimpleChannel CHANNEL = NetworkRegistry.ChannelBuilder
+            .named(new ResourceLocation(MOD_ID, "main"))
+            .networkProtocolVersion(() -> PROTOCOL_VERSION)
+            .clientAcceptedVersions(PROTOCOL_VERSION::equals)
+            .serverAcceptedVersions(PROTOCOL_VERSION::equals)
+            .simpleChannel();
+
     private static boolean customTabsLoaded = false;
 
 
-    public ModTabs(IEventBus modEventBus, ModContainer modContainer)
+    public ModTabs()
     {
-        IEventBus neoForgeBus = NeoForge.EVENT_BUS;
+        IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
+        IEventBus forgeBus = MinecraftForge.EVENT_BUS;
 
         // Initialize MidnightConfig
         MidnightConfig.init(MOD_ID, ModTabsConfig.class);
@@ -52,34 +64,19 @@ public class ModTabs
         // Initialize mod integration manager
         ModIntegrationManager.detectLoadedMods();
 
-        // Register network packets
-        modEventBus.addListener(this::registerNetworking);
-
-        // Event handlers removed - now using proper Patchouli synchronization
-    }
-
-    private void registerNetworking(net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent event) {
-        var registrar = event.registrar(MOD_ID).versioned("1.0");
-
-        registrar.playToServer(
-            vodmordia.modtabs.network.TomeConvertPayload.TYPE,
-            vodmordia.modtabs.network.TomeConvertPayload.STREAM_CODEC,
-            vodmordia.modtabs.network.TomeConvertHandler::handle
-        );
-
-        registrar.playToServer(
-            vodmordia.modtabs.network.OpenReliableBackpackPayload.TYPE,
-            vodmordia.modtabs.network.OpenReliableBackpackPayload.STREAM_CODEC,
-            vodmordia.modtabs.network.OpenReliableBackpackHandler::handle
+        // Register network packets via SimpleChannel.
+        CHANNEL.registerMessage(
+                0,
+                TomeConvertPayload.class,
+                TomeConvertPayload::encode,
+                TomeConvertPayload::decode,
+                TomeConvertHandler::handle
         );
 
         LOGGER.info("Registered ModTabs network packets");
     }
 
-    // Old config event handlers removed - MidnightConfig handles reloading automatically
-
-    // You can use EventBusSubscriber to automatically register all static methods in the class annotated with @SubscribeEvent
-    @EventBusSubscriber(modid = MOD_ID, value = Dist.CLIENT, bus = EventBusSubscriber.Bus.MOD)
+    @Mod.EventBusSubscriber(modid = MOD_ID, value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.MOD)
     public static class ClientModEvents
     {
         @SubscribeEvent
@@ -150,12 +147,8 @@ public class ModTabs
 
             TabsMenu.register(new ArsNouveauTab());
             TabsMenu.register(new AdvancementsTab());
-            TabsMenu.register(new BrassworksMissionsTab());
             TabsMenu.register(new EccentricTomeTab());
-            TabsMenu.register(new RpgCraftingTab());
             TabsMenu.register(new MotpTab());
-            TabsMenu.register(new BiologyDictionaryTab());
-            TabsMenu.register(new ReliableBackpackTab());
 
             // Wait for Patchouli books to load, then load custom tabs
             waitForPatchouliAndLoadCustomTabs();
@@ -165,17 +158,15 @@ public class ModTabs
         }
 
         /**
-         * Wait for Patchouli books to be loaded, then load custom tabs
+         * Wait for Patchouli books to be loaded, then load custom tabs.
          */
         private static void waitForPatchouliAndLoadCustomTabs() {
-            // Run in a separate thread to avoid blocking the mod loading
             new Thread(() -> {
                 try {
                     if (Config.Baked.customTabsDebugLogging) {
                         LOGGER.info("Waiting for Patchouli books to be loaded...");
                     }
 
-                    // Wait for Patchouli books to be loaded using their synchronization mechanism
                     waitForPatchouliBooksLoaded();
 
                     if (Config.Baked.customTabsDebugLogging) {
@@ -195,11 +186,11 @@ public class ModTabs
         }
 
         /**
-         * Wait for Patchouli books to be loaded using reflection to access their synchronization mechanism
+         * Try Patchouli's NeoForge synchronization fields (1.21.1+); on 1.20.1 Forge those classes
+         * don't exist, so the ClassNotFoundException catch path falls through to a 2-second sleep.
          */
         private static void waitForPatchouliBooksLoaded() {
             try {
-                // Check if Patchouli is loaded first
                 if (!ModList.get().isLoaded("patchouli")) {
                     if (Config.Baked.customTabsDebugLogging) {
                         LOGGER.info("Patchouli not loaded, proceeding without waiting");
@@ -207,10 +198,8 @@ public class ModTabs
                     return;
                 }
 
-                // Access Patchouli's NeoForgeClientInitializer using reflection
                 Class<?> clientInitClass = Class.forName("vazkii.patchouli.neoforge.client.NeoForgeClientInitializer");
 
-                // Get the BOOK_LOAD_LOCK and BOOK_LOAD_CONDITION
                 java.lang.reflect.Field lockField = clientInitClass.getDeclaredField("BOOK_LOAD_LOCK");
                 lockField.setAccessible(true);
                 java.util.concurrent.locks.Lock bookLoadLock = (java.util.concurrent.locks.Lock) lockField.get(null);
@@ -222,9 +211,6 @@ public class ModTabs
                 java.lang.reflect.Field booksLoadedField = clientInitClass.getDeclaredField("booksLoaded");
                 booksLoadedField.setAccessible(true);
 
-                // Wait for books to be loaded using Patchouli's synchronization mechanism.
-                // Use a bounded timeout so a Patchouli internal change (renamed field, missed signal)
-                // can never hang this loader thread forever.
                 final long timeoutNanos = java.util.concurrent.TimeUnit.SECONDS.toNanos(30);
                 long remaining = timeoutNanos;
                 bookLoadLock.lock();
@@ -250,13 +236,18 @@ public class ModTabs
                 }
 
             } catch (ClassNotFoundException e) {
-                LOGGER.info("Patchouli NeoForgeClientInitializer not found, proceeding without waiting");
+                // Expected on 1.20.1 Forge — Patchouli's synchronization machinery is NeoForge-only.
+                LOGGER.info("Patchouli synchronization class not present (probably 1.20.1 Forge); falling back to short sleep");
+                try {
+                    Thread.sleep(2000);
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                }
             } catch (Exception e) {
                 LOGGER.warn("Failed to wait for Patchouli books using synchronization mechanism: " + e.getMessage());
                 if (Config.Baked.customTabsDebugLogging) {
                     e.printStackTrace();
                 }
-                // Fallback: wait a short time
                 try {
                     Thread.sleep(2000);
                 } catch (InterruptedException ie) {
@@ -265,9 +256,6 @@ public class ModTabs
             }
         }
 
-        /**
-         * Public method to manually trigger custom tabs loading (for debugging)
-         */
         public static void forceLoadCustomTabs() {
             if (!customTabsLoaded) {
                 LOGGER.info("Manually forcing custom tabs loading");
@@ -279,9 +267,6 @@ public class ModTabs
         }
 
 
-        /**
-         * Load and register custom tabs from JSON configuration files
-         */
         private static void loadCustomTabs() {
             if (Config.Baked.customTabsDebugLogging) {
                 LOGGER.info("loadCustomTabs() called - customTabsEnabled: " + Config.Baked.customTabsEnabled);
@@ -327,13 +312,11 @@ public class ModTabs
 
                 LOGGER.info("Loaded " + customTabDefinitions.size() + " custom tab(s)");
 
-                // Re-finalize registrations to ensure custom tabs are properly integrated
                 if (Config.Baked.customTabsDebugLogging) {
                     LOGGER.info("Re-finalizing tab registrations for custom tabs");
                 }
                 TabsMenu.finalizePendingRegistrations();
 
-                // Refresh the current screen to show newly loaded custom tabs
                 refreshCurrentScreenForNewTabs();
 
             } catch (Exception e) {
@@ -344,14 +327,6 @@ public class ModTabs
             }
         }
 
-        /**
-         * Refresh the current screen to show newly loaded custom tabs.
-         *
-         * <p>This is invoked from the {@code PatchouliCustomTabsLoader} worker thread, but
-         * {@link net.minecraft.client.Minecraft#setScreen} must run on the client thread —
-         * mutating the screen off-thread can race with rendering and crash. Schedule the
-         * refresh via {@code Minecraft.execute} so it lands on the right thread.
-         */
         private static void refreshCurrentScreenForNewTabs() {
             net.minecraft.client.Minecraft minecraft = net.minecraft.client.Minecraft.getInstance();
             minecraft.execute(() -> {
@@ -366,7 +341,6 @@ public class ModTabs
                     if (Config.Baked.customTabsDebugLogging) {
                         LOGGER.info("Refreshing screen " + currentScreen.getClass().getSimpleName() + " to show new custom tabs");
                     }
-                    // Force a refresh by closing and reopening — re-runs the tab build pass.
                     minecraft.setScreen(null);
                     minecraft.setScreen(currentScreen);
                 } catch (Exception e) {

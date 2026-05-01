@@ -1,20 +1,8 @@
 package vodmordia.modtabs.utils;
 
-//import com.illusivesoulworks.diet.api.type.IDietSuite;
-//import com.illusivesoulworks.diet.common.data.suite.DietSuites;
-//import com.mrcrayfish.backpacked.item.BackpackItem;
-//import com.mrcrayfish.backpacked.platform.Services;
-import com.tiviacz.travelersbackpack.capability.AttachmentUtils;
-import com.tiviacz.travelersbackpack.inventory.BackpackWrapper;
-import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.ItemStack;
-import vodmordia.modtabs.ModTabs;
 import vodmordia.modtabs.integration.ModIntegration;
 import vodmordia.modtabs.integration.ModIntegrationManager;
-
-import java.util.Collection;
-import java.util.Set;
 
 public class IntegrationUtils {
     public IntegrationUtils(){}
@@ -60,12 +48,16 @@ public class IntegrationUtils {
         if (!ModIntegrationManager.isModLoaded(ModIntegration.TRAVELERS_BACKPACK))
             return 0;
 
-        BackpackWrapper wrapper = AttachmentUtils.getBackpackWrapper(player);
+        Object wrapper = getBackpackWrapper(player);
         if (wrapper != null) {
-            int slotCount = wrapper.getStorage().getSlots();
-            boolean wider = slotCount > 81;
-            boolean tanksVisible = wrapper.tanksVisible();
-            return wider ? (tanksVisible ? 256 : 212) : (tanksVisible ? 220 : 176);
+            try {
+                int slotCount = ((Integer) wrapper.getClass().getMethod("getStorage").invoke(wrapper)
+                        .getClass().getMethod("getSlots").invoke(wrapper.getClass().getMethod("getStorage").invoke(wrapper)));
+                boolean wider = slotCount > 81;
+                boolean tanksVisible = (Boolean) wrapper.getClass().getMethod("tanksVisible").invoke(wrapper);
+                return wider ? (tanksVisible ? 256 : 212) : (tanksVisible ? 220 : 176);
+            } catch (Exception ignored) {
+            }
         }
         return 176;
     }
@@ -74,17 +66,39 @@ public class IntegrationUtils {
         if (!ModIntegrationManager.isModLoaded(ModIntegration.TRAVELERS_BACKPACK))
             return 0;
 
-        BackpackWrapper wrapper = AttachmentUtils.getBackpackWrapper(player);
+        Object wrapper = getBackpackWrapper(player);
         if (wrapper != null) {
-            int slotCount = wrapper.getStorage().getSlots();
-            boolean wider = slotCount > 81;
-            int rowSlots = wider ? 11 : 9;
-            int rows = (int)Math.ceil((double)slotCount / (double)rowSlots);
+            try {
+                Object storage = wrapper.getClass().getMethod("getStorage").invoke(wrapper);
+                int slotCount = (Integer) storage.getClass().getMethod("getSlots").invoke(storage);
+                boolean wider = slotCount > 81;
+                int rowSlots = wider ? 11 : 9;
+                int rows = (int)Math.ceil((double)slotCount / (double)rowSlots);
 
-            int slotsHeight = rows * 18;
-            int playerInventoryHeight = 96;
-            return 17 + slotsHeight + playerInventoryHeight;
+                int slotsHeight = rows * 18;
+                int playerInventoryHeight = 96;
+                return 17 + slotsHeight + playerInventoryHeight;
+            } catch (Exception ignored) {
+            }
         }
         return 7 * 18 + 96 + 17;
+    }
+
+    /**
+     * Resolve the player's Travelers Backpack wrapper via reflection.
+     *
+     * <p>The 1.21.1 NeoForge build uses {@code AttachmentUtils.getBackpackWrapper(player)}, which
+     * may not be the right entry point on the 1.20.1 Forge build of the mod (it historically used
+     * a Forge {@link net.minecraftforge.common.capabilities.Capability Capability} on the player).
+     * Try the attachment-style call first; if that class isn't there, fall back to {@code null} —
+     * the callers default to vanilla-sized layout when the wrapper is missing.
+     */
+    private static Object getBackpackWrapper(Player player) {
+        try {
+            Class<?> attachmentUtilsClass = Class.forName("com.tiviacz.travelersbackpack.capability.AttachmentUtils");
+            return attachmentUtilsClass.getMethod("getBackpackWrapper", Player.class).invoke(null, player);
+        } catch (Exception e) {
+            return null;
+        }
     }
 }

@@ -14,7 +14,7 @@ import java.util.function.Consumer;
 public class TabRenderer {
 
     // Common constants used by all tabs
-    public static final ResourceLocation TAB_TEXTURE = ResourceLocation.fromNamespaceAndPath(ModTabs.MOD_ID, "textures/gui/tab_menu_buttons.png");
+    public static final ResourceLocation TAB_TEXTURE = new ResourceLocation(ModTabs.MOD_ID, "textures/gui/tab_menu_buttons.png");
     public static final int TAB_BACKGROUND_U = 0;
     public static final int TAB_BACKGROUND_V = 138;
     public static final int HOVER_OFFSET = 54;

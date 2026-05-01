@@ -26,7 +26,7 @@ public class ReskillableReimaginedTab extends ConfigurableCustomIconTab {
                 int v = 145; // Y position of book icon
 
                 // Draw the 16x16 book icon, scaled down to 14x14 and moved down 2px
-                context.gui.blit(ResourceLocation.fromNamespaceAndPath("reskillable", "textures/gui/skills.png"),
+                context.gui.blit(new ResourceLocation("reskillable", "textures/gui/skills.png"),
                     context.x + 6, context.y + 6, u, v, 14, 14, 256, 256);
             } catch (Exception e) {
                 context.gui.fill(context.x + 7, context.y + 5, context.x + 19, context.y + 17, 0xFF8B4513);

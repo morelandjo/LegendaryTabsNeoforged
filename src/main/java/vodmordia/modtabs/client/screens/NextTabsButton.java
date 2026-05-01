@@ -13,7 +13,7 @@ import static vodmordia.modtabs.api.tabs_menu.TabBase.TAB_HEIGHT;
 import static vodmordia.modtabs.api.tabs_menu.TabBase.TAB_WIDTH;
 
 public class NextTabsButton extends Button {
-    private final ResourceLocation TAB_ICONS = ResourceLocation.fromNamespaceAndPath(ModTabs.MOD_ID, "textures/gui/tab_menu_buttons.png");
+    private final ResourceLocation TAB_ICONS = new ResourceLocation(ModTabs.MOD_ID, "textures/gui/tab_menu_buttons.png");
     public static final int NEXT_TABS_ICON_TEX_X = 135;
     public static final int NEXT_TABS_ICON_TEX_Y = 0;
     public static final int NEXT_TABS_BUTTON_WIDTH = 12;

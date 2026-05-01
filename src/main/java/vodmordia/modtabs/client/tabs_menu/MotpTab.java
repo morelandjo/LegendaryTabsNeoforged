@@ -14,7 +14,7 @@ import vodmordia.modtabs.utils.ScreenClasses;
 @TabConfig(configKey = "motpTab", defaultEnabled = true, defaultOrder = 0)
 public class MotpTab extends IntegrationIconTab {
     private static final ResourceLocation MOTP_ICON =
-            ResourceLocation.fromNamespaceAndPath("memory_of_the_past", "textures/item/book_02f.png");
+            new ResourceLocation("memory_of_the_past", "textures/item/book_02f.png");
 
     private static final TabSpec SPEC = new TabSpec(
             "motpTab",

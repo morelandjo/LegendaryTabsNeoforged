@@ -11,9 +11,8 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
-import net.neoforged.neoforge.client.ClientHooks;
-import net.neoforged.neoforge.common.NeoForge;
-import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import vodmordia.modtabs.ModTabs;
 import vodmordia.modtabs.config.CustomTabDefinition;
 
@@ -56,7 +55,7 @@ public class ItemUseSimulator {
         }
 
         try {
-            ResourceLocation itemLocation = ResourceLocation.parse(itemId);
+            ResourceLocation itemLocation = ResourceLocation.tryParse(itemId);
             Item item = BuiltInRegistries.ITEM.get(itemLocation);
 
             if (item == null || item == net.minecraft.world.item.Items.AIR) {
@@ -119,7 +118,7 @@ public class ItemUseSimulator {
     private static boolean tryPlayerInteractEvent(ItemStack itemStack, Player player) {
         try {
             PlayerInteractEvent.RightClickItem event = new PlayerInteractEvent.RightClickItem(player, InteractionHand.MAIN_HAND);
-            NeoForge.EVENT_BUS.post(event);
+            MinecraftForge.EVENT_BUS.post(event);
 
             if (!event.isCanceled()) {
                 ModTabs.LOGGER.debug("Player interact event succeeded");

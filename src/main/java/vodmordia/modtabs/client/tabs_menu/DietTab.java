@@ -17,7 +17,7 @@ import vodmordia.modtabs.integration.ModIntegrationManager;
 
 @TabConfig(configKey = "dietTab", defaultEnabled = false, defaultOrder = 0)
 public class DietTab extends ConfigurableIconTab {
-    private static final ResourceLocation DIET_ICON = ResourceLocation.fromNamespaceAndPath(ModTabs.MOD_ID, "textures/gui/diet.png");
+    private static final ResourceLocation DIET_ICON = new ResourceLocation(ModTabs.MOD_ID, "textures/gui/diet.png");
 
     public DietTab() {
         super(DIET_ICON, Config.Baked.dietTabCustomIcon, "diet");

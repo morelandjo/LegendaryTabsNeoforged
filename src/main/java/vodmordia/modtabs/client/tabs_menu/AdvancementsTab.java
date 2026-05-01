@@ -16,7 +16,11 @@ import vodmordia.modtabs.integration.ModIntegrationManager;
 
 @TabConfig(configKey = "advancementsTab", defaultEnabled = true, defaultOrder = 0)
 public class AdvancementsTab extends ConfigurableIconTab {
-    private static final ResourceLocation ADVANCEMENTS_ICON = ResourceLocation.fromNamespaceAndPath("minecraft", "textures/gui/sprites/advancements/challenge_frame_obtained.png");
+    // 1.21+ moved advancement frame icons to /sprites/advancements/<frame>_obtained.png; on 1.20.1
+    // those individual files don't exist (everything lived in textures/gui/advancements/widgets.png
+    // as a sprite sheet). Use the vanilla knowledge book item icon instead — same theme, exists
+    // as a single 16×16 file.
+    private static final ResourceLocation ADVANCEMENTS_ICON = new ResourceLocation("minecraft", "textures/item/knowledge_book.png");
 
     public AdvancementsTab() {
         super(ADVANCEMENTS_ICON, Config.Baked.advancementsTabCustomIcon, "advancements");

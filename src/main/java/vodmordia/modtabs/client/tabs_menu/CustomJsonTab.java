@@ -9,7 +9,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.neoforged.fml.ModList;
+import net.minecraftforge.fml.ModList;
 import vodmordia.modtabs.ModTabs;
 import vodmordia.modtabs.api.tabs_menu.ScreenRegistry;
 import vodmordia.modtabs.api.tabs_menu.TabBase;
@@ -68,7 +68,7 @@ public class CustomJsonTab extends TabBase {
         // Try loading from customTexture (resource-based) if file-based failed
         if (!customTextureLoaded && definition.icon.customTexture != null && !definition.icon.customTexture.trim().isEmpty()) {
             try {
-                loadedTexture = ResourceLocation.parse(definition.icon.customTexture);
+                loadedTexture = ResourceLocation.tryParse(definition.icon.customTexture);
                 // Validate the texture exists
                 if (DynamicTextureLoader.validateResourceTexture(loadedTexture)) {
                     customTextureLoaded = true;
@@ -92,7 +92,7 @@ public class CustomJsonTab extends TabBase {
         }
 
         try {
-            ResourceLocation itemLocation = ResourceLocation.parse(itemId);
+            ResourceLocation itemLocation = ResourceLocation.tryParse(itemId);
             Item item = BuiltInRegistries.ITEM.get(itemLocation);
 
             if (item != null && item != Items.AIR) {

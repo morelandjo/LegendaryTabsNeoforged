@@ -14,7 +14,7 @@ import vodmordia.modtabs.utils.ScreenClasses;
 @TabConfig(configKey = "mapAtlasesTab", defaultEnabled = true, defaultOrder = 0)
 public class MapAtlasesTab extends IntegrationIconTab {
     private static final ResourceLocation MAP_ATLAS_ICON =
-            ResourceLocation.fromNamespaceAndPath("map_atlases", "textures/item/atlas_generic.png");
+            new ResourceLocation("map_atlases", "textures/item/atlas_generic.png");
 
     private static final TabSpec SPEC = TabSpec.withoutCurrentScreen(
             "mapAtlasesTab",
@@ -51,26 +51,16 @@ public class MapAtlasesTab extends IntegrationIconTab {
 
     @Override
     public void openTargetScreen(Player player) {
-        if (Config.Baked.mapAtlasesTabEnabled && player.level().isClientSide) {
-            try {
-                Class<?> accessUtils = ClassCache.resolve("pepjebs.mapatlases.utils.MapAtlasesAccessUtils");
-                if (accessUtils == null) return;
-                ItemStack atlas = (ItemStack) accessUtils
-                        .getMethod("getAtlasFromPlayerByConfig", Player.class)
-                        .invoke(null, player);
-
-                if (!ClassCache.isInstance(ScreenClasses.MAP_ATLASES_ITEM, atlas.getItem())) return;
-
-                Class<?> networkHelper = ClassCache.resolve("net.mehvahdjukaar.moonlight.api.platform.network.NetworkHelper");
-                Class<?> packetClass = ClassCache.resolve("pepjebs.mapatlases.networking.C2S2COpenAtlasScreenPacket");
-                Class<?> customPacketPayload = ClassCache.resolve("net.minecraft.network.protocol.common.custom.CustomPacketPayload");
-                if (networkHelper == null || packetClass == null || customPacketPayload == null) return;
-
-                Object packet = packetClass.getDeclaredConstructor().newInstance();
-                networkHelper.getMethod("sendToServer", customPacketPayload).invoke(null, packet);
-            } catch (Exception e) {
-                // Map Atlases not present or failed to open atlas
-            }
+        if (!Config.Baked.mapAtlasesTabEnabled || !player.level().isClientSide) return;
+        // The 1.21.1 NeoForge build went through MapAtlasesNetworking → CustomPacketPayload, but
+        // 1.20.1 doesn't have CustomPacketPayload (it's a 1.20.5+ class). AtlasOverviewScreen has a
+        // public no-arg constructor on 1.20.1, so we just open it client-side directly.
+        try {
+            Class<?> screenClass = Class.forName("pepjebs.mapatlases.client.screen.AtlasOverviewScreen");
+            Object screen = screenClass.getDeclaredConstructor().newInstance();
+            net.minecraft.client.Minecraft.getInstance().setScreen((net.minecraft.client.gui.screens.Screen) screen);
+        } catch (Exception e) {
+            // Map Atlases not present or screen failed to open.
         }
     }
 }

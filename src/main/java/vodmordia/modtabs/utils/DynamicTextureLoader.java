@@ -65,7 +65,7 @@ public class DynamicTextureLoader {
 
             // Create a unique ResourceLocation for this texture
             // ResourceLocations must be lowercase, so convert textureId to lowercase
-            ResourceLocation textureLocation = ResourceLocation.fromNamespaceAndPath(
+            ResourceLocation textureLocation = new ResourceLocation(
                 ModTabs.MOD_ID,
                 DYNAMIC_TEXTURE_PREFIX + "/" + textureId.toLowerCase()
             );
