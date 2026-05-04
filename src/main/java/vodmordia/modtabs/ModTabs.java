@@ -43,11 +43,13 @@ public class ModTabs
     public static Path modConfigPath = Paths.get(configPath.toAbsolutePath().toString(), "modtabs");
 
     private static final String PROTOCOL_VERSION = "1.0";
+    // acceptMissingOr(...) so a client-only install can still connect to vanilla / mod-less servers.
+    // Without it, Forge requires the channel on both ends and rejects the handshake.
     public static final SimpleChannel CHANNEL = NetworkRegistry.ChannelBuilder
             .named(new ResourceLocation(MOD_ID, "main"))
             .networkProtocolVersion(() -> PROTOCOL_VERSION)
-            .clientAcceptedVersions(PROTOCOL_VERSION::equals)
-            .serverAcceptedVersions(PROTOCOL_VERSION::equals)
+            .clientAcceptedVersions(NetworkRegistry.acceptMissingOr(PROTOCOL_VERSION::equals))
+            .serverAcceptedVersions(NetworkRegistry.acceptMissingOr(PROTOCOL_VERSION::equals))
             .simpleChannel();
 
     private static boolean customTabsLoaded = false;
