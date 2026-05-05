@@ -125,6 +125,7 @@ public class ModTabs
             }
             TabsMenu.register(new FtbTeamsTab());
             TabsMenu.register(new AdvancedTeamTab());
+            TabsMenu.register(new VillagerRecruitsTab());
             TabsMenu.register(new FtbChunksTab());
 
             TabsMenu.register(new ReskillableReimaginedTab());

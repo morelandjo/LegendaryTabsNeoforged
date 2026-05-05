@@ -197,6 +197,9 @@ dependencies {
     // Misc.
     implementation fg.deobf("curse.maven:selene-499980:7945711")
     implementation fg.deobf("curse.maven:archivist-1513409:7979569")
+
+    // Villager Recruits — faction screen (U key by default).
+    implementation fg.deobf("curse.maven:recruits-523860:7906232")
 }
 
 tasks.named('processResources', ProcessResources).configure {

@@ -42,6 +42,7 @@ public class Config
 		public static boolean reliableBackpacksTabEnabled;
 		public static boolean runicSkillsTabEnabled;
 		public static boolean advancedTeamTabEnabled;
+		public static boolean villagerRecruitsTabEnabled;
 		public static boolean stickyInventoryTab;
 
 		// Custom icon settings
@@ -78,6 +79,7 @@ public class Config
 		public static String reliableBackpacksTabCustomIcon;
 		public static String runicSkillsTabCustomIcon;
 		public static String advancedTeamTabCustomIcon;
+		public static String villagerRecruitsTabCustomIcon;
 
 		// Custom tabs settings
 		public static boolean customTabsEnabled;
@@ -117,6 +119,7 @@ public class Config
 		public static TabDisplayVisibility reliableBackpacksTabDisplayVisibility;
 		public static TabDisplayVisibility runicSkillsTabDisplayVisibility;
 		public static TabDisplayVisibility advancedTeamTabDisplayVisibility;
+		public static TabDisplayVisibility villagerRecruitsTabDisplayVisibility;
 
 		// Tab order overrides
 		public static int inventoryTabOrder;
@@ -153,6 +156,7 @@ public class Config
 		public static int reliableBackpacksTabOrder;
 		public static int runicSkillsTabOrder;
 		public static int advancedTeamTabOrder;
+		public static int villagerRecruitsTabOrder;
 
 		public static void bakeClient()
 		{
@@ -194,6 +198,7 @@ public class Config
 				reliableBackpacksTabEnabled = ModTabsConfig.reliableBackpacksTabEnabled;
 				runicSkillsTabEnabled = ModTabsConfig.runicSkillsTabEnabled;
 				advancedTeamTabEnabled = ModTabsConfig.advancedTeamTabEnabled;
+				villagerRecruitsTabEnabled = ModTabsConfig.villagerRecruitsTabEnabled;
 				stickyInventoryTab = ModTabsConfig.stickyInventoryTab;
 
 				// Load custom tabs settings
@@ -235,6 +240,7 @@ public class Config
 				reliableBackpacksTabOrder = ModTabsConfig.reliableBackpacksTabOrder;
 				runicSkillsTabOrder = ModTabsConfig.runicSkillsTabOrder;
 				advancedTeamTabOrder = ModTabsConfig.advancedTeamTabOrder;
+				villagerRecruitsTabOrder = ModTabsConfig.villagerRecruitsTabOrder;
 
 				// Load tab display visibility settings
 				inventoryTabDisplayVisibility = ModTabsConfig.inventoryTabDisplayVisibility;
@@ -270,6 +276,7 @@ public class Config
 				reliableBackpacksTabDisplayVisibility = ModTabsConfig.reliableBackpacksTabDisplayVisibility;
 				runicSkillsTabDisplayVisibility = ModTabsConfig.runicSkillsTabDisplayVisibility;
 				advancedTeamTabDisplayVisibility = ModTabsConfig.advancedTeamTabDisplayVisibility;
+				villagerRecruitsTabDisplayVisibility = ModTabsConfig.villagerRecruitsTabDisplayVisibility;
 
 				// Load custom icon settings
 				inventoryTabCustomIcon = ModTabsConfig.inventoryTabCustomIcon;
@@ -305,6 +312,7 @@ public class Config
 				reliableBackpacksTabCustomIcon = ModTabsConfig.reliableBackpacksTabCustomIcon;
 				runicSkillsTabCustomIcon = ModTabsConfig.runicSkillsTabCustomIcon;
 				advancedTeamTabCustomIcon = ModTabsConfig.advancedTeamTabCustomIcon;
+				villagerRecruitsTabCustomIcon = ModTabsConfig.villagerRecruitsTabCustomIcon;
 			}
 			catch (Exception e)
 			{

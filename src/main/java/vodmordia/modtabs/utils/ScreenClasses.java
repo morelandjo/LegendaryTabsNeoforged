@@ -214,4 +214,9 @@ public final class ScreenClasses {
     /** Static {@code INSTANCE} field; {@code isInTeam()} picks which screen to open. */
     public static final String ADVANCED_TEAM_CLIENT_TEAM =
             "com.clefal.teams.client.core.ClientTeam";
+
+    // -- Villager Recruits ------------------------------------------------
+    /** Faction landing screen opened by the U keybind. Constructor takes a {@link net.minecraft.world.entity.player.Player}. */
+    public static final String VILLAGER_RECRUITS_FACTION_MAIN_SCREEN =
+            "com.talhanation.recruits.client.gui.faction.FactionMainScreen";
 }

@@ -309,6 +309,22 @@ public class ModTabsConfig extends MidnightConfig {
     @Entry(category = "tabs")
     public static TabDisplayVisibility advancedTeamTabDisplayVisibility = TabDisplayVisibility.YES;
 
+    @Comment(category = "tabs") public static CommentText spacer_villager_recruits;
+
+    @Comment(category = "tabs") public static CommentText villagerRecruits;
+
+    @Entry(category = "tabs")
+    public static boolean villagerRecruitsTabEnabled = true;
+
+
+    @Entry(category = "tabs")
+    public static String villagerRecruitsTabCustomIcon = "";
+    @Entry(category = "tabs")
+    public static int villagerRecruitsTabOrder = 0;
+
+    @Entry(category = "tabs")
+    public static TabDisplayVisibility villagerRecruitsTabDisplayVisibility = TabDisplayVisibility.YES;
+
     @Comment(category = "tabs") public static CommentText spacer10;
 
     @Comment(category = "tabs") public static CommentText journeyMap;
