@@ -41,6 +41,7 @@ public class Config
 		public static boolean biologyDictionaryTabEnabled;
 		public static boolean reliableBackpacksTabEnabled;
 		public static boolean runicSkillsTabEnabled;
+		public static boolean advancedTeamTabEnabled;
 		public static boolean stickyInventoryTab;
 
 		// Custom icon settings
@@ -76,6 +77,7 @@ public class Config
 		public static String biologyDictionaryTabCustomIcon;
 		public static String reliableBackpacksTabCustomIcon;
 		public static String runicSkillsTabCustomIcon;
+		public static String advancedTeamTabCustomIcon;
 
 		// Custom tabs settings
 		public static boolean customTabsEnabled;
@@ -114,6 +116,7 @@ public class Config
 		public static TabDisplayVisibility biologyDictionaryTabDisplayVisibility;
 		public static TabDisplayVisibility reliableBackpacksTabDisplayVisibility;
 		public static TabDisplayVisibility runicSkillsTabDisplayVisibility;
+		public static TabDisplayVisibility advancedTeamTabDisplayVisibility;
 
 		// Tab order overrides
 		public static int inventoryTabOrder;
@@ -149,6 +152,7 @@ public class Config
 		public static int biologyDictionaryTabOrder;
 		public static int reliableBackpacksTabOrder;
 		public static int runicSkillsTabOrder;
+		public static int advancedTeamTabOrder;
 
 		public static void bakeClient()
 		{
@@ -189,6 +193,7 @@ public class Config
 				biologyDictionaryTabEnabled = ModTabsConfig.biologyDictionaryTabEnabled;
 				reliableBackpacksTabEnabled = ModTabsConfig.reliableBackpacksTabEnabled;
 				runicSkillsTabEnabled = ModTabsConfig.runicSkillsTabEnabled;
+				advancedTeamTabEnabled = ModTabsConfig.advancedTeamTabEnabled;
 				stickyInventoryTab = ModTabsConfig.stickyInventoryTab;
 
 				// Load custom tabs settings
@@ -229,6 +234,7 @@ public class Config
 				biologyDictionaryTabOrder = ModTabsConfig.biologyDictionaryTabOrder;
 				reliableBackpacksTabOrder = ModTabsConfig.reliableBackpacksTabOrder;
 				runicSkillsTabOrder = ModTabsConfig.runicSkillsTabOrder;
+				advancedTeamTabOrder = ModTabsConfig.advancedTeamTabOrder;
 
 				// Load tab display visibility settings
 				inventoryTabDisplayVisibility = ModTabsConfig.inventoryTabDisplayVisibility;
@@ -263,6 +269,7 @@ public class Config
 				biologyDictionaryTabDisplayVisibility = ModTabsConfig.biologyDictionaryTabDisplayVisibility;
 				reliableBackpacksTabDisplayVisibility = ModTabsConfig.reliableBackpacksTabDisplayVisibility;
 				runicSkillsTabDisplayVisibility = ModTabsConfig.runicSkillsTabDisplayVisibility;
+				advancedTeamTabDisplayVisibility = ModTabsConfig.advancedTeamTabDisplayVisibility;
 
 				// Load custom icon settings
 				inventoryTabCustomIcon = ModTabsConfig.inventoryTabCustomIcon;
@@ -297,6 +304,7 @@ public class Config
 				biologyDictionaryTabCustomIcon = ModTabsConfig.biologyDictionaryTabCustomIcon;
 				reliableBackpacksTabCustomIcon = ModTabsConfig.reliableBackpacksTabCustomIcon;
 				runicSkillsTabCustomIcon = ModTabsConfig.runicSkillsTabCustomIcon;
+				advancedTeamTabCustomIcon = ModTabsConfig.advancedTeamTabCustomIcon;
 			}
 			catch (Exception e)
 			{

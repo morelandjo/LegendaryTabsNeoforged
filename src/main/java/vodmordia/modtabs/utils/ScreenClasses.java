@@ -202,4 +202,16 @@ public final class ScreenClasses {
     // -- Runic Skills -----------------------------------------------------
     public static final String RUNIC_SKILLS_SCREEN =
             "com.otectus.runicskills.client.screen.RunicSkillsScreen";
+
+    // -- Advanced Team (clefal) -------------------------------------------
+    /** Abstract parent of HasTeamScreen / NoTeamScreen — used for tab attachment. */
+    public static final String ADVANCED_TEAM_SCREEN =
+            "com.clefal.teams.client.gui.screens.TeamsScreen";
+    public static final String ADVANCED_TEAM_HAS_TEAM_SCREEN =
+            "com.clefal.teams.client.gui.screens.hasteam.HasTeamScreen";
+    public static final String ADVANCED_TEAM_NO_TEAM_SCREEN =
+            "com.clefal.teams.client.gui.screens.noteam.NoTeamScreen";
+    /** Static {@code INSTANCE} field; {@code isInTeam()} picks which screen to open. */
+    public static final String ADVANCED_TEAM_CLIENT_TEAM =
+            "com.clefal.teams.client.core.ClientTeam";
 }

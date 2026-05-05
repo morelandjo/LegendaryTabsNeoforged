@@ -119,6 +119,7 @@ public class ModTabs
                 LOGGER.warn("Failed to run FTB Teams inspection: " + e.getMessage());
             }
             TabsMenu.register(new FtbTeamsTab());
+            TabsMenu.register(new AdvancedTeamTab());
             TabsMenu.register(new FtbChunksTab());
 
             TabsMenu.register(new ReskillableReimaginedTab());

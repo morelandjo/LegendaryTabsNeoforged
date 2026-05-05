@@ -151,6 +151,17 @@ dependencies {
     implementation fg.deobf("curse.maven:ftb-library-forge-404465:7296748")
     implementation fg.deobf("curse.maven:framework-549225:7573740")
 
+    // Advanced Team (clefal) — separate teams mod with its own HasTeam/NoTeam screens.
+    // Curse Maven blocks direct download of this artifact (403 Forbidden), same as Runic Skills,
+    // so we vendor the jar in libs/advanced-team-1.4.6.jar and resolve it through the flatDir
+    // repo above. The "blank" group is required by ForgeGradle's deobf cache key.
+    implementation fg.deobf("blank:advanced-team:1.4.6")
+    // Nirvana Library — required by Advanced Team (com.clefal.nirvana_lib.* packages).
+    implementation fg.deobf("curse.maven:nirvana-library-1164411:7986008")
+    // Required transitive deps of Nirvana Library.
+    implementation fg.deobf("curse.maven:common-network-806044:5486134")
+    implementation fg.deobf("curse.maven:fzzy-config-1005914:7568893")
+
     // Map mods.
     implementation fg.deobf("curse.maven:journeymap-32274:5789363")
     implementation fg.deobf("curse.maven:xaeros-world-map-317780:7598469")

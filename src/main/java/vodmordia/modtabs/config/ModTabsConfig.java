@@ -293,6 +293,22 @@ public class ModTabsConfig extends MidnightConfig {
     @Entry(category = "tabs")
     public static TabDisplayVisibility ftbTeamsTabDisplayVisibility = TabDisplayVisibility.YES;
 
+    @Comment(category = "tabs") public static CommentText spacer_advanced_team;
+
+    @Comment(category = "tabs") public static CommentText advancedTeam;
+
+    @Entry(category = "tabs")
+    public static boolean advancedTeamTabEnabled = true;
+
+
+    @Entry(category = "tabs")
+    public static String advancedTeamTabCustomIcon = "";
+    @Entry(category = "tabs")
+    public static int advancedTeamTabOrder = 0;
+
+    @Entry(category = "tabs")
+    public static TabDisplayVisibility advancedTeamTabDisplayVisibility = TabDisplayVisibility.YES;
+
     @Comment(category = "tabs") public static CommentText spacer10;
 
     @Comment(category = "tabs") public static CommentText journeyMap;

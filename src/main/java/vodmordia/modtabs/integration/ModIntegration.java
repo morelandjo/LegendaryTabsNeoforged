@@ -35,7 +35,8 @@ public enum ModIntegration {
     ECCENTRIC_TOME("eccentrictome", "Eccentric Tome"),
     BETTER_ADVANCEMENTS("betteradvancements", "Better Advancements"),
     MOTP("memory_of_the_past", "MOTP - RPG Player Leveling"),
-    RUNIC_SKILLS("runicskills", "Runic Skills");
+    RUNIC_SKILLS("runicskills", "Runic Skills"),
+    ADVANCED_TEAM("teams", "Advanced Team");
 
     private final String modId;
     private final String displayName;
