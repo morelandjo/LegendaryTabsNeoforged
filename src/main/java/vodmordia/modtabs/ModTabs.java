@@ -60,8 +60,13 @@ public class ModTabs
         IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
         IEventBus forgeBus = MinecraftForge.EVENT_BUS;
 
-        // Initialize MidnightConfig
-        MidnightConfig.init(MOD_ID, ModTabsConfig.class);
+        // MidnightConfig.init is deferred to FMLCommonSetupEvent (enqueueWork) to avoid
+        // a ConcurrentModificationException race with MidnightLib's own constructor —
+        // Forge dispatches @Mod constructors in parallel, and MidnightConfig mutates
+        // shared static LinkedHashMaps without synchronization.
+        modEventBus.addListener((net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent event) ->
+            event.enqueueWork(() -> MidnightConfig.init(MOD_ID, ModTabsConfig.class))
+        );
 
         // Initialize mod integration manager
         ModIntegrationManager.detectLoadedMods();
