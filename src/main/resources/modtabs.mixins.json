@@ -1,0 +1,13 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "vodmordia.modtabs.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "refmap": "modtabs.refmap.json",
+  "client": [
+    "DrawTabsMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 0
+  }
+}

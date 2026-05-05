@@ -437,6 +437,22 @@ public class ModTabsConfig extends MidnightConfig {
     @Entry(category = "tabs")
     public static TabDisplayVisibility pufferfishSkillsTabDisplayVisibility = TabDisplayVisibility.YES;
 
+    @Comment(category = "tabs") public static CommentText spacer_runic_skills;
+
+    @Comment(category = "tabs") public static CommentText runicSkills;
+
+    @Entry(category = "tabs")
+    public static boolean runicSkillsTabEnabled = true;
+
+
+    @Entry(category = "tabs")
+    public static String runicSkillsTabCustomIcon = "";
+    @Entry(category = "tabs")
+    public static int runicSkillsTabOrder = 0;
+
+    @Entry(category = "tabs")
+    public static TabDisplayVisibility runicSkillsTabDisplayVisibility = TabDisplayVisibility.YES;
+
     @Comment(category = "tabs") public static CommentText spacer18;
 
     @Comment(category = "tabs") public static CommentText reskillableReimagined;

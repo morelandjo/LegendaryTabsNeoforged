@@ -122,6 +122,7 @@ public class ModTabs
             TabsMenu.register(new FtbChunksTab());
 
             TabsMenu.register(new ReskillableReimaginedTab());
+            TabsMenu.register(new RunicSkillsTab());
             TabsMenu.register(new MapAtlasesTab());
             TabsMenu.register(new XaerosMapTab());
             TabsMenu.register(new JourneyMapTab());

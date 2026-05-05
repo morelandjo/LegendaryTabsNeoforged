@@ -33,6 +33,7 @@ public class DynamicTabConfig {
         registerTab("passiveSkillTreeTab", true, 0);
         registerTab("pufferfishSkillsTab", true, 0);
         registerTab("reskillableTab", true, 0);
+        registerTab("runicSkillsTab", true, 0);
         registerTab("sophisticatedBackpacksTab", true, 0);
         registerTab("travelersBackpackTab", true, 0);
         registerTab("xaerosMapTab", true, 0);
@@ -107,6 +108,7 @@ public class DynamicTabConfig {
         updateTabConfig("passiveSkillTreeTab", ModTabsConfig.passiveSkillTreeTabEnabled, ModTabsConfig.passiveSkillTreeTabOrder);
         updateTabConfig("pufferfishSkillsTab", ModTabsConfig.pufferfishSkillsTabEnabled, ModTabsConfig.pufferfishSkillsTabOrder);
         updateTabConfig("reskillableReimaginedTab", ModTabsConfig.reskillableReimaginedTabEnabled, ModTabsConfig.reskillableReimaginedTabOrder);
+        updateTabConfig("runicSkillsTab", ModTabsConfig.runicSkillsTabEnabled, ModTabsConfig.runicSkillsTabOrder);
         updateTabConfig("sophisticatedBackpacksTab", ModTabsConfig.sophisticatedBackpacksTabEnabled, ModTabsConfig.sophisticatedBackpacksTabOrder);
         updateTabConfig("travelersBackpackTab", ModTabsConfig.travelersBackpackTabEnabled, ModTabsConfig.travelersBackpackTabOrder);
         updateTabConfig("xaerosMapTab", ModTabsConfig.xaerosMapTabEnabled, ModTabsConfig.xaerosMapTabOrder);

@@ -198,4 +198,8 @@ public final class ScreenClasses {
             "com.evandev.reliable_backpacks.common.items.BackpackItem";
     public static final String RELIABLE_BACKPACKS_CONTAINER =
             "com.evandev.reliable_backpacks.common.items.BackpackItemContainer";
+
+    // -- Runic Skills -----------------------------------------------------
+    public static final String RUNIC_SKILLS_SCREEN =
+            "com.otectus.runicskills.client.screen.RunicSkillsScreen";
 }
