@@ -88,6 +88,11 @@ repositories {
     maven {
         url "https://maven.terraformersmc.com/releases/"
     }
+    // Shadows_of_Fire's Maven (Apothic Attributes + Placebo).
+    maven {
+        name = "Shadows_of_Fire"
+        url = "https://maven.shadowsoffire.dev/releases"
+    }
     flatDir {
         dirs 'libs'
     }
@@ -200,6 +205,12 @@ dependencies {
 
     // Villager Recruits — faction screen (U key by default).
     implementation fg.deobf("curse.maven:recruits-523860:7906232")
+
+    // Apothic Attributes (+ Placebo, its hard runtime dep). Reflection-only integration on
+    // our side; both jars need to be on the runtime classpath for AttributesGui to load.
+    // Sourced from Shadows_of_Fire's official maven; bump versions in gradle.properties.
+    implementation fg.deobf("dev.shadowsoffire:Placebo:${minecraft_version}-${project.placebo_version}")
+    implementation fg.deobf("dev.shadowsoffire:ApothicAttributes:${minecraft_version}-${project.apothic_attributes_version}")
 }
 
 tasks.named('processResources', ProcessResources).configure {

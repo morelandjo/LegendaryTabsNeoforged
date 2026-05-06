@@ -219,4 +219,13 @@ public final class ScreenClasses {
     /** Faction landing screen opened by the U keybind. Constructor takes a {@link net.minecraft.world.entity.player.Player}. */
     public static final String VILLAGER_RECRUITS_FACTION_MAIN_SCREEN =
             "com.talhanation.recruits.client.gui.faction.FactionMainScreen";
+
+    // -- Apothic Attributes (modid attributeslib on 1.20.1) ---------------
+    /** Renderable overlay attached to {@code InventoryScreen} via the mod's own ScreenEvent.Init.Post listener.
+     *  Holds the static {@code wasOpen} flag we flip before opening the inventory. */
+    public static final String APOTHIC_ATTRIBUTES_GUI =
+            "dev.shadowsoffire.attributeslib.client.AttributesGui";
+    /** Static {@code enableAttributesGui} field — server admins can disable the panel entirely. */
+    public static final String APOTHIC_ATTRIBUTES_CONFIG =
+            "dev.shadowsoffire.attributeslib.ALConfig";
 }

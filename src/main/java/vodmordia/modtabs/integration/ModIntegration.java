@@ -37,7 +37,8 @@ public enum ModIntegration {
     MOTP("memory_of_the_past", "MOTP - RPG Player Leveling"),
     RUNIC_SKILLS("runicskills", "Runic Skills"),
     ADVANCED_TEAM("teams", "Advanced Team"),
-    VILLAGER_RECRUITS("recruits", "Villager Recruits");
+    VILLAGER_RECRUITS("recruits", "Villager Recruits"),
+    APOTHIC_ATTRIBUTES("attributeslib", "Apothic Attributes");
 
     private final String modId;
     private final String displayName;

@@ -43,6 +43,7 @@ public class Config
 		public static boolean runicSkillsTabEnabled;
 		public static boolean advancedTeamTabEnabled;
 		public static boolean villagerRecruitsTabEnabled;
+		public static boolean apothicAttributesTabEnabled;
 		public static boolean stickyInventoryTab;
 
 		// Custom icon settings
@@ -80,6 +81,7 @@ public class Config
 		public static String runicSkillsTabCustomIcon;
 		public static String advancedTeamTabCustomIcon;
 		public static String villagerRecruitsTabCustomIcon;
+		public static String apothicAttributesTabCustomIcon;
 
 		// Custom tabs settings
 		public static boolean customTabsEnabled;
@@ -157,6 +159,7 @@ public class Config
 		public static int runicSkillsTabOrder;
 		public static int advancedTeamTabOrder;
 		public static int villagerRecruitsTabOrder;
+		public static int apothicAttributesTabOrder;
 
 		public static void bakeClient()
 		{
@@ -199,6 +202,7 @@ public class Config
 				runicSkillsTabEnabled = ModTabsConfig.runicSkillsTabEnabled;
 				advancedTeamTabEnabled = ModTabsConfig.advancedTeamTabEnabled;
 				villagerRecruitsTabEnabled = ModTabsConfig.villagerRecruitsTabEnabled;
+				apothicAttributesTabEnabled = ModTabsConfig.apothicAttributesTabEnabled;
 				stickyInventoryTab = ModTabsConfig.stickyInventoryTab;
 
 				// Load custom tabs settings
@@ -241,6 +245,7 @@ public class Config
 				runicSkillsTabOrder = ModTabsConfig.runicSkillsTabOrder;
 				advancedTeamTabOrder = ModTabsConfig.advancedTeamTabOrder;
 				villagerRecruitsTabOrder = ModTabsConfig.villagerRecruitsTabOrder;
+				apothicAttributesTabOrder = ModTabsConfig.apothicAttributesTabOrder;
 
 				// Load tab display visibility settings
 				inventoryTabDisplayVisibility = ModTabsConfig.inventoryTabDisplayVisibility;
@@ -313,6 +318,7 @@ public class Config
 				runicSkillsTabCustomIcon = ModTabsConfig.runicSkillsTabCustomIcon;
 				advancedTeamTabCustomIcon = ModTabsConfig.advancedTeamTabCustomIcon;
 				villagerRecruitsTabCustomIcon = ModTabsConfig.villagerRecruitsTabCustomIcon;
+				apothicAttributesTabCustomIcon = ModTabsConfig.apothicAttributesTabCustomIcon;
 			}
 			catch (Exception e)
 			{
