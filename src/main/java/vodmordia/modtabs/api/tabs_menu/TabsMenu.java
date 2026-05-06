@@ -20,6 +20,8 @@ import java.util.function.Function;
 
 import static vodmordia.modtabs.api.tabs_menu.TabBase.TAB_HEIGHT;
 import static vodmordia.modtabs.api.tabs_menu.TabBase.TAB_WIDTH;
+import static vodmordia.modtabs.api.tabs_menu.TabBase.TAB_HEIGHT_VERTICAL;
+import static vodmordia.modtabs.api.tabs_menu.TabBase.TAB_WIDTH_VERTICAL;
 
 public class TabsMenu {
     private static final Map<Class<? extends Screen>, ScreenInfo> tabsScreens = new HashMap<>();
@@ -128,7 +130,17 @@ public class TabsMenu {
 
         ScreenInfo screenInfo = tabsScreens.get(screen.getClass());
 
-        // Calculate tab area bounds with padding
+        if (screenInfo.positioning != null && screenInfo.positioning.isVertical()) {
+            int tabAreaTop = topScreenPos - HOVER_PADDING;
+            int tabAreaBottom = topScreenPos + (currentTabsCount * (TAB_HEIGHT_VERTICAL + 1)) + HOVER_PADDING;
+            int tabAreaLeft = leftScreenPos - HOVER_PADDING;
+            int tabAreaRight = leftScreenPos + TAB_WIDTH_VERTICAL + HOVER_PADDING;
+            return mouseX >= tabAreaLeft && mouseX <= tabAreaRight &&
+                   mouseY >= tabAreaTop && mouseY <= tabAreaBottom;
+        }
+
+
+        // Horizontal layout
         int tabAreaLeft = leftScreenPos - HOVER_PADDING;
         int tabAreaRight = leftScreenPos + (currentTabsCount * (TAB_WIDTH + 1)) + HOVER_PADDING;
 
@@ -146,12 +158,24 @@ public class TabsMenu {
     }
 
     private static TabDisplayMode currentDisplayMode = TabDisplayMode.NORMAL;
+    private static TabPositioning currentPositioning = TabPositioning.GUI_RELATIVE;
 
     public static int getAnimatedYOffset() {
-        if (animationManager != null && isInTuckMode) {
+        if (animationManager != null && isInTuckMode && !currentPositioning.isVertical()) {
             return animationManager.getYOffset(TAB_HEIGHT, currentDisplayMode);
         }
         return 0;
+    }
+
+    public static int getAnimatedXOffset() {
+        if (animationManager != null && isInTuckMode && currentPositioning.isVertical()) {
+            return animationManager.getXOffset(TAB_WIDTH_VERTICAL, currentPositioning);
+        }
+        return 0;
+    }
+
+    public static boolean isCurrentVertical() {
+        return currentPositioning != null && currentPositioning.isVertical();
     }
 
     public static boolean hasCustomPositioning(Screen screen) {
@@ -162,10 +186,23 @@ public class TabsMenu {
         return screenInfo.positioning != TabPositioning.GUI_RELATIVE;
     }
 
-    public static void updateButtonsPosition(Screen screen, int leftScreenPos, int topScreenPos) {
-        if (TabsMenu.leftScreenPos != leftScreenPos || TabsMenu.topScreenPos != topScreenPos) {
-            TabsMenu.leftScreenPos = leftScreenPos;
-            TabsMenu.topScreenPos = topScreenPos;
+    public static void updateButtonsPosition(Screen screen, int guiLeft, int guiTop) {
+        // Translate the GUI's actual position into our tab anchor.
+        // Horizontal GUI_RELATIVE: anchor matches the GUI's top-left.
+        // Vertical GUI_RELATIVE_RIGHT: anchor sits at the GUI's right edge (guiLeft + guiWidth).
+        int newLeft = guiLeft;
+        int newTop = guiTop;
+        if (currentPositioning == TabPositioning.GUI_RELATIVE_RIGHT) {
+            ScreenInfo info = tabsScreens.get(screen.getClass());
+            if (info != null) {
+                int guiW = info.width.apply(Minecraft.getInstance().player);
+                newLeft = guiLeft + guiW;
+            }
+        }
+
+        if (TabsMenu.leftScreenPos != newLeft || TabsMenu.topScreenPos != newTop) {
+            TabsMenu.leftScreenPos = newLeft;
+            TabsMenu.topScreenPos = newTop;
             for (GuiEventListener button: screen.children()) {
                 if (button instanceof TabButton tabButton) {
                     tabButton.updatePosition(TabsMenu.leftScreenPos, TabsMenu.topScreenPos);
@@ -273,11 +310,31 @@ public class TabsMenu {
 
             ScreenInfo screenInfo = tabsScreens.get(event.getScreen().getClass());
 
-            // Store current display mode for animation
-            currentDisplayMode = screenInfo.displayMode;
+            // Apply user placement override only to GUI_RELATIVE registrations.
+            // Tabs hardcoded as SCREEN_TOP, SCREEN_BOTTOM, SCREEN_RIGHT, or CUSTOM
+            // are left untouched.
+            TabPositioning effectivePositioning = screenInfo.positioning;
+            TabDisplayMode effectiveDisplayMode = screenInfo.displayMode;
+            if (screenInfo.positioning == TabPositioning.GUI_RELATIVE && Config.Baked.standardTabPlacement != null) {
+                switch (Config.Baked.standardTabPlacement) {
+                    case TOP:
+                        effectiveDisplayMode = TabDisplayMode.NORMAL;
+                        break;
+                    case BOTTOM:
+                        effectiveDisplayMode = TabDisplayMode.INVERTED;
+                        break;
+                    case RIGHT:
+                        effectivePositioning = TabPositioning.GUI_RELATIVE_RIGHT;
+                        effectiveDisplayMode = TabDisplayMode.NORMAL;
+                        break;
+                }
+            }
+            // Store current display mode and positioning for animation/render
+            currentDisplayMode = effectiveDisplayMode;
+            currentPositioning = effectivePositioning;
 
             // Calculate tab position based on positioning mode
-            switch (screenInfo.positioning) {
+            switch (effectivePositioning) {
                 case GUI_RELATIVE:
                     // Original behavior - position relative to GUI center
                     TabsMenu.leftScreenPos = (event.getScreen().width - screenInfo.width.apply(Minecraft.getInstance().player)) / 2;
@@ -290,19 +347,33 @@ public class TabsMenu {
                     TabsMenu.leftScreenPos = (screenWidth - guiWidth) / 2;
 
                     // For inverted tabs, position at absolute top (y=0), otherwise use offset
-                    TabsMenu.topScreenPos = screenInfo.displayMode == TabDisplayMode.INVERTED ? 0 : screenInfo.screenEdgeOffset;
+                    TabsMenu.topScreenPos = effectiveDisplayMode == TabDisplayMode.INVERTED ? 0 : screenInfo.screenEdgeOffset;
                     break;
                 case SCREEN_BOTTOM:
                     // Position at bottom of screen with offset
                     TabsMenu.leftScreenPos = (event.getScreen().width - screenInfo.width.apply(Minecraft.getInstance().player)) / 2;
                     // For NORMAL display mode, TabButton will subtract TAB_HEIGHT again, so we need to add it back
                     // For INVERTED display mode, TabButton will use the position as-is
-                    if (screenInfo.displayMode == TabDisplayMode.NORMAL) {
+                    if (effectiveDisplayMode == TabDisplayMode.NORMAL) {
                         TabsMenu.topScreenPos = event.getScreen().height - screenInfo.screenEdgeOffset;
                     } else {
                         TabsMenu.topScreenPos = event.getScreen().height - TAB_HEIGHT - screenInfo.screenEdgeOffset;
                     }
                     break;
+                case SCREEN_RIGHT: {
+                    int guiHeightR = screenInfo.height.apply(Minecraft.getInstance().player);
+                    TabsMenu.leftScreenPos = event.getScreen().width - TAB_WIDTH_VERTICAL - screenInfo.screenEdgeOffset;
+                    TabsMenu.topScreenPos = (event.getScreen().height - guiHeightR) / 2;
+                    break;
+                }
+                case GUI_RELATIVE_RIGHT: {
+                    int guiW = screenInfo.width.apply(Minecraft.getInstance().player);
+                    int guiH = screenInfo.height.apply(Minecraft.getInstance().player);
+                    int guiLeft = (event.getScreen().width - guiW) / 2;
+                    TabsMenu.leftScreenPos = guiLeft + guiW;
+                    TabsMenu.topScreenPos = (event.getScreen().height - guiH) / 2;
+                    break;
+                }
                 case CUSTOM:
                     // Use custom position functions
                     if (screenInfo.customTabX != null && screenInfo.customTabY != null) {
@@ -317,7 +388,7 @@ public class TabsMenu {
             }
 
             // Only check bounds for GUI_RELATIVE positioning
-            if (screenInfo.positioning == TabPositioning.GUI_RELATIVE && TabsMenu.topScreenPos - TAB_HEIGHT < 0) {
+            if (effectivePositioning == TabPositioning.GUI_RELATIVE && TabsMenu.topScreenPos - TAB_HEIGHT < 0) {
                 ModTabs.LOGGER.warn("TabsMenu: EARLY RETURN - Tab position would be off-screen");
                 return;
             }
@@ -374,23 +445,28 @@ public class TabsMenu {
             }
 
 
-            int remainingWidth;
+            boolean vertical = effectivePositioning != null && effectivePositioning.isVertical();
+            int axisSize = vertical ? TAB_HEIGHT_VERTICAL : TAB_WIDTH;
+
+            int remainingAxis;
             try {
-                remainingWidth = screenInfo.width.apply(Minecraft.getInstance().player);
+                remainingAxis = vertical
+                    ? screenInfo.height.apply(Minecraft.getInstance().player)
+                    : screenInfo.width.apply(Minecraft.getInstance().player);
             } catch (Exception e) {
-                ModTabs.LOGGER.error("TabsMenu: Width calculation failed: " + e.getMessage());
+                ModTabs.LOGGER.error("TabsMenu: Axis size calculation failed: " + e.getMessage());
                 return;
             }
 
 
             // First pass: determine how many tabs can fit
             currentTabsCount = 0;
-            int tempWidth = remainingWidth;
+            int tempAxis = remainingAxis;
 
             // If sticky inventory tab is enabled and present, reserve space for it
             if (Config.Baked.stickyInventoryTab && inventoryTab != null) {
-                if (tempWidth > TAB_WIDTH) {
-                    tempWidth -= TAB_WIDTH + 1;
+                if (tempAxis > axisSize) {
+                    tempAxis -= axisSize + 1;
                     currentTabsCount++; // Count the inventory tab
                 }
             }
@@ -398,8 +474,8 @@ public class TabsMenu {
             // Count remaining space for non-inventory tabs
             List<TabBase> tabsToCheck = Config.Baked.stickyInventoryTab ? nonInventoryTabs : enabledTabs;
             for (TabBase tabBase: tabsToCheck) {
-                if (tempWidth > TAB_WIDTH) {
-                    tempWidth -= TAB_WIDTH + 1;
+                if (tempAxis > axisSize) {
+                    tempAxis -= axisSize + 1;
                     currentTabsCount++;
                 } else {
                     break;
@@ -432,7 +508,7 @@ public class TabsMenu {
 
             // If sticky inventory tab is enabled and present, always render it first
             if (Config.Baked.stickyInventoryTab && inventoryTab != null && currentTabsCount > 0) {
-                TabButton inventoryButton = new TabButton(inventoryTab, Minecraft.getInstance().player, event.getScreen(), buttonPosition, TabsMenu.leftScreenPos, TabsMenu.topScreenPos, screenInfo.displayMode);
+                TabButton inventoryButton = new TabButton(inventoryTab, Minecraft.getInstance().player, event.getScreen(), buttonPosition, TabsMenu.leftScreenPos, TabsMenu.topScreenPos, effectiveDisplayMode, effectivePositioning);
                 event.addListener(inventoryButton);
                 buttonPosition++;
             }
@@ -446,7 +522,7 @@ public class TabsMenu {
                 int tabIndexToShow = tabIndex - startTabIndex;
 
                 if (tabIndexToShow >= 0 && tabIndexToShow < availableSlots) {
-                    TabButton newButton = new TabButton(tabBase, Minecraft.getInstance().player, event.getScreen(), buttonPosition, TabsMenu.leftScreenPos, TabsMenu.topScreenPos, screenInfo.displayMode);
+                    TabButton newButton = new TabButton(tabBase, Minecraft.getInstance().player, event.getScreen(), buttonPosition, TabsMenu.leftScreenPos, TabsMenu.topScreenPos, effectiveDisplayMode, effectivePositioning);
                     event.addListener(newButton);
                     buttonPosition++;
                 }
@@ -458,7 +534,7 @@ public class TabsMenu {
 
             if (totalTabsToPage > maxVisibleTabs) {
                 // Use the same positioning logic as TabButton - pass topScreenPos directly and let NextTabsButton handle display mode
-                event.addListener(new NextTabsButton(currentTabsCount, TabsMenu.leftScreenPos, TabsMenu.topScreenPos, screenInfo.displayMode,
+                event.addListener(new NextTabsButton(currentTabsCount, TabsMenu.leftScreenPos, TabsMenu.topScreenPos, effectiveDisplayMode, effectivePositioning,
                         button -> nextTabButtons(event.getScreen())));
             }
         }

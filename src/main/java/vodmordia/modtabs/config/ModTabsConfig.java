@@ -6,6 +6,13 @@ public class ModTabsConfig extends MidnightConfig {
 
     public static class CommentText {}
 
+    @Comment(category = "tabs") public static CommentText placement;
+
+    @Entry(category = "tabs")
+    public static StandardTabPlacement standardTabPlacement = StandardTabPlacement.RIGHT;
+
+    @Comment(category = "tabs") public static CommentText spacer_placement;
+
     @Comment(category = "tabs") public static CommentText inventory;
 
     @Entry(category = "tabs")

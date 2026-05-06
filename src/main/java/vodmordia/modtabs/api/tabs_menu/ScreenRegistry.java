@@ -70,6 +70,10 @@ public class ScreenRegistry {
             return withPositioning(TabPositioning.SCREEN_BOTTOM);
         }
 
+        public ScreenRegistrationBuilder atRight() {
+            return withPositioning(TabPositioning.SCREEN_RIGHT);
+        }
+
         public ScreenRegistrationBuilder withOffset(int offset) {
             this.offset = offset;
             return this;

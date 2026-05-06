@@ -15,9 +15,16 @@ public class TabRenderer {
 
     // Common constants used by all tabs
     public static final ResourceLocation TAB_TEXTURE = new ResourceLocation(ModTabs.MOD_ID, "textures/gui/tab_menu_buttons.png");
+    public static final ResourceLocation TAB_TEXTURE_VERTICAL = new ResourceLocation(ModTabs.MOD_ID, "textures/gui/tab_menu_buttons_vertical.png");
     public static final int TAB_BACKGROUND_U = 0;
     public static final int TAB_BACKGROUND_V = 138;
     public static final int HOVER_OFFSET = 54;
+
+    // After 90° CW rotation of the 256x256 source: the (0,138,26x22) sprite lands at (96,0,22x26)
+    // and the hover-variant offset of 54 (originally along U) now runs along V.
+    public static final int TAB_BACKGROUND_U_VERTICAL = 96;
+    public static final int TAB_BACKGROUND_V_VERTICAL = 0;
+    public static final int HOVER_OFFSET_VERTICAL = 54;
 
     // Builder for fluent API
     private boolean hasBackground = false;
@@ -106,28 +113,37 @@ public class TabRenderer {
     }
 
     /**
-     * Renders the tab with all specified components
+     * Renders the tab with all specified components.
+     * Vertical orientation is read from {@link TabsMenu#isCurrentVertical()} so existing
+     * tab subclasses don't need to know about it explicitly.
      */
     public void render(GuiGraphics gui, int x, int y, boolean hover, boolean inverted) {
+        render(gui, x, y, hover, inverted, TabsMenu.isCurrentVertical());
+    }
+
+    public void render(GuiGraphics gui, int x, int y, boolean hover, boolean inverted, boolean vertical) {
 
         if (hasBackground) {
-            renderBackground(gui, x, y, hover, inverted);
+            renderBackground(gui, x, y, hover, inverted, vertical);
         }
 
         if (iconTexture != null) {
-            renderTextureIcon(gui, x, y, inverted);
+            renderTextureIcon(gui, x, y, inverted, vertical);
         } else if (iconItem != null) {
-            renderItemIcon(gui, x, y, inverted);
+            renderItemIcon(gui, x, y, inverted, vertical);
         } else if (customIconRenderer != null) {
-            renderCustomIcon(gui, x, y, hover, inverted);
+            renderCustomIcon(gui, x, y, hover, inverted, vertical);
         }
 
     }
 
-    private void renderBackground(GuiGraphics gui, int x, int y, boolean hover, boolean inverted) {
+    private void renderBackground(GuiGraphics gui, int x, int y, boolean hover, boolean inverted, boolean vertical) {
         int hoverOffset = hover ? HOVER_OFFSET : 0;
 
-        if (inverted) {
+        if (vertical) {
+            int verticalHover = hover ? HOVER_OFFSET_VERTICAL : 0;
+            gui.blit(TAB_TEXTURE_VERTICAL, x, y, TAB_BACKGROUND_U_VERTICAL, TAB_BACKGROUND_V_VERTICAL + verticalHover, TabBase.TAB_WIDTH_VERTICAL, TabBase.TAB_HEIGHT_VERTICAL);
+        } else if (inverted) {
             // Render rotated background
             gui.pose().pushPose();
             gui.pose().translate(x + TabBase.TAB_WIDTH / 2.0f, y + TabBase.TAB_HEIGHT / 2.0f, 0);
@@ -141,33 +157,52 @@ public class TabRenderer {
         }
     }
 
-    private void renderTextureIcon(GuiGraphics gui, int x, int y, boolean inverted) {
+    private void renderTextureIcon(GuiGraphics gui, int x, int y, boolean inverted, boolean vertical) {
         // Icons always render upright, regardless of tab orientation
         // Move icon up 3px when tabs are inverted
         int yOffset = inverted ? -3 : 0;
-        gui.blit(iconTexture, x + iconX, y + iconY + yOffset, iconU, iconV, iconWidth, iconHeight, iconTextureWidth, iconTextureHeight);
+        // For vertical tabs, center the icon within the rotated tab background
+        int xCenterOffset = vertical ? (TabBase.TAB_WIDTH_VERTICAL - iconWidth) / 2 - iconX : 0;
+        int yCenterOffset = vertical ? (TabBase.TAB_HEIGHT_VERTICAL - iconHeight) / 2 - iconY : 0;
+        gui.blit(iconTexture, x + iconX + xCenterOffset, y + iconY + yOffset + yCenterOffset, iconU, iconV, iconWidth, iconHeight, iconTextureWidth, iconTextureHeight);
     }
 
-    private void renderItemIcon(GuiGraphics gui, int x, int y, boolean inverted) {
+    private void renderItemIcon(GuiGraphics gui, int x, int y, boolean inverted, boolean vertical) {
         // Items always render upright, regardless of tab orientation
         // Move icon up 3px when tabs are inverted
         int yOffset = inverted ? -3 : 0;
+        // For vertical tabs, center the 16x16 item within the rotated tab background
+        int xCenterOffset = vertical ? (TabBase.TAB_WIDTH_VERTICAL - 16) / 2 - itemX : 0;
+        int yCenterOffset = vertical ? (TabBase.TAB_HEIGHT_VERTICAL - 16) / 2 - itemY : 0;
         if (itemScale != 1.0f) {
             gui.pose().pushPose();
-            gui.pose().translate(x + itemX + 8, y + itemY + yOffset + 8, 0); // Center around item center
+            gui.pose().translate(x + itemX + xCenterOffset + 8, y + itemY + yOffset + yCenterOffset + 8, 0);
             gui.pose().scale(itemScale, itemScale, 1.0f);
-            gui.pose().translate(-8, -8, 0); // Move back to render position
+            gui.pose().translate(-8, -8, 0);
             gui.renderItem(iconItem, 0, 0);
             gui.pose().popPose();
         } else {
-            gui.renderItem(iconItem, x + itemX, y + itemY + yOffset);
+            gui.renderItem(iconItem, x + itemX + xCenterOffset, y + itemY + yOffset + yCenterOffset);
         }
     }
 
-    private void renderCustomIcon(GuiGraphics gui, int x, int y, boolean hover, boolean inverted) {
-        // Custom icons always render upright, regardless of tab orientation
-        RenderContext context = new RenderContext(gui, x, y, hover, inverted);
-        customIconRenderer.accept(context);
+    private void renderCustomIcon(GuiGraphics gui, int x, int y, boolean hover, boolean inverted, boolean vertical) {
+        // Custom icons always render upright, regardless of tab orientation.
+        // For vertical tabs the footprint is 22x26 instead of 26x22, so existing custom
+        // renderers (which hardcode horizontal offsets like x+6, y+5) draw off-center.
+        // Apply a single translation to compensate so renderers don't need to know about it.
+        if (vertical) {
+            int dx = (TabBase.TAB_WIDTH_VERTICAL - TabBase.TAB_WIDTH) / 2;   // -2
+            int dy = (TabBase.TAB_HEIGHT_VERTICAL - TabBase.TAB_HEIGHT) / 2; // +2
+            gui.pose().pushPose();
+            gui.pose().translate(dx, dy, 0);
+            RenderContext context = new RenderContext(gui, x, y, hover, inverted, vertical);
+            customIconRenderer.accept(context);
+            gui.pose().popPose();
+        } else {
+            RenderContext context = new RenderContext(gui, x, y, hover, inverted, vertical);
+            customIconRenderer.accept(context);
+        }
     }
 
     /**
@@ -176,14 +211,19 @@ public class TabRenderer {
     public static class RenderContext {
         public final GuiGraphics gui;
         public final int x, y;
-        public final boolean hover, inverted;
+        public final boolean hover, inverted, vertical;
 
         public RenderContext(GuiGraphics gui, int x, int y, boolean hover, boolean inverted) {
+            this(gui, x, y, hover, inverted, false);
+        }
+
+        public RenderContext(GuiGraphics gui, int x, int y, boolean hover, boolean inverted, boolean vertical) {
             this.gui = gui;
             this.x = x;
             this.y = y;
             this.hover = hover;
             this.inverted = inverted;
+            this.vertical = vertical;
         }
     }
 }

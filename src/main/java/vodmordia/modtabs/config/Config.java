@@ -45,6 +45,7 @@ public class Config
 		public static boolean villagerRecruitsTabEnabled;
 		public static boolean apothicAttributesTabEnabled;
 		public static boolean stickyInventoryTab;
+		public static StandardTabPlacement standardTabPlacement;
 
 		// Custom icon settings
 		public static String inventoryTabCustomIcon;
@@ -204,6 +205,7 @@ public class Config
 				villagerRecruitsTabEnabled = ModTabsConfig.villagerRecruitsTabEnabled;
 				apothicAttributesTabEnabled = ModTabsConfig.apothicAttributesTabEnabled;
 				stickyInventoryTab = ModTabsConfig.stickyInventoryTab;
+				standardTabPlacement = ModTabsConfig.standardTabPlacement;
 
 				// Load custom tabs settings
 				customTabsEnabled = ModTabsConfig.customTabsEnabled;

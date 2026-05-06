@@ -61,7 +61,8 @@ public record TabSpec(
         public enum Position {
             GUI_RELATIVE(TabPositioning.GUI_RELATIVE),
             SCREEN_TOP(TabPositioning.SCREEN_TOP),
-            SCREEN_BOTTOM(TabPositioning.SCREEN_BOTTOM);
+            SCREEN_BOTTOM(TabPositioning.SCREEN_BOTTOM),
+            SCREEN_RIGHT(TabPositioning.SCREEN_RIGHT);
 
             public final TabPositioning value;
             Position(TabPositioning v) { this.value = v; }
@@ -95,5 +96,6 @@ public record TabSpec(
         public static Layout standardBottom() { return new Layout(false, Position.SCREEN_BOTTOM, Dimensions.STANDARD); }
         public static Layout guiRelative() { return new Layout(false, Position.GUI_RELATIVE, Dimensions.STANDARD); }
         public static Layout guiRelativeInverted() { return new Layout(true, Position.GUI_RELATIVE, Dimensions.STANDARD); }
+        public static Layout screenRight() { return new Layout(false, Position.SCREEN_RIGHT, Dimensions.STANDARD); }
     }
 }

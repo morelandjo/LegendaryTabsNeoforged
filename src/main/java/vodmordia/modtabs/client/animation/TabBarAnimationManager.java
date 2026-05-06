@@ -1,6 +1,7 @@
 package vodmordia.modtabs.client.animation;
 
 import vodmordia.modtabs.api.tabs_menu.TabDisplayMode;
+import vodmordia.modtabs.api.tabs_menu.TabPositioning;
 
 public class TabBarAnimationManager {
     public enum AnimationState {
@@ -78,32 +79,36 @@ public class TabBarAnimationManager {
     public int getYOffset(int tabHeight, TabDisplayMode displayMode) {
         update(); // Update state
 
-        float offsetFactor = 0.0f;
-
-        switch (currentState) {
-            case VISIBLE:
-                offsetFactor = 0.0f;
-                break;
-            case TUCKED:
-                offsetFactor = TUCK_PERCENTAGE;
-                break;
-            case ANIMATING_IN:
-                // Animating from tucked (TUCK_PERCENTAGE) to visible (0)
-                float progressIn = getAnimationProgress();
-                offsetFactor = TUCK_PERCENTAGE * (1.0f - progressIn);
-                break;
-            case ANIMATING_OUT:
-                // Animating from visible (0) to tucked (TUCK_PERCENTAGE)
-                float progressOut = getAnimationProgress();
-                offsetFactor = TUCK_PERCENTAGE * progressOut;
-                break;
-        }
-
+        float offsetFactor = currentOffsetFactor();
         int offset = (int) (tabHeight * offsetFactor);
 
         // For inverted tabs, move upward (negative offset)
         // For normal tabs, move downward (positive offset)
         return displayMode == TabDisplayMode.INVERTED ? -offset : offset;
+    }
+
+    /**
+     * Cross-axis offset for vertical (right-side) tab bars: positive moves right,
+     * sliding the bar off-screen to tuck it.
+     */
+    public int getXOffset(int tabWidth, TabPositioning positioning) {
+        update();
+        float offsetFactor = currentOffsetFactor();
+        return (int) (tabWidth * offsetFactor);
+    }
+
+    private float currentOffsetFactor() {
+        switch (currentState) {
+            case VISIBLE:
+                return 0.0f;
+            case TUCKED:
+                return TUCK_PERCENTAGE;
+            case ANIMATING_IN:
+                return TUCK_PERCENTAGE * (1.0f - getAnimationProgress());
+            case ANIMATING_OUT:
+                return TUCK_PERCENTAGE * getAnimationProgress();
+        }
+        return 0.0f;
     }
 
     public boolean isInHoverState() {
