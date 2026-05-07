@@ -122,8 +122,13 @@ public class TabRenderer {
     }
 
     public void render(GuiGraphics gui, int x, int y, boolean hover, boolean inverted, boolean vertical) {
-
-        if (hasBackground) {
+        // Panel preview: just the icon, no background, never inverted, never vertical.
+        // (currentIconRotation() and isCurrentVertical() also short-circuit to 0/false
+        // while TabsMenu.previewRendering is true.)
+        if (TabsMenu.previewRendering) {
+            inverted = false;
+            vertical = false;
+        } else if (hasBackground) {
             renderBackground(gui, x, y, hover, inverted, vertical);
         }
 
@@ -158,42 +163,79 @@ public class TabRenderer {
     }
 
     private void renderTextureIcon(GuiGraphics gui, int x, int y, boolean inverted, boolean vertical) {
-        // Icons always render upright, regardless of tab orientation
-        // Move icon up 3px when tabs are inverted
-        int yOffset = inverted ? -3 : 0;
-        // For vertical tabs, center the icon within the rotated tab background
-        int xCenterOffset = vertical ? (TabBase.TAB_WIDTH_VERTICAL - iconWidth) / 2 - iconX : 0;
-        int yCenterOffset = vertical ? (TabBase.TAB_HEIGHT_VERTICAL - iconHeight) / 2 - iconY : 0;
-        gui.blit(iconTexture, x + iconX + xCenterOffset, y + iconY + yOffset + yCenterOffset, iconU, iconV, iconWidth, iconHeight, iconTextureWidth, iconTextureHeight);
+        // Geometrically center the icon inside the tab regardless of orientation. The
+        // per-tab iconX/iconY values used to be additive offsets; ignoring them means
+        // every tab gets perfectly centered, which is what we want.
+        int tabW = vertical ? TabBase.TAB_WIDTH_VERTICAL : TabBase.TAB_WIDTH;
+        int tabH = vertical ? TabBase.TAB_HEIGHT_VERTICAL : TabBase.TAB_HEIGHT;
+        int dx = TabsMenu.previewRendering ? 0 : (vodmordia.modtabs.config.Config.Baked.iconOffsetLeft - vodmordia.modtabs.config.Config.Baked.iconOffsetRight);
+        int dy = TabsMenu.previewRendering ? 0 : (vodmordia.modtabs.config.Config.Baked.iconOffsetTop - vodmordia.modtabs.config.Config.Baked.iconOffsetBottom);
+        int finalX = x + (tabW - iconWidth) / 2 + dx;
+        int finalY = y + (tabH - iconHeight) / 2 + dy;
+        int iconRot = TabsMenu.currentIconRotation();
+        if (iconRot != 0) {
+            int cx = finalX + iconWidth / 2;
+            int cy = finalY + iconHeight / 2;
+            gui.pose().pushPose();
+            gui.pose().translate(cx, cy, 0);
+            gui.pose().mulPose(com.mojang.math.Axis.ZP.rotationDegrees(iconRot));
+            gui.pose().translate(-cx, -cy, 0);
+            gui.blit(iconTexture, finalX, finalY, iconU, iconV, iconWidth, iconHeight, iconTextureWidth, iconTextureHeight);
+            gui.pose().popPose();
+        } else {
+            gui.blit(iconTexture, finalX, finalY, iconU, iconV, iconWidth, iconHeight, iconTextureWidth, iconTextureHeight);
+        }
     }
 
     private void renderItemIcon(GuiGraphics gui, int x, int y, boolean inverted, boolean vertical) {
-        // Items always render upright, regardless of tab orientation
-        // Move icon up 3px when tabs are inverted
-        int yOffset = inverted ? -3 : 0;
-        // For vertical tabs, center the 16x16 item within the rotated tab background
-        int xCenterOffset = vertical ? (TabBase.TAB_WIDTH_VERTICAL - 16) / 2 - itemX : 0;
-        int yCenterOffset = vertical ? (TabBase.TAB_HEIGHT_VERTICAL - 16) / 2 - itemY : 0;
+        int tabW = vertical ? TabBase.TAB_WIDTH_VERTICAL : TabBase.TAB_WIDTH;
+        int tabH = vertical ? TabBase.TAB_HEIGHT_VERTICAL : TabBase.TAB_HEIGHT;
+        int dx = TabsMenu.previewRendering ? 0 : (vodmordia.modtabs.config.Config.Baked.iconOffsetLeft - vodmordia.modtabs.config.Config.Baked.iconOffsetRight);
+        int dy = TabsMenu.previewRendering ? 0 : (vodmordia.modtabs.config.Config.Baked.iconOffsetTop - vodmordia.modtabs.config.Config.Baked.iconOffsetBottom);
+        int finalX = x + (tabW - 16) / 2 + dx;
+        int finalY = y + (tabH - 16) / 2 + dy;
+        int iconRot = TabsMenu.currentIconRotation();
+        boolean rotated = iconRot != 0;
+        if (rotated) {
+            gui.pose().pushPose();
+            int cx = finalX + 8;
+            int cy = finalY + 8;
+            gui.pose().translate(cx, cy, 0);
+            gui.pose().mulPose(com.mojang.math.Axis.ZP.rotationDegrees(iconRot));
+            gui.pose().translate(-cx, -cy, 0);
+        }
         if (itemScale != 1.0f) {
             gui.pose().pushPose();
-            gui.pose().translate(x + itemX + xCenterOffset + 8, y + itemY + yOffset + yCenterOffset + 8, 0);
+            gui.pose().translate(finalX + 8, finalY + 8, 0);
             gui.pose().scale(itemScale, itemScale, 1.0f);
             gui.pose().translate(-8, -8, 0);
             gui.renderItem(iconItem, 0, 0);
             gui.pose().popPose();
         } else {
-            gui.renderItem(iconItem, x + itemX + xCenterOffset, y + itemY + yOffset + yCenterOffset);
+            gui.renderItem(iconItem, finalX, finalY);
+        }
+        if (rotated) {
+            gui.pose().popPose();
         }
     }
 
     private void renderCustomIcon(GuiGraphics gui, int x, int y, boolean hover, boolean inverted, boolean vertical) {
-        // Custom icons always render upright, regardless of tab orientation.
-        // For vertical tabs the footprint is 22x26 instead of 26x22, so existing custom
-        // renderers (which hardcode horizontal offsets like x+6, y+5) draw off-center.
-        // Apply a single translation to compensate so renderers don't need to know about it.
+        int iconRot = TabsMenu.currentIconRotation();
+        boolean rotated = iconRot != 0;
+        if (rotated) {
+            // Rotate around the tab's natural icon center (offset 13/11 from tab top-left for
+            // the standard 26x22 horizontal tab). Custom icons that diverge from this position
+            // will appear slightly off-center when rotated, which is acceptable for now.
+            int cx = x + (vertical ? TabBase.TAB_WIDTH_VERTICAL : TabBase.TAB_WIDTH) / 2;
+            int cy = y + (vertical ? TabBase.TAB_HEIGHT_VERTICAL : TabBase.TAB_HEIGHT) / 2;
+            gui.pose().pushPose();
+            gui.pose().translate(cx, cy, 0);
+            gui.pose().mulPose(com.mojang.math.Axis.ZP.rotationDegrees(iconRot));
+            gui.pose().translate(-cx, -cy, 0);
+        }
         if (vertical) {
-            int dx = (TabBase.TAB_WIDTH_VERTICAL - TabBase.TAB_WIDTH) / 2;   // -2
-            int dy = (TabBase.TAB_HEIGHT_VERTICAL - TabBase.TAB_HEIGHT) / 2; // +2
+            int dx = (TabBase.TAB_WIDTH_VERTICAL - TabBase.TAB_WIDTH) / 2;
+            int dy = (TabBase.TAB_HEIGHT_VERTICAL - TabBase.TAB_HEIGHT) / 2;
             gui.pose().pushPose();
             gui.pose().translate(dx, dy, 0);
             RenderContext context = new RenderContext(gui, x, y, hover, inverted, vertical);
@@ -202,6 +244,9 @@ public class TabRenderer {
         } else {
             RenderContext context = new RenderContext(gui, x, y, hover, inverted, vertical);
             customIconRenderer.accept(context);
+        }
+        if (rotated) {
+            gui.pose().popPose();
         }
     }
 

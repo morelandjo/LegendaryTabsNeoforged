@@ -3,11 +3,10 @@ package vodmordia.modtabs.client.tabs_menu;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 import vodmordia.modtabs.ModTabs;
-import vodmordia.modtabs.api.tabs_menu.IntegrationItemTab;
+import vodmordia.modtabs.api.tabs_menu.IntegrationIconTab;
 import vodmordia.modtabs.api.tabs_menu.TabConfig;
 import vodmordia.modtabs.api.tabs_menu.TabSpec;
 import vodmordia.modtabs.config.Config;
@@ -30,7 +29,14 @@ import vodmordia.modtabs.utils.ScreenClasses;
  * matching the mod's own gating: if the panel itself can't open, neither should the tab.
  */
 @TabConfig(configKey = "apothicAttributesTab", defaultEnabled = true, defaultOrder = 0)
-public class ApothicAttributesTab extends IntegrationItemTab {
+public class ApothicAttributesTab extends IntegrationIconTab {
+
+    // Static iron-sword PNG (extracted from vanilla assets) instead of a live ItemStack
+    // icon. ItemRenderer's deferred batch flushed at end-of-frame puts item icons on top
+    // of the GUI panel even though our pre-panel pass flushes early — using a plain blit
+    // sidesteps that by drawing through the same texture pipeline as every other tab.
+    private static final ResourceLocation IRON_SWORD_ICON =
+            new ResourceLocation(ModTabs.MOD_ID, "textures/gui/iron_sword.png");
 
     private static final TabSpec SPEC = TabSpec.withoutCurrentScreen(
             "apothicAttributesTab",
@@ -42,7 +48,7 @@ public class ApothicAttributesTab extends IntegrationItemTab {
     );
 
     public ApothicAttributesTab() {
-        super(SPEC, () -> new ItemStack(Items.IRON_SWORD), Config.Baked.apothicAttributesTabCustomIcon);
+        super(SPEC, IRON_SWORD_ICON, Config.Baked.apothicAttributesTabCustomIcon);
     }
 
     @Override

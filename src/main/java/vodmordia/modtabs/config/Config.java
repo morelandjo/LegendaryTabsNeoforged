@@ -8,6 +8,13 @@ public class Config
 
 	public static class Baked
 	{
+		// Global icon-offset & paging from the General tab of the in-game settings modal.
+		public static int iconOffsetTop;
+		public static int iconOffsetRight;
+		public static int iconOffsetBottom;
+		public static int iconOffsetLeft;
+		public static int maxTabsPerPage;
+
 		// Tab enable/disable settings
 		public static boolean inventoryTabEnabled;
 		public static boolean backpackedTabEnabled;
@@ -166,6 +173,13 @@ public class Config
 		{
 			try
 			{
+				// Global modal-controlled settings.
+				iconOffsetTop = ModTabsConfig.iconOffsetTop;
+				iconOffsetRight = ModTabsConfig.iconOffsetRight;
+				iconOffsetBottom = ModTabsConfig.iconOffsetBottom;
+				iconOffsetLeft = ModTabsConfig.iconOffsetLeft;
+				maxTabsPerPage = ModTabsConfig.maxTabsPerPage;
+
 				// Read from MidnightConfig fields
 				inventoryTabEnabled = ModTabsConfig.inventoryTabEnabled;
 				backpackedTabEnabled = ModTabsConfig.backpackedTabEnabled;

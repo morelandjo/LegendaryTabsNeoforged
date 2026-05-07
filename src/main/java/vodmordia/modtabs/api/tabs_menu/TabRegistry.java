@@ -46,19 +46,21 @@ public class TabRegistry {
     public static int getTabOrder(TabBase tab) {
         Class<? extends TabBase> tabClass = tab.getClass();
 
-        // First try to get from registered configuration
-        TabConfiguration config = getConfiguration(tabClass);
-        if (config != null) {
-            return config.order();
+        // First try a previously-registered configuration. Note that getConfiguration
+        // returns defaultConfig() (order=0) for unregistered classes, which would
+        // short-circuit before the annotation/config-field path — check containsKey
+        // explicitly so the live ModTabsConfig field wins for unregistered tabs.
+        if (tabConfigs.containsKey(tabClass)) {
+            return tabConfigs.get(tabClass).order();
         }
 
-        // Fallback to annotation
+        // Fallback to annotation: read the live <configKey>Order field on ModTabsConfig
+        // so the global-settings modal's reorder writes are picked up at sort time.
         TabConfig annotation = tabClass.getAnnotation(TabConfig.class);
         if (annotation != null) {
             return getConfigValueByKey(annotation.configKey() + "Order", annotation.defaultOrder());
         }
 
-        // All tabs now use @TabConfig annotation system
         return 0;
     }
 

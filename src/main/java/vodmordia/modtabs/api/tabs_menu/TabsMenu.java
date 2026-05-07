@@ -1,8 +1,11 @@
 package vodmordia.modtabs.api.tabs_menu;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.resources.ResourceLocation;
+// (Phase 2 helpers reference TabsMenu state directly; no additional imports beyond above.)
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.client.event.ScreenEvent;
 import vodmordia.modtabs.ModTabs;
@@ -13,6 +16,8 @@ import vodmordia.modtabs.config.Config;
 import vodmordia.modtabs.config.ModTabsConfig;
 import vodmordia.modtabs.config.TabDisplayVisibility;
 import vodmordia.modtabs.client.animation.TabBarAnimationManager;
+import vodmordia.modtabs.layout.ScreenLayout;
+import vodmordia.modtabs.layout.ScreenLayoutStore;
 import vodmordia.modtabs.utils.ScreenClasses;
 
 import java.util.*;
@@ -38,75 +43,1530 @@ public class TabsMenu {
 
     // Animation and hover detection
     private static TabBarAnimationManager animationManager = null;
-    private static final int HOVER_PADDING = 20; // Pixels of extra hover area around tabs
     private static boolean isInTuckMode = false;
+
+    // Set to true while AbstractContainerScreenMixin is replaying our tab widgets BEFORE
+    // the GUI panel draws, so they appear behind it. TabButton/NextTabsButton check this
+    // (with edit-mode) to render once at the right pass and skip the other.
+    public static boolean renderingBehindPanel = false;
+
+    /**
+     * Renders the screen's TabButtons / NextTabsButton manually, before the GUI panel
+     * draws. Called from {@link vodmordia.modtabs.mixin.AbstractContainerScreenMixin}.
+     * Skipped while editing — edit mode wants tabs on top so the user can grab handles.
+     */
+    public static void renderTabsBehindPanel(Screen screen, GuiGraphics gui, int mouseX, int mouseY, float partialTick) {
+        if (isEditing(screen)) return;
+        if (!tabsScreens.containsKey(screen.getClass())) return;
+        renderingBehindPanel = true;
+        try {
+            for (var r : screen.renderables) {
+                if (r instanceof TabButton || r instanceof NextTabsButton) {
+                    r.render(gui, mouseX, mouseY, partialTick);
+                }
+            }
+            // ItemRenderer (used for icons like Apothic Attributes' sword) submits to
+            // GuiGraphics's deferred item buffer, which flushes only at the end of the
+            // frame — by then the panel has already drawn, leaving the icon on top of
+            // it. Flush now so the icons rasterize at this point in the render order.
+            gui.flush();
+        } finally {
+            renderingBehindPanel = false;
+        }
+    }
+
+    // Layout editor (Phase 1: drag, Phase 2: scale + spacing)
+    private static Class<? extends Screen> editingScreenClass = null;
+    private static int dragOffsetX = 0;
+    private static int dragOffsetY = 0;
+    private static float tempScale = 1.0f;
+    private static int tempSpacingDelta = 0;
+    private static float tempRotation = 0.0f;
+    private static int tempNextOffsetX = 0;
+    private static int tempNextOffsetY = 0;
+    private static float tempNextRotation = 0.0f;
+    private static int tempIconRotation = 0;
+    private static int dragAnchorMouseX = 0;
+    private static int dragAnchorMouseY = 0;
+    private static int dragStartOffsetX = 0;
+    private static int dragStartOffsetY = 0;
+    private static float dragStartTempScale = 1.0f;
+    private static int dragStartTempSpacingDelta = 0;
+    private static float dragStartTempRotation = 0.0f;
+    private static int dragStartTempNextOffsetX = 0;
+    private static int dragStartTempNextOffsetY = 0;
+    private static float dragStartTempNextRotation = 0.0f;
+    private static double dragStartCenterDistance = 0;
+    private static double dragStartCenterX = 0;
+    private static double dragStartCenterY = 0;
+    private static double dragStartAngleRad = 0;
+
+    public enum DragMode { NONE, BAR, SCALE, SPACING_LOW, SPACING_HIGH, ROTATION, NEXT_TRANSLATE, NEXT_ROTATE }
+    private static DragMode dragMode = DragMode.NONE;
 
     private TabsMenu() {
     }
 
-    private static TabDisplayVisibility getTabDisplayVisibilityForScreen(Screen screen) {
-        String screenClassName = screen.getClass().getName();
+    public static boolean isEditing(Screen screen) {
+        return screen != null && editingScreenClass != null && editingScreenClass.equals(screen.getClass());
+    }
 
-        // Check each screen type and its corresponding display visibility setting.
-        // Class-name strings come from ScreenClasses so a mod rename only edits one constant.
+    public static void enterEditMode(Screen screen) {
+        editingScreenClass = screen.getClass();
+        dragOffsetX = 0;
+        dragOffsetY = 0;
+        tempScale = 1.0f;
+        tempSpacingDelta = 0;
+        tempRotation = 0.0f;
+        tempNextOffsetX = 0;
+        tempNextOffsetY = 0;
+        tempNextRotation = 0.0f;
+        tempIconRotation = 0;
+        dragMode = DragMode.NONE;
+        panelCollapsed = false;
+        globalSettingsOpen = false;
+        setTabTooltipsSuppressed(screen, true);
+    }
+
+    public static void exitEditMode() {
+        Screen current = Minecraft.getInstance().screen;
+        if (current != null) {
+            setTabTooltipsSuppressed(current, false);
+        }
+        editingScreenClass = null;
+        dragOffsetX = 0;
+        dragOffsetY = 0;
+        tempScale = 1.0f;
+        tempSpacingDelta = 0;
+        tempRotation = 0.0f;
+        tempNextOffsetX = 0;
+        tempNextOffsetY = 0;
+        tempNextRotation = 0.0f;
+        tempIconRotation = 0;
+        dragMode = DragMode.NONE;
+    }
+
+    private static void setTabTooltipsSuppressed(Screen screen, boolean suppressed) {
+        for (GuiEventListener child : screen.children()) {
+            if (child instanceof TabButton tb) {
+                tb.setTooltipSuppressed(suppressed);
+            }
+        }
+    }
+
+    public static List<TabBase> getEnabledTabs() {
+        return enabledTabs;
+    }
+
+    public static int getDragOffsetX() {
+        return dragOffsetX;
+    }
+
+    public static int getDragOffsetY() {
+        return dragOffsetY;
+    }
+
+    public static float currentEffectiveScale() {
+        Screen s = Minecraft.getInstance().screen;
+        if (s == null) return 1.0f;
+        ScreenLayout layout = ScreenLayoutStore.get(s.getClass());
+        return layout.scale * (isEditing(s) ? tempScale : 1.0f);
+    }
+
+    public static int currentNextOffsetX() {
+        Screen s = Minecraft.getInstance().screen;
+        if (s == null) return 0;
+        ScreenLayout layout = ScreenLayoutStore.get(s.getClass());
+        return layout.nextButtonOffsetX + (isEditing(s) ? tempNextOffsetX : 0);
+    }
+
+    public static int currentNextOffsetY() {
+        Screen s = Minecraft.getInstance().screen;
+        if (s == null) return 0;
+        ScreenLayout layout = ScreenLayoutStore.get(s.getClass());
+        return layout.nextButtonOffsetY + (isEditing(s) ? tempNextOffsetY : 0);
+    }
+
+    public static float currentNextEffectiveRotation() {
+        Screen s = Minecraft.getInstance().screen;
+        if (s == null) return 0f;
+        ScreenLayout layout = ScreenLayoutStore.get(s.getClass());
+        return layout.nextButtonRotation + (isEditing(s) ? tempNextRotation : 0f);
+    }
+
+    public static int currentIconRotation() {
+        if (previewRendering) return 0;
+        Screen s = Minecraft.getInstance().screen;
+        if (s == null) return 0;
+        ScreenLayout layout = ScreenLayoutStore.get(s.getClass());
+        int total = layout.iconRotation + (isEditing(s) ? tempIconRotation : 0);
+        return ((total % 360) + 360) % 360;
+    }
+
+    /** While true, TabRenderer skips the background and forces horizontal orientation /
+     *  zero icon rotation, so the panel preview shows just the icon at its natural pose. */
+    public static boolean previewRendering = false;
+
+    public static void cycleIconRotation() {
+        tempIconRotation = (tempIconRotation + 90) % 360;
+    }
+
+    public static float currentEffectiveRotation() {
+        Screen s = Minecraft.getInstance().screen;
+        if (s == null) return 0f;
+        ScreenLayout layout = ScreenLayoutStore.get(s.getClass());
+        return layout.rotation + (isEditing(s) ? tempRotation : 0f);
+    }
+
+    public static double[] barCenter() {
+        int[] b = computeTabBarBounds();
+        return new double[]{(b[0] + b[2]) / 2.0, (b[1] + b[3]) / 2.0};
+    }
+
+    public static double[] rotatePoint(double x, double y, double cx, double cy, double degrees) {
+        double rad = Math.toRadians(degrees);
+        double cos = Math.cos(rad);
+        double sin = Math.sin(rad);
+        double dx = x - cx;
+        double dy = y - cy;
+        return new double[]{
+            cx + dx * cos - dy * sin,
+            cy + dx * sin + dy * cos
+        };
+    }
+
+    public static double[] inverseRotatePoint(double x, double y, double cx, double cy, double degrees) {
+        return rotatePoint(x, y, cx, cy, -degrees);
+    }
+
+    private static double[] primaryAxisUnit() {
+        boolean vertical = currentPositioning != null && currentPositioning.isVertical();
+        double rad = Math.toRadians(currentEffectiveRotation());
+        double cos = Math.cos(rad);
+        double sin = Math.sin(rad);
+        if (vertical) {
+            return new double[]{-sin, cos};
+        }
+        return new double[]{cos, sin};
+    }
+
+    public static int currentEffectiveTabSpacing() {
+        Screen s = Minecraft.getInstance().screen;
+        if (s == null) return 1;
+        ScreenLayout layout = ScreenLayoutStore.get(s.getClass());
+        return layout.tabSpacing + (isEditing(s) ? tempSpacingDelta : 0);
+    }
+
+    public static int primaryAxisStep() {
+        boolean vertical = currentPositioning != null && currentPositioning.isVertical();
+        int baseSize = vertical ? TAB_HEIGHT_VERTICAL : TAB_WIDTH;
+        return Math.round(baseSize * currentEffectiveScale()) + currentEffectiveTabSpacing();
+    }
+
+    public static int effectiveTabWidth() {
+        boolean vertical = currentPositioning != null && currentPositioning.isVertical();
+        int baseSize = vertical ? TAB_WIDTH_VERTICAL : TAB_WIDTH;
+        return Math.round(baseSize * currentEffectiveScale());
+    }
+
+    public static int effectiveTabHeight() {
+        boolean vertical = currentPositioning != null && currentPositioning.isVertical();
+        int baseSize = vertical ? TAB_HEIGHT_VERTICAL : TAB_HEIGHT;
+        return Math.round(baseSize * currentEffectiveScale());
+    }
+
+    public static void saveEdit(Screen screen) {
+        if (screen == null) return;
+        String fqn = screen.getClass().getName();
+        ScreenLayout existing = ScreenLayoutStore.get(fqn);
+        ScreenLayout updated = new ScreenLayout(
+            existing.offsetX + dragOffsetX,
+            existing.offsetY + dragOffsetY,
+            existing.scale * tempScale,
+            existing.tabSpacing + tempSpacingDelta,
+            existing.rotation + tempRotation,
+            existing.nextButtonOffsetX + tempNextOffsetX,
+            existing.nextButtonOffsetY + tempNextOffsetY,
+            existing.nextButtonRotation + tempNextRotation,
+            (((existing.iconRotation + tempIconRotation) % 360) + 360) % 360);
+        ScreenLayoutStore.save(fqn, updated);
+        exitEditMode();
+    }
+
+    public static void resetEdit(Screen screen) {
+        if (screen == null) return;
+        ScreenLayoutStore.reset(screen.getClass().getName());
+        exitEditMode();
+    }
+
+    public static void onMousePressed(Screen screen, double mouseX, double mouseY) {
+        if (!isEditing(screen)) return;
+
+        dragAnchorMouseX = (int) mouseX;
+        dragAnchorMouseY = (int) mouseY;
+        dragStartOffsetX = dragOffsetX;
+        dragStartOffsetY = dragOffsetY;
+        dragStartTempScale = tempScale;
+        dragStartTempSpacingDelta = tempSpacingDelta;
+        dragStartTempRotation = tempRotation;
+        dragStartTempNextOffsetX = tempNextOffsetX;
+        dragStartTempNextOffsetY = tempNextOffsetY;
+        dragStartTempNextRotation = tempNextRotation;
+
+        int handle = handleHitTest(mouseX, mouseY);
+        if (handle >= 0 && handle <= 3) {
+            dragMode = DragMode.SCALE;
+            double[] center = barCenter();
+            dragStartCenterX = center[0];
+            dragStartCenterY = center[1];
+            dragStartCenterDistance = Math.hypot(mouseX - dragStartCenterX, mouseY - dragStartCenterY);
+            if (dragStartCenterDistance < 1.0) dragStartCenterDistance = 1.0;
+        } else if (handle == 4) {
+            dragMode = DragMode.SPACING_LOW;
+        } else if (handle == 5) {
+            dragMode = DragMode.SPACING_HIGH;
+        } else if (handle == 6) {
+            dragMode = DragMode.ROTATION;
+            double[] center = barCenter();
+            dragStartCenterX = center[0];
+            dragStartCenterY = center[1];
+            dragStartAngleRad = Math.atan2(mouseY - dragStartCenterY, mouseX - dragStartCenterX);
+        } else if (handle == 7) {
+            dragMode = DragMode.NEXT_ROTATE;
+            double[] center = nextButtonScreenCenter();
+            dragStartCenterX = center[0];
+            dragStartCenterY = center[1];
+            dragStartAngleRad = Math.atan2(mouseY - dragStartCenterY, mouseX - dragStartCenterX);
+        } else if (isMouseOnNextButton(mouseX, mouseY)) {
+            dragMode = DragMode.NEXT_TRANSLATE;
+        } else if (isMouseOnTabBar(mouseX, mouseY)) {
+            dragMode = DragMode.BAR;
+        } else {
+            dragMode = DragMode.NONE;
+        }
+    }
+
+    public static void onMouseDragged(Screen screen, double mouseX, double mouseY) {
+        if (!isEditing(screen) || dragMode == DragMode.NONE) return;
+        boolean vertical = currentPositioning != null && currentPositioning.isVertical();
+        switch (dragMode) {
+            case BAR -> {
+                dragOffsetX = dragStartOffsetX + (int) (mouseX - dragAnchorMouseX);
+                dragOffsetY = dragStartOffsetY + (int) (mouseY - dragAnchorMouseY);
+            }
+            case SCALE -> {
+                double now = Math.hypot(mouseX - dragStartCenterX, mouseY - dragStartCenterY);
+                tempScale = dragStartTempScale * (float) (now / dragStartCenterDistance);
+            }
+            case SPACING_HIGH -> {
+                double[] axis = primaryAxisUnit();
+                double mdx = mouseX - dragAnchorMouseX;
+                double mdy = mouseY - dragAnchorMouseY;
+                double projected = mdx * axis[0] + mdy * axis[1];
+                int divisor = Math.max(1, currentTabsCount - 1);
+                tempSpacingDelta = dragStartTempSpacingDelta + (int) (projected / divisor);
+            }
+            case SPACING_LOW -> {
+                double[] axis = primaryAxisUnit();
+                double mdx = mouseX - dragAnchorMouseX;
+                double mdy = mouseY - dragAnchorMouseY;
+                double projected = mdx * axis[0] + mdy * axis[1];
+                int divisor = Math.max(1, currentTabsCount - 1);
+                tempSpacingDelta = dragStartTempSpacingDelta + (int) (-projected / divisor);
+                dragOffsetX = dragStartOffsetX + (int) (projected * axis[0]);
+                dragOffsetY = dragStartOffsetY + (int) (projected * axis[1]);
+            }
+            case ROTATION -> {
+                double now = Math.atan2(mouseY - dragStartCenterY, mouseX - dragStartCenterX);
+                double deltaDeg = Math.toDegrees(now - dragStartAngleRad);
+                tempRotation = dragStartTempRotation + (float) deltaDeg;
+
+                Screen s = Minecraft.getInstance().screen;
+                if (s != null) {
+                    float saved = ScreenLayoutStore.get(s.getClass()).rotation;
+                    float effective = saved + tempRotation;
+                    float wrapped = ((effective % 360f) + 360f) % 360f;
+                    float nearest = Math.round(wrapped / 90f) * 90f;
+                    if (Math.abs(wrapped - nearest) <= ROTATION_SNAP_DEGREES) {
+                        float snappedEffective = effective - wrapped + nearest;
+                        tempRotation = snappedEffective - saved;
+                    }
+                }
+            }
+            case NEXT_TRANSLATE -> {
+                tempNextOffsetX = dragStartTempNextOffsetX + (int) (mouseX - dragAnchorMouseX);
+                tempNextOffsetY = dragStartTempNextOffsetY + (int) (mouseY - dragAnchorMouseY);
+            }
+            case NEXT_ROTATE -> {
+                double now = Math.atan2(mouseY - dragStartCenterY, mouseX - dragStartCenterX);
+                double deltaDeg = Math.toDegrees(now - dragStartAngleRad);
+                tempNextRotation = dragStartTempNextRotation + (float) deltaDeg;
+
+                Screen s = Minecraft.getInstance().screen;
+                if (s != null) {
+                    ScreenLayout layout = ScreenLayoutStore.get(s.getClass());
+                    float effective = layout.nextButtonRotation + tempNextRotation;
+                    float wrapped = ((effective % 360f) + 360f) % 360f;
+                    float nearest = Math.round(wrapped / 90f) * 90f;
+                    if (Math.abs(wrapped - nearest) <= ROTATION_SNAP_DEGREES) {
+                        float snappedEffective = effective - wrapped + nearest;
+                        tempNextRotation = snappedEffective - layout.nextButtonRotation;
+                    }
+                }
+            }
+            default -> {}
+        }
+    }
+
+    public static void onMouseReleased(Screen screen) {
+        if (!isEditing(screen)) return;
+        dragMode = DragMode.NONE;
+    }
+
+    private static int handleHitTest(double mouseX, double mouseY) {
+        int[] b = computeTabBarBounds();
+        double[] m = inverseRotateMouseToBarFrame(mouseX, mouseY, b);
+        double mx = m[0];
+        double my = m[1];
+        int cornerExtent = 9;
+        int midHit = 6;
+        int rotHit = 6;
+        int fl = b[0] - 1, ft = b[1] - 1, fr = b[2] + 1, fb = b[3] + 1;
+        if (insideCornerHit(mx, my, fl, ft, -1, -1, cornerExtent)) return 0;
+        if (insideCornerHit(mx, my, fr, ft,  1, -1, cornerExtent)) return 1;
+        if (insideCornerHit(mx, my, fl, fb, -1,  1, cornerExtent)) return 2;
+        if (insideCornerHit(mx, my, fr, fb,  1,  1, cornerExtent)) return 3;
+        boolean vertical = currentPositioning != null && currentPositioning.isVertical();
+        int midX = (fl + fr) / 2;
+        int midY = (ft + fb) / 2;
+        if (vertical) {
+            if (within(mx, my, midX, ft, midHit)) return 4;
+            if (within(mx, my, midX, fb, midHit)) return 5;
+        } else {
+            if (within(mx, my, fl, midY, midHit)) return 4;
+            if (within(mx, my, fr, midY, midHit)) return 5;
+        }
+        if (within(mx, my, midX, ft - ROTATION_HANDLE_OFFSET, rotHit)) return 6;
+        double[] nbCenter = nextButtonScreenCenter();
+        float totalNextRot = currentEffectiveRotation() + currentNextEffectiveRotation();
+        double rad = Math.toRadians(totalNextRot - 90);
+        double hx = nbCenter[0] + Math.cos(rad) * (ROTATION_HANDLE_OFFSET + 6);
+        double hy = nbCenter[1] + Math.sin(rad) * (ROTATION_HANDLE_OFFSET + 6);
+        if (Math.hypot(mouseX - hx, mouseY - hy) <= rotHit) return 7;
+        return -1;
+    }
+
+    private static final int ROTATION_HANDLE_OFFSET = 14;
+    private static final float ROTATION_SNAP_DEGREES = 5f;
+
+    private static boolean within(double mouseX, double mouseY, int cx, int cy, int half) {
+        return mouseX >= cx - half && mouseX < cx + half && mouseY >= cy - half && mouseY < cy + half;
+    }
+
+    private static boolean insideCornerHit(double mouseX, double mouseY, int cx, int cy, int dx, int dy, int extent) {
+        int loX = dx < 0 ? cx - extent : cx - 2;
+        int hiX = dx < 0 ? cx + 2       : cx + extent;
+        int loY = dy < 0 ? cy - extent : cy - 2;
+        int hiY = dy < 0 ? cy + 2       : cy + extent;
+        return mouseX >= loX && mouseX < hiX && mouseY >= loY && mouseY < hiY;
+    }
+
+    /**
+     * Render the edit-mode visual overlay: dim the screen everywhere except the tab
+     * bar's bounding rect, draw a green frame just outside the bar, and place a small
+     * triangle at each side's midpoint as a visual indicator. Called from a
+     * Render.Post hook so it draws on top of the screen content but works around
+     * the tab bar (which has already been drawn during the screen's normal render
+     * pass and is therefore visible through the "hole" in the dim overlay).
+     */
+    public static void renderEditModeOverlay(GuiGraphics gui, Screen screen, int mouseX, int mouseY) {
+        if (!isEditing(screen)) {
+            return;
+        }
+        int sw = screen.width;
+        int sh = screen.height;
+        int dim = 0xC0000000;
+
+        // Pass 1: dim + tabs at Z=400. ItemRenderer pushes +150 internally so item icons
+        // land at Z≈550 — above the player model (<400) but below the panel layer below.
+        gui.pose().pushPose();
+        gui.pose().translate(0, 0, 400);
+
+        gui.fill(0, 0, sw, sh, dim);
+
+        for (var child : screen.children()) {
+            if (child instanceof net.minecraft.client.gui.components.AbstractWidget w) {
+                if (child instanceof vodmordia.modtabs.client.screens.TabButton
+                        || child instanceof vodmordia.modtabs.client.screens.NextTabsButton
+                        || child instanceof vodmordia.modtabs.client.screens.LayoutEditorButtons.EditOnly
+                        || child instanceof vodmordia.modtabs.client.screens.LayoutEditorButtons.CustomIconEditBox) {
+                    w.render(gui, mouseX, mouseY, 0f);
+                }
+            }
+        }
+
+        gui.pose().popPose();
+
+        // Pass 2: decorations at Z=600 so they sit above 3D-rendered item icons (Z≈550).
+        gui.pose().pushPose();
+        gui.pose().translate(0, 0, 600);
+
+        int[] bounds = computeTabBarBounds();
+        int tabLeft = bounds[0], tabTop = bounds[1], tabRight = bounds[2], tabBottom = bounds[3];
+        double cx = (tabLeft + tabRight) / 2.0;
+        double cy = (tabTop + tabBottom) / 2.0;
+        float rotation = currentEffectiveRotation();
+        int hovered = handleHitTest(mouseX, mouseY);
+
+        gui.pose().pushPose();
+        if (rotation != 0f) {
+            gui.pose().translate(cx, cy, 0);
+            gui.pose().mulPose(com.mojang.math.Axis.ZP.rotationDegrees(rotation));
+            gui.pose().translate(-cx, -cy, 0);
+        }
+
+        // Highlight the tab whose configKey matches the screen we're editing — subtle
+        // transparent green fill so the user can tell which tab their per-screen icon
+        // / visibility / custom-icon settings will apply to.
+        TabBase editedTab = findTabForConfigKey(getConfigKeyForScreen(screen));
+        if (editedTab != null) {
+            int offX = getAnimatedXOffset() + getDragOffsetX();
+            int offY = getAnimatedYOffset() + getDragOffsetY();
+            int tabSw = effectiveTabWidth();
+            int tabSh = effectiveTabHeight();
+            for (var child : screen.children()) {
+                if (child instanceof TabButton tb && tb.tabBase == editedTab) {
+                    int ax = tb.getX() + offX;
+                    int ay = tb.getY() + offY;
+                    gui.fill(ax, ay, ax + tabSw, ay + tabSh, 0x8044FF66);
+                }
+            }
+        }
+
+        int green = 0xFF44FF66;
+        int inset = 1;
+        int fl = tabLeft - inset, ft = tabTop - inset, fr = tabRight + inset, fb = tabBottom + inset;
+        int t = 1;
+        gui.fill(fl, ft, fr, ft + t, green);
+        gui.fill(fl, fb - t, fr, fb, green);
+        gui.fill(fl, ft, fl + t, fb, green);
+        gui.fill(fr - t, ft, fr, fb, green);
+
+        boolean vertical = currentPositioning != null && currentPositioning.isVertical();
+        int midX = (fl + fr) / 2;
+        int midY = (ft + fb) / 2;
+        drawCornerHandle(gui, fl, ft, 0, hovered == 0);
+        drawCornerHandle(gui, fr, ft, 1, hovered == 1);
+        drawCornerHandle(gui, fl, fb, 2, hovered == 2);
+        drawCornerHandle(gui, fr, fb, 3, hovered == 3);
+        if (vertical) {
+            drawInwardTriangle(gui, midX, ft - 4, 0, hovered == 4);
+            drawInwardTriangle(gui, midX, fb + 4, 1, hovered == 5);
+        } else {
+            drawInwardTriangle(gui, fl - 4, midY, 2, hovered == 4);
+            drawInwardTriangle(gui, fr + 4, midY, 3, hovered == 5);
+        }
+
+        int rotHandleX = midX;
+        int rotHandleY = ft - ROTATION_HANDLE_OFFSET;
+        gui.fill(midX, rotHandleY + 1, midX + 1, ft, green);
+        drawRotationHandle(gui, rotHandleX, rotHandleY, hovered == 6);
+
+        gui.pose().popPose();
+
+        double[] nbCenter = nextButtonScreenCenter();
+        float totalNextRot = currentEffectiveRotation() + currentNextEffectiveRotation();
+        double rad = Math.toRadians(totalNextRot - 90);
+        int hx = (int) Math.round(nbCenter[0] + Math.cos(rad) * (ROTATION_HANDLE_OFFSET + 6));
+        int hy = (int) Math.round(nbCenter[1] + Math.sin(rad) * (ROTATION_HANDLE_OFFSET + 6));
+        drawLineBetween(gui, (int) Math.round(nbCenter[0]), (int) Math.round(nbCenter[1]), hx, hy, 0xFFB36BFF);
+        drawNextRotationHandle(gui, hx, hy, hovered == 7);
+
+        drawOptionsPanel(gui, screen);
+
+        gui.pose().popPose();
+
+        // Pass 3: panel controls at Z=700 — must be ABOVE the panel BG (Z=600).
+        gui.pose().pushPose();
+        gui.pose().translate(0, 0, 700);
+        for (var child : screen.children()) {
+            if (child instanceof net.minecraft.client.gui.components.AbstractWidget w) {
+                if (child instanceof vodmordia.modtabs.client.screens.LayoutEditorButtons.IconRotationCycle
+                        || child instanceof vodmordia.modtabs.client.screens.LayoutEditorButtons.VisibilityCycle
+                        || child instanceof vodmordia.modtabs.client.screens.LayoutEditorButtons.CustomIconEditBox) {
+                    w.render(gui, mouseX, mouseY, 0f);
+                }
+            }
+        }
+        gui.pose().popPose();
+
+        // Pass 4: global settings modal (Z=900) — sits above everything else.
+        if (globalSettingsOpen) {
+            gui.pose().pushPose();
+            gui.pose().translate(0, 0, 900);
+            renderGlobalSettings(gui, screen, mouseX, mouseY);
+            gui.pose().popPose();
+        }
+    }
+
+    public static final int PANEL_W = 230;
+    public static final int PANEL_H = 116;
+    public static final int PANEL_TITLE_H = 14;
+    public static final int PANEL_ROW_H = 16;
+    public static final int PANEL_LABEL_W = 78;
+    public static final int PANEL_PAD = 6;
+    public static final int PANEL_PREVIEW_H = 28;
+    public static final int PANEL_HANDLE_W = 12;
+    public static final int PANEL_HANDLE_H = 40;
+    private static final int PANEL_MARGIN_X = 8;
+
+    private static boolean panelCollapsed = false;
+
+    public static int currentPanelX(Screen screen) {
+        if (panelCollapsed) return -PANEL_W;
+        return PANEL_MARGIN_X;
+    }
+
+    public static int currentPanelY(Screen screen) {
+        Screen s = (screen != null) ? screen : Minecraft.getInstance().screen;
+        int sh = (s != null) ? s.height : 240;
+        return Math.max(8, (sh - PANEL_H) / 2);
+    }
+
+    public static int panelHandleX(Screen screen) {
+        return currentPanelX(screen) + PANEL_W;
+    }
+
+    public static int panelHandleY(Screen screen) {
+        return currentPanelY(screen) + (PANEL_H - PANEL_HANDLE_H) / 2;
+    }
+
+    public static boolean isMouseOnPanelHandle(Screen screen, double mx, double my) {
+        int hx = panelHandleX(screen);
+        int hy = panelHandleY(screen);
+        return mx >= hx && mx <= hx + PANEL_HANDLE_W
+            && my >= hy && my <= hy + PANEL_HANDLE_H;
+    }
+
+    public static void togglePanelCollapsed() {
+        panelCollapsed = !panelCollapsed;
+    }
+
+    public static boolean isPanelCollapsed() {
+        return panelCollapsed;
+    }
+
+    // ============================================================================
+    // Global settings (cogwheel) — modal window editing per-tab visibility & order
+    // GLOBALLY (across all screens). Bound to the in-edit-mode cogwheel button.
+    // ============================================================================
+    public enum GlobalSettingsTab { VISIBILITY, ORDER, GENERAL }
+    private enum GsField { NONE, OFFSET_TOP, OFFSET_RIGHT, OFFSET_BOTTOM, OFFSET_LEFT, TABS_PER_PAGE }
+    private static GsField gsFocusedField = GsField.NONE;
+    private static String gsDraftOffsetTop = "0";
+    private static String gsDraftOffsetRight = "0";
+    private static String gsDraftOffsetBottom = "0";
+    private static String gsDraftOffsetLeft = "0";
+    private static String gsDraftTabsPerPage = "0";
+    private static boolean globalSettingsOpen = false;
+    private static GlobalSettingsTab gsActiveTab = GlobalSettingsTab.VISIBILITY;
+    private static java.util.Map<String, Boolean> gsDraftEnabled = null;
+    private static java.util.List<String> gsDraftOrder = null;
+    /** Snapshot of the configurable tabs at modal-open time, keyed by short configKey. */
+    private static java.util.Map<String, TabBase> gsTabsCache = null;
+    private static int gsScrollVisibility = 0;
+    private static int gsScrollOrder = 0;
+    private static int gsDraggingIndex = -1;
+    private static double gsDragMouseX = 0, gsDragMouseY = 0;
+
+    private static final int GS_NAV_W = 90;
+    private static final int GS_HEADER_H = 18;
+    private static final int GS_FOOTER_H = 24;
+    private static final int GS_NAV_BTN_H = 18;
+    private static final int GS_PAD = 8;
+    private static final int GS_CELL = 28;
+    private static final int GS_FOOTER_BTN_W = 56;
+    private static final int GS_FOOTER_BTN_H = 16;
+
+    private static final ResourceLocation COGWHEEL_TEX =
+            new ResourceLocation(ModTabs.MOD_ID, "textures/gui/cogwheel.png");
+
+    public static ResourceLocation cogwheelTexture() { return COGWHEEL_TEX; }
+    public static boolean isGlobalSettingsOpen() { return globalSettingsOpen; }
+
+    private static String shortConfigKey(TabBase tab) {
+        TabConfig tc = tab.getClass().getAnnotation(TabConfig.class);
+        if (tc == null) return null;
+        String k = tc.configKey();
+        return k.endsWith("Tab") ? k.substring(0, k.length() - 3) : k;
+    }
+
+    private static java.util.List<TabBase> collectConfigurableTabs() {
+        java.util.LinkedHashMap<Class<?>, TabBase> seen = new java.util.LinkedHashMap<>();
+        for (ScreenInfo info : tabsScreens.values()) {
+            for (List<TabBase> list : info.tabs.values()) {
+                for (TabBase tab : list) {
+                    if (tab.getClass().isAnnotationPresent(TabConfig.class) && isTabAvailable(tab)) {
+                        seen.putIfAbsent(tab.getClass(), tab);
+                    }
+                }
+            }
+        }
+        return new java.util.ArrayList<>(seen.values());
+    }
+
+    /**
+     * "Available" = the tab's mod is loaded. Many integration tabs register their screens
+     * unconditionally but their {@code isEnabled(player)} short-circuits via a
+     * {@code ModIntegrationManager.isModLoaded(...)} check. We probe by temporarily
+     * forcing the user-enabled flag on, calling {@code isEnabled}, and restoring the flag.
+     * If it returns false, the mod isn't present and the tab can never appear in any row.
+     */
+    private static boolean isTabAvailable(TabBase tab) {
+        String key = shortConfigKey(tab);
+        if (key == null) return false;
+        Player p = Minecraft.getInstance().player;
+        if (p == null) return true;
+        java.lang.reflect.Field f;
+        try {
+            f = Config.Baked.class.getField(key + "TabEnabled");
+        } catch (NoSuchFieldException e) {
+            return true;
+        }
+        try {
+            boolean original = f.getBoolean(null);
+            try {
+                f.setBoolean(null, true);
+                return tab.isEnabled(p);
+            } finally {
+                f.setBoolean(null, original);
+            }
+        } catch (IllegalAccessException e) {
+            return true;
+        }
+    }
+
+    private static boolean readEnabledField(String shortKey) {
+        try { return ModTabsConfig.class.getField(shortKey + "TabEnabled").getBoolean(null); }
+        catch (Exception ignored) { return true; }
+    }
+    private static int readOrderField(String shortKey) {
+        try { return ModTabsConfig.class.getField(shortKey + "TabOrder").getInt(null); }
+        catch (Exception ignored) { return 0; }
+    }
+    private static void writeEnabledField(String shortKey, boolean value) {
+        try { ModTabsConfig.class.getField(shortKey + "TabEnabled").setBoolean(null, value); }
+        catch (Exception ignored) {}
+    }
+    private static void writeOrderField(String shortKey, int value) {
+        try { ModTabsConfig.class.getField(shortKey + "TabOrder").setInt(null, value); }
+        catch (Exception ignored) {}
+    }
+
+    private static int parseSafeInt(String s, int fallback) {
+        if (s == null || s.isEmpty() || s.equals("-")) return fallback;
+        try { return Integer.parseInt(s.trim()); }
+        catch (NumberFormatException e) { return fallback; }
+    }
+
+    public static void openGlobalSettings() {
+        gsDraftEnabled = new java.util.LinkedHashMap<>();
+        gsDraftOrder = new java.util.ArrayList<>();
+        gsTabsCache = new java.util.LinkedHashMap<>();
+        java.util.List<TabBase> tabs = collectConfigurableTabs();
+        tabs.sort(java.util.Comparator.<TabBase>comparingInt(t -> readOrderField(shortConfigKey(t)))
+                .thenComparing(t -> t.getClass().getSimpleName()));
+        for (TabBase t : tabs) {
+            String k = shortConfigKey(t);
+            if (k == null) continue;
+            gsDraftEnabled.put(k, readEnabledField(k));
+            gsDraftOrder.add(k);
+            gsTabsCache.put(k, t);
+        }
+        gsActiveTab = GlobalSettingsTab.VISIBILITY;
+        gsDraggingIndex = -1;
+        gsFocusedField = GsField.NONE;
+        gsDraftOffsetTop = String.valueOf(Config.Baked.iconOffsetTop);
+        gsDraftOffsetRight = String.valueOf(Config.Baked.iconOffsetRight);
+        gsDraftOffsetBottom = String.valueOf(Config.Baked.iconOffsetBottom);
+        gsDraftOffsetLeft = String.valueOf(Config.Baked.iconOffsetLeft);
+        gsDraftTabsPerPage = String.valueOf(Config.Baked.maxTabsPerPage);
+        globalSettingsOpen = true;
+    }
+
+    public static void closeGlobalSettings(boolean save) {
+        boolean configChanged = false;
+        if (save && gsDraftEnabled != null && gsDraftOrder != null) {
+            for (var entry : gsDraftEnabled.entrySet()) {
+                writeEnabledField(entry.getKey(), entry.getValue());
+            }
+            // Write 1-based indices: the existing sort comparator treats order==0 as
+            // "no explicit override" and banishes the tab to an alphabetical bucket.
+            for (int i = 0; i < gsDraftOrder.size(); i++) {
+                writeOrderField(gsDraftOrder.get(i), i + 1);
+            }
+            // General tab settings
+            ModTabsConfig.iconOffsetTop = parseSafeInt(gsDraftOffsetTop, 0);
+            ModTabsConfig.iconOffsetRight = parseSafeInt(gsDraftOffsetRight, 0);
+            ModTabsConfig.iconOffsetBottom = parseSafeInt(gsDraftOffsetBottom, 0);
+            ModTabsConfig.iconOffsetLeft = parseSafeInt(gsDraftOffsetLeft, 0);
+            ModTabsConfig.maxTabsPerPage = Math.max(0, parseSafeInt(gsDraftTabsPerPage, 0));
+            ModTabsConfig.write("modtabs");
+            Config.Baked.bakeClient();
+            configChanged = true;
+        }
+        globalSettingsOpen = false;
+        gsDraftEnabled = null;
+        gsDraftOrder = null;
+        gsTabsCache = null;
+        gsDraggingIndex = -1;
+        gsScrollVisibility = 0;
+        gsScrollOrder = 0;
+        gsFocusedField = GsField.NONE;
+        // Force a re-init of the current screen so its tab row picks up the new
+        // enabled/order config — TabButton instances are added to screen.children
+        // at Init.Post time and won't reflect later config writes otherwise.
+        if (configChanged) {
+            Screen current = Minecraft.getInstance().screen;
+            if (current != null) {
+                Minecraft.getInstance().setScreen(current);
+            }
+        }
+    }
+
+    private static TabBase tabForKey(String shortKey) {
+        if (gsTabsCache != null) return gsTabsCache.get(shortKey);
+        for (TabBase t : collectConfigurableTabs()) {
+            if (shortKey.equals(shortConfigKey(t))) return t;
+        }
+        return null;
+    }
+
+    private static int[] gsWindowRect(Screen screen) {
+        int sw = screen.width;
+        int sh = screen.height;
+        int w = (int)(sw * 0.75);
+        int h = Math.min((int)(sh * 0.85), Math.max(160, sh - 40));
+        int x = (sw - w) / 2;
+        int y = (sh - h) / 2;
+        return new int[]{x, y, w, h};
+    }
+
+    private static int[] gsContentRect(Screen screen) {
+        int[] win = gsWindowRect(screen);
+        int x = win[0] + GS_NAV_W;
+        int y = win[1] + GS_HEADER_H;
+        int w = win[2] - GS_NAV_W - 1;
+        int h = win[3] - GS_HEADER_H - GS_FOOTER_H;
+        return new int[]{x, y, w, h};
+    }
+
+    private static int[] gsNavButtonRect(Screen screen, int index) {
+        int[] win = gsWindowRect(screen);
+        int x = win[0] + 4;
+        int y = win[1] + GS_HEADER_H + 4 + index * (GS_NAV_BTN_H + 2);
+        return new int[]{x, y, GS_NAV_W - 8, GS_NAV_BTN_H};
+    }
+
+    private static int[] gsSaveButtonRect(Screen screen) {
+        int[] win = gsWindowRect(screen);
+        int x = win[0] + win[2] - GS_FOOTER_BTN_W - 6;
+        int y = win[1] + win[3] - GS_FOOTER_BTN_H - 5;
+        return new int[]{x, y, GS_FOOTER_BTN_W, GS_FOOTER_BTN_H};
+    }
+    private static int[] gsCancelButtonRect(Screen screen) {
+        int[] win = gsWindowRect(screen);
+        int x = win[0] + win[2] - GS_FOOTER_BTN_W * 2 - 12;
+        int y = win[1] + win[3] - GS_FOOTER_BTN_H - 5;
+        return new int[]{x, y, GS_FOOTER_BTN_W, GS_FOOTER_BTN_H};
+    }
+
+    private static int[] gsVisibilitySlotRect(Screen screen, int column, int slotIndex) {
+        int[] cr = gsContentRect(screen);
+        int colW = cr[2] / 2;
+        int colX = cr[0] + column * colW + GS_PAD;
+        int colY = cr[1] + GS_HEADER_H;
+        int cellsPerRow = Math.max(1, (colW - GS_PAD * 2) / GS_CELL);
+        int row = slotIndex / cellsPerRow;
+        int col = slotIndex % cellsPerRow;
+        return new int[]{colX + col * GS_CELL, colY + row * GS_CELL - gsScrollVisibility, GS_CELL, GS_CELL};
+    }
+
+    private static int[] gsOrderSlotRect(Screen screen, int slotIndex) {
+        int[] cr = gsContentRect(screen);
+        int areaX = cr[0] + GS_PAD;
+        int areaY = cr[1] + GS_HEADER_H;
+        int areaW = cr[2] - GS_PAD * 2;
+        int cellsPerRow = Math.max(1, areaW / GS_CELL);
+        int row = slotIndex / cellsPerRow;
+        int col = slotIndex % cellsPerRow;
+        return new int[]{areaX + col * GS_CELL, areaY + row * GS_CELL - gsScrollOrder, GS_CELL, GS_CELL};
+    }
+
+    private static int gsMaxScrollVisibility(Screen screen) {
+        if (gsDraftOrder == null) return 0;
+        int[] cr = gsContentRect(screen);
+        int colW = cr[2] / 2;
+        int cellsPerRow = Math.max(1, (colW - GS_PAD * 2) / GS_CELL);
+        int visCount = 0, hidCount = 0;
+        for (String key : gsDraftOrder) {
+            if (Boolean.TRUE.equals(gsDraftEnabled.get(key))) visCount++; else hidCount++;
+        }
+        int rows = Math.max(rowsFor(visCount, cellsPerRow), rowsFor(hidCount, cellsPerRow));
+        int viewportH = cr[3] - GS_HEADER_H;
+        return Math.max(0, rows * GS_CELL - viewportH);
+    }
+
+    private static int gsMaxScrollOrder(Screen screen) {
+        if (gsDraftOrder == null) return 0;
+        int[] cr = gsContentRect(screen);
+        int areaW = cr[2] - GS_PAD * 2;
+        int cellsPerRow = Math.max(1, areaW / GS_CELL);
+        int rows = rowsFor(gsDraftOrder.size(), cellsPerRow);
+        int viewportH = cr[3] - GS_HEADER_H;
+        return Math.max(0, rows * GS_CELL - viewportH);
+    }
+
+    private static int rowsFor(int count, int cellsPerRow) {
+        return count == 0 ? 0 : (count + cellsPerRow - 1) / cellsPerRow;
+    }
+
+    private static int gsOrderHitTest(Screen screen, double mx, double my) {
+        int n = gsDraftOrder == null ? 0 : gsDraftOrder.size();
+        for (int i = 0; i < n; i++) {
+            int[] r = gsOrderSlotRect(screen, i);
+            if (mx >= r[0] && mx < r[0] + r[2] && my >= r[1] && my < r[1] + r[3]) return i;
+        }
+        return -1;
+    }
+
+    public static void renderGlobalSettings(GuiGraphics gui, Screen screen, int mouseX, int mouseY) {
+        if (!globalSettingsOpen || gsDraftEnabled == null) return;
+        int[] win = gsWindowRect(screen);
+        int wx = win[0], wy = win[1], ww = win[2], wh = win[3];
+        gui.fill(0, 0, screen.width, screen.height, 0xC0000000);
+        int bg = 0xF0101418;
+        int border = 0xFF44FF66;
+        gui.fill(wx, wy, wx + ww, wy + wh, bg);
+        gui.fill(wx, wy, wx + ww, wy + 1, border);
+        gui.fill(wx, wy + wh - 1, wx + ww, wy + wh, border);
+        gui.fill(wx, wy, wx + 1, wy + wh, border);
+        gui.fill(wx + ww - 1, wy, wx + ww, wy + wh, border);
+        gui.drawString(Minecraft.getInstance().font, "Global Settings", wx + GS_PAD, wy + 5, 0xFFCCFFCC, false);
+        gui.fill(wx + 1, wy + GS_HEADER_H, wx + ww - 1, wy + GS_HEADER_H + 1, border);
+        gui.fill(wx + GS_NAV_W, wy + GS_HEADER_H, wx + GS_NAV_W + 1, wy + wh, border);
+        String[] navLabels = { "Visibility", "Order", "General" };
+        for (int i = 0; i < navLabels.length; i++) {
+            int[] r = gsNavButtonRect(screen, i);
+            boolean active = (gsActiveTab == GlobalSettingsTab.values()[i]);
+            int btnBg = active ? 0xFF1F3322 : 0xFF1A1F23;
+            gui.fill(r[0], r[1], r[0] + r[2], r[1] + r[3], btnBg);
+            gui.fill(r[0], r[1], r[0] + r[2], r[1] + 1, border);
+            gui.fill(r[0], r[1] + r[3] - 1, r[0] + r[2], r[1] + r[3], border);
+            gui.fill(r[0], r[1], r[0] + 1, r[1] + r[3], border);
+            gui.fill(r[0] + r[2] - 1, r[1], r[0] + r[2], r[1] + r[3], border);
+            int textColor = active ? 0xFFCCFFCC : 0xFFAAAAAA;
+            gui.drawString(Minecraft.getInstance().font, navLabels[i], r[0] + 6, r[1] + 5, textColor, false);
+        }
+        if (gsActiveTab == GlobalSettingsTab.VISIBILITY) {
+            renderVisibilityTab(gui, screen);
+        } else if (gsActiveTab == GlobalSettingsTab.ORDER) {
+            renderOrderTab(gui, screen, mouseX, mouseY);
+        } else {
+            renderGeneralTab(gui, screen);
+        }
+        int[] sbr = gsSaveButtonRect(screen);
+        int[] cbr = gsCancelButtonRect(screen);
+        drawFooterButton(gui, sbr, "save", 0xFF1F3322);
+        drawFooterButton(gui, cbr, "cancel", 0xFF331F1F);
+    }
+
+    private static void drawFooterButton(GuiGraphics gui, int[] r, String label, int bg) {
+        int border = 0xFF44FF66;
+        gui.fill(r[0], r[1], r[0] + r[2], r[1] + r[3], bg);
+        gui.fill(r[0], r[1], r[0] + r[2], r[1] + 1, border);
+        gui.fill(r[0], r[1] + r[3] - 1, r[0] + r[2], r[1] + r[3], border);
+        gui.fill(r[0], r[1], r[0] + 1, r[1] + r[3], border);
+        gui.fill(r[0] + r[2] - 1, r[1], r[0] + r[2], r[1] + r[3], border);
+        int tw = Minecraft.getInstance().font.width(label);
+        gui.drawString(Minecraft.getInstance().font, label,
+                r[0] + (r[2] - tw) / 2, r[1] + 4, 0xFFCCFFCC, false);
+    }
+
+    private static void renderVisibilityTab(GuiGraphics gui, Screen screen) {
+        int[] cr = gsContentRect(screen);
+        int colW = cr[2] / 2;
+        int leftColX = cr[0];
+        int rightColX = cr[0] + colW;
+        gui.fill(rightColX, cr[1], cr[0] + cr[2], cr[1] + cr[3], 0x30FF4444);
+        gui.drawString(Minecraft.getInstance().font, "Visible", leftColX + GS_PAD, cr[1] + 4, 0xFFAAFFAA, false);
+        gui.drawString(Minecraft.getInstance().font, "Hidden", rightColX + GS_PAD, cr[1] + 4, 0xFFFFAAAA, false);
+        gui.fill(leftColX, cr[1] + GS_HEADER_H - 4, cr[0] + cr[2], cr[1] + GS_HEADER_H - 3, 0xFF44FF66);
+
+        gsScrollVisibility = Math.max(0, Math.min(gsScrollVisibility, gsMaxScrollVisibility(screen)));
+
+        gui.enableScissor(cr[0], cr[1] + GS_HEADER_H, cr[0] + cr[2], cr[1] + cr[3]);
+        int visIdx = 0, hidIdx = 0;
+        for (String key : gsDraftOrder) {
+            boolean enabled = Boolean.TRUE.equals(gsDraftEnabled.get(key));
+            int[] slot = gsVisibilitySlotRect(screen, enabled ? 0 : 1, enabled ? visIdx++ : hidIdx++);
+            renderTabIconAt(gui, key, slot[0], slot[1]);
+        }
+        gui.disableScissor();
+    }
+
+    private static void renderOrderTab(GuiGraphics gui, Screen screen, int mouseX, int mouseY) {
+        int[] cr = gsContentRect(screen);
+        gui.drawString(Minecraft.getInstance().font, "Drag to reorder",
+                cr[0] + GS_PAD, cr[1] + 4, 0xFFAAAAAA, false);
+        gui.fill(cr[0], cr[1] + GS_HEADER_H - 4, cr[0] + cr[2], cr[1] + GS_HEADER_H - 3, 0xFF44FF66);
+
+        gsScrollOrder = Math.max(0, Math.min(gsScrollOrder, gsMaxScrollOrder(screen)));
+
+        gui.enableScissor(cr[0], cr[1] + GS_HEADER_H, cr[0] + cr[2], cr[1] + cr[3]);
+        for (int i = 0; i < gsDraftOrder.size(); i++) {
+            if (i == gsDraggingIndex) continue;
+            int[] slot = gsOrderSlotRect(screen, i);
+            renderTabIconAt(gui, gsDraftOrder.get(i), slot[0], slot[1]);
+        }
+        if (gsDraggingIndex >= 0 && gsDraggingIndex < gsDraftOrder.size()) {
+            int[] slot = gsOrderSlotRect(screen, gsDraggingIndex);
+            int dragX = (int) (mouseX - GS_CELL / 2);
+            int dragY = (int) (mouseY - GS_CELL / 2);
+            gui.fill(slot[0], slot[1], slot[0] + slot[2], slot[1] + 1, 0xFFFFAA00);
+            gui.fill(slot[0], slot[1] + slot[3] - 1, slot[0] + slot[2], slot[1] + slot[3], 0xFFFFAA00);
+            gui.fill(slot[0], slot[1], slot[0] + 1, slot[1] + slot[3], 0xFFFFAA00);
+            gui.fill(slot[0] + slot[2] - 1, slot[1], slot[0] + slot[2], slot[1] + slot[3], 0xFFFFAA00);
+            renderTabIconAt(gui, gsDraftOrder.get(gsDraggingIndex), dragX, dragY);
+        }
+        gui.disableScissor();
+    }
+
+    // ---- General tab ---------------------------------------------------------
+    private static final int GS_INPUT_W = 44;
+    private static final int GS_INPUT_H = 14;
+
+    private static int[] gsOffsetInputRect(Screen screen, int index) {
+        int[] cr = gsContentRect(screen);
+        int gap = 6;
+        int totalW = GS_INPUT_W * 4 + gap * 3;
+        int rowX = cr[0] + (cr[2] - totalW) / 2;
+        int rowY = cr[1] + GS_HEADER_H + 18;
+        return new int[]{rowX + index * (GS_INPUT_W + gap), rowY, GS_INPUT_W, GS_INPUT_H};
+    }
+
+    private static int[] gsTabsPerPageRect(Screen screen) {
+        int[] cr = gsContentRect(screen);
+        int rowY = cr[1] + GS_HEADER_H + 70;
+        int rowX = cr[0] + (cr[2] - GS_INPUT_W) / 2;
+        return new int[]{rowX, rowY, GS_INPUT_W, GS_INPUT_H};
+    }
+
+    private static GsField gsHitGeneralInput(Screen screen, double mx, double my) {
+        GsField[] offsetFields = { GsField.OFFSET_TOP, GsField.OFFSET_RIGHT, GsField.OFFSET_BOTTOM, GsField.OFFSET_LEFT };
+        for (int i = 0; i < 4; i++) {
+            int[] r = gsOffsetInputRect(screen, i);
+            if (mx >= r[0] && mx < r[0] + r[2] && my >= r[1] && my < r[1] + r[3]) return offsetFields[i];
+        }
+        int[] tpr = gsTabsPerPageRect(screen);
+        if (mx >= tpr[0] && mx < tpr[0] + tpr[2] && my >= tpr[1] && my < tpr[1] + tpr[3]) return GsField.TABS_PER_PAGE;
+        return null;
+    }
+
+    private static String gsDraftValue(GsField field) {
+        switch (field) {
+            case OFFSET_TOP: return gsDraftOffsetTop;
+            case OFFSET_RIGHT: return gsDraftOffsetRight;
+            case OFFSET_BOTTOM: return gsDraftOffsetBottom;
+            case OFFSET_LEFT: return gsDraftOffsetLeft;
+            case TABS_PER_PAGE: return gsDraftTabsPerPage;
+            default: return "";
+        }
+    }
+
+    private static void gsSetDraftValue(GsField field, String value) {
+        switch (field) {
+            case OFFSET_TOP: gsDraftOffsetTop = value; break;
+            case OFFSET_RIGHT: gsDraftOffsetRight = value; break;
+            case OFFSET_BOTTOM: gsDraftOffsetBottom = value; break;
+            case OFFSET_LEFT: gsDraftOffsetLeft = value; break;
+            case TABS_PER_PAGE: gsDraftTabsPerPage = value; break;
+            default: break;
+        }
+    }
+
+    private static void renderGeneralTab(GuiGraphics gui, Screen screen) {
+        int[] cr = gsContentRect(screen);
+        gui.drawString(Minecraft.getInstance().font, "Icon offset (pixels)",
+                cr[0] + GS_PAD, cr[1] + 4, 0xFFAAAAAA, false);
+        gui.fill(cr[0], cr[1] + GS_HEADER_H - 4, cr[0] + cr[2], cr[1] + GS_HEADER_H - 3, 0xFF44FF66);
+
+        String[] labels = { "top", "right", "bottom", "left" };
+        GsField[] fields = { GsField.OFFSET_TOP, GsField.OFFSET_RIGHT, GsField.OFFSET_BOTTOM, GsField.OFFSET_LEFT };
+        for (int i = 0; i < 4; i++) {
+            int[] r = gsOffsetInputRect(screen, i);
+            int lw = Minecraft.getInstance().font.width(labels[i]);
+            gui.drawString(Minecraft.getInstance().font, labels[i],
+                    r[0] + (r[2] - lw) / 2, r[1] - 10, 0xFFCCCCCC, false);
+            gsRenderInput(gui, r, gsDraftValue(fields[i]), gsFocusedField == fields[i]);
+        }
+
+        int tppLabelY = cr[1] + GS_HEADER_H + 56;
+        gui.drawString(Minecraft.getInstance().font, "Tabs per page (0 = unlimited)",
+                cr[0] + GS_PAD, tppLabelY, 0xFFAAAAAA, false);
+        gsRenderInput(gui, gsTabsPerPageRect(screen),
+                gsDraftTabsPerPage, gsFocusedField == GsField.TABS_PER_PAGE);
+    }
+
+    private static void gsRenderInput(GuiGraphics gui, int[] r, String value, boolean focused) {
+        int bg = 0xFF1A1F23;
+        int border = focused ? 0xFFFFEE66 : 0xFF44FF66;
+        gui.fill(r[0], r[1], r[0] + r[2], r[1] + r[3], bg);
+        gui.fill(r[0], r[1], r[0] + r[2], r[1] + 1, border);
+        gui.fill(r[0], r[1] + r[3] - 1, r[0] + r[2], r[1] + r[3], border);
+        gui.fill(r[0], r[1], r[0] + 1, r[1] + r[3], border);
+        gui.fill(r[0] + r[2] - 1, r[1], r[0] + r[2], r[1] + r[3], border);
+        String display = value + (focused ? "_" : "");
+        int tw = Minecraft.getInstance().font.width(display);
+        int textX = r[0] + Math.max(4, r[2] - 4 - tw);
+        gui.drawString(Minecraft.getInstance().font, display, textX, r[1] + 3, 0xFFFFFFFF, false);
+    }
+
+    public static boolean handleGlobalSettingsCharTyped(char c) {
+        if (!globalSettingsOpen || gsFocusedField == GsField.NONE) return false;
+        String cur = gsDraftValue(gsFocusedField);
+        if (c >= '0' && c <= '9') {
+            if (cur.length() < 6) gsSetDraftValue(gsFocusedField, cur + c);
+            return true;
+        }
+        if (c == '-' && cur.isEmpty()) {
+            gsSetDraftValue(gsFocusedField, "-");
+            return true;
+        }
+        return false;
+    }
+
+    public static boolean handleGlobalSettingsKey(int keyCode) {
+        if (!globalSettingsOpen || gsFocusedField == GsField.NONE) return false;
+        if (keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_BACKSPACE) {
+            String cur = gsDraftValue(gsFocusedField);
+            if (!cur.isEmpty()) gsSetDraftValue(gsFocusedField, cur.substring(0, cur.length() - 1));
+            return true;
+        }
+        if (keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_ENTER || keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_KP_ENTER) {
+            gsFocusedField = GsField.NONE;
+            return true;
+        }
+        return false;
+    }
+
+    private static void renderTabIconAt(GuiGraphics gui, String shortKey, int slotX, int slotY) {
+        TabBase tab = tabForKey(shortKey);
+        if (tab == null) return;
+        int tabOffX = slotX + (GS_CELL - 26) / 2;
+        int tabOffY = slotY + (GS_CELL - 22) / 2;
+        previewRendering = true;
+        try {
+            tab.render(gui, tabOffX, tabOffY, false);
+        } finally {
+            previewRendering = false;
+        }
+    }
+
+    public static boolean handleGlobalSettingsMouseDown(Screen screen, double mx, double my) {
+        if (!globalSettingsOpen) return false;
+        int[] sbr = gsSaveButtonRect(screen);
+        if (mx >= sbr[0] && mx < sbr[0] + sbr[2] && my >= sbr[1] && my < sbr[1] + sbr[3]) {
+            closeGlobalSettings(true);
+            return true;
+        }
+        int[] cbr = gsCancelButtonRect(screen);
+        if (mx >= cbr[0] && mx < cbr[0] + cbr[2] && my >= cbr[1] && my < cbr[1] + cbr[3]) {
+            closeGlobalSettings(false);
+            return true;
+        }
+        for (int i = 0; i < GlobalSettingsTab.values().length; i++) {
+            int[] r = gsNavButtonRect(screen, i);
+            if (mx >= r[0] && mx < r[0] + r[2] && my >= r[1] && my < r[1] + r[3]) {
+                gsActiveTab = GlobalSettingsTab.values()[i];
+                gsDraggingIndex = -1;
+                gsScrollVisibility = 0;
+                gsScrollOrder = 0;
+                gsFocusedField = GsField.NONE;
+                return true;
+            }
+        }
+        if (gsActiveTab == GlobalSettingsTab.GENERAL) {
+            GsField hit = gsHitGeneralInput(screen, mx, my);
+            gsFocusedField = (hit != null) ? hit : GsField.NONE;
+            return true;
+        }
+        if (gsActiveTab == GlobalSettingsTab.VISIBILITY) {
+            int visIdx = 0, hidIdx = 0;
+            for (String key : gsDraftOrder) {
+                boolean enabled = Boolean.TRUE.equals(gsDraftEnabled.get(key));
+                int[] slot = gsVisibilitySlotRect(screen, enabled ? 0 : 1, enabled ? visIdx++ : hidIdx++);
+                if (mx >= slot[0] && mx < slot[0] + slot[2] && my >= slot[1] && my < slot[1] + slot[3]) {
+                    gsDraftEnabled.put(key, !enabled);
+                    return true;
+                }
+            }
+        } else {
+            int idx = gsOrderHitTest(screen, mx, my);
+            if (idx >= 0) {
+                gsDraggingIndex = idx;
+                gsDragMouseX = mx;
+                gsDragMouseY = my;
+                return true;
+            }
+        }
+        return true;
+    }
+
+    public static boolean handleGlobalSettingsMouseDrag(Screen screen, double mx, double my) {
+        if (!globalSettingsOpen) return false;
+        if (gsActiveTab == GlobalSettingsTab.ORDER && gsDraggingIndex >= 0) {
+            gsDragMouseX = mx;
+            gsDragMouseY = my;
+            int targetIdx = gsOrderHitTest(screen, mx, my);
+            if (targetIdx >= 0 && targetIdx != gsDraggingIndex) {
+                String moving = gsDraftOrder.remove(gsDraggingIndex);
+                gsDraftOrder.add(targetIdx, moving);
+                gsDraggingIndex = targetIdx;
+            }
+        }
+        return true;
+    }
+
+    public static boolean handleGlobalSettingsMouseUp(Screen screen, double mx, double my) {
+        if (!globalSettingsOpen) return false;
+        gsDraggingIndex = -1;
+        return true;
+    }
+
+    /** Mouse-wheel scroll on the modal. {@code dy} > 0 means scroll up (content moves down). */
+    public static boolean handleGlobalSettingsMouseScroll(Screen screen, double mx, double my, double dy) {
+        if (!globalSettingsOpen) return false;
+        int[] cr = gsContentRect(screen);
+        if (mx < cr[0] || mx > cr[0] + cr[2] || my < cr[1] || my > cr[1] + cr[3]) return true;
+        int step = GS_CELL;
+        if (gsActiveTab == GlobalSettingsTab.VISIBILITY) {
+            int max = gsMaxScrollVisibility(screen);
+            gsScrollVisibility = Math.max(0, Math.min(max, gsScrollVisibility - (int) (dy * step)));
+        } else {
+            int max = gsMaxScrollOrder(screen);
+            gsScrollOrder = Math.max(0, Math.min(max, gsScrollOrder - (int) (dy * step)));
+        }
+        return true;
+    }
+
+    private static void drawOptionsPanel(GuiGraphics gui, Screen screen) {
+        int x = currentPanelX(screen), y = currentPanelY(screen), w = PANEL_W, h = PANEL_H;
+        int bg = 0xE8101418;
+        int border = 0xFF44FF66;
+        gui.fill(x, y, x + w, y + h, bg);
+        gui.fill(x, y, x + w, y + 1, border);
+        gui.fill(x, y + h - 1, x + w, y + h, border);
+        gui.fill(x, y, x + 1, y + h, border);
+        gui.fill(x + w - 1, y, x + w, y + h, border);
+        gui.drawString(Minecraft.getInstance().font, "Layout Options",
+                x + PANEL_PAD, y + 4, 0xFFCCFFCC, false);
+        gui.fill(x + 1, y + PANEL_TITLE_H, x + w - 1, y + PANEL_TITLE_H + 1, border);
+        int rowY = y + PANEL_TITLE_H + PANEL_PAD;
+        gui.drawString(Minecraft.getInstance().font, "Icon rotation:", x + PANEL_PAD, rowY + 4, 0xFFCCCCCC, false);
+        gui.drawString(Minecraft.getInstance().font, "Tab visibility:", x + PANEL_PAD, rowY + PANEL_ROW_H + 4, 0xFFCCCCCC, false);
+        gui.drawString(Minecraft.getInstance().font, "Custom icon:", x + PANEL_PAD, rowY + PANEL_ROW_H * 2 + 4, 0xFFCCCCCC, false);
+
+        // Preview row — render of the tab's icon (no background, no rotation, no vertical
+        // re-orientation) so the user sees the icon at its natural pose for comparison.
+        int previewRowY = rowY + PANEL_ROW_H * 3 + PANEL_PAD;
+        gui.drawString(Minecraft.getInstance().font, "Preview:", x + PANEL_PAD, previewRowY + 8, 0xFFCCCCCC, false);
+        TabBase previewTab = findTabForConfigKey(getConfigKeyForScreen(screen));
+        if (previewTab != null) {
+            int previewTabX = x + PANEL_PAD + PANEL_LABEL_W;
+            int previewTabY = previewRowY;
+            previewRendering = true;
+            try {
+                previewTab.render(gui, previewTabX, previewTabY, false);
+            } finally {
+                previewRendering = false;
+            }
+        }
+
+        int hx = panelHandleX(screen);
+        int hy = panelHandleY(screen);
+        gui.fill(hx, hy, hx + PANEL_HANDLE_W, hy + PANEL_HANDLE_H, bg);
+        gui.fill(hx, hy, hx + PANEL_HANDLE_W, hy + 1, border);
+        gui.fill(hx, hy + PANEL_HANDLE_H - 1, hx + PANEL_HANDLE_W, hy + PANEL_HANDLE_H, border);
+        gui.fill(hx + PANEL_HANDLE_W - 1, hy, hx + PANEL_HANDLE_W, hy + PANEL_HANDLE_H, border);
+        String arrow = panelCollapsed ? ">" : "<";
+        int aw = Minecraft.getInstance().font.width(arrow);
+        gui.drawString(Minecraft.getInstance().font, arrow,
+                hx + (PANEL_HANDLE_W - aw) / 2, hy + (PANEL_HANDLE_H - 8) / 2, 0xFFCCFFCC, false);
+    }
+
+    private static void drawLineBetween(GuiGraphics gui, int x0, int y0, int x1, int y1, int color) {
+        int dx = Math.abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
+        int dy = -Math.abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
+        int err = dx + dy;
+        while (true) {
+            gui.fill(x0, y0, x0 + 1, y0 + 1, color);
+            if (x0 == x1 && y0 == y1) break;
+            int e2 = 2 * err;
+            if (e2 >= dy) { err += dy; x0 += sx; }
+            if (e2 <= dx) { err += dx; y0 += sy; }
+        }
+    }
+
+    private static void drawNextRotationHandle(GuiGraphics gui, int cx, int cy, boolean hovered) {
+        int color = hovered ? 0xFFD6A3FF : 0xFFB36BFF;
+        int radius = 4;
+        for (int dy = -radius; dy <= radius; dy++) {
+            for (int dx = -radius; dx <= radius; dx++) {
+                if (dx * dx + dy * dy <= radius * radius) {
+                    gui.fill(cx + dx, cy + dy, cx + dx + 1, cy + dy + 1, color);
+                }
+            }
+        }
+    }
+
+    private static void drawRotationHandle(GuiGraphics gui, int cx, int cy, boolean hovered) {
+        int color = hovered ? 0xFFFFEE66 : 0xFFFFCC22;
+        int radius = 4;
+        for (int dy = -radius; dy <= radius; dy++) {
+            for (int dx = -radius; dx <= radius; dx++) {
+                if (dx * dx + dy * dy <= radius * radius) {
+                    gui.fill(cx + dx, cy + dy, cx + dx + 1, cy + dy + 1, color);
+                }
+            }
+        }
+    }
+
+    private static void drawCornerHandle(GuiGraphics gui, int cx, int cy, int corner, boolean hovered) {
+        int color = hovered ? 0xFFA8DDFF : 0xFF44AAFF;
+        int side = 8;
+        double medianLen = side * Math.sqrt(3) / 2.0;
+        double halfBase = side / 2.0;
+
+        double dx = (corner == 0 || corner == 2) ? -1 : 1;
+        double dy = (corner == 0 || corner == 1) ? -1 : 1;
+        double mag = Math.sqrt(dx * dx + dy * dy);
+        dx /= mag;
+        dy /= mag;
+
+        double bcx = cx + dx * medianLen;
+        double bcy = cy + dy * medianLen;
+        double px = -dy;
+        double py = dx;
+        int v1x = cx;
+        int v1y = cy;
+        int v2x = (int) Math.round(bcx + px * halfBase);
+        int v2y = (int) Math.round(bcy + py * halfBase);
+        int v3x = (int) Math.round(bcx - px * halfBase);
+        int v3y = (int) Math.round(bcy - py * halfBase);
+
+        int minX = Math.min(v1x, Math.min(v2x, v3x));
+        int maxX = Math.max(v1x, Math.max(v2x, v3x));
+        int minY = Math.min(v1y, Math.min(v2y, v3y));
+        int maxY = Math.max(v1y, Math.max(v2y, v3y));
+        for (int y = minY; y <= maxY; y++) {
+            for (int x = minX; x <= maxX; x++) {
+                if (pointInTriangle(x + 0.5, y + 0.5, v1x, v1y, v2x, v2y, v3x, v3y)) {
+                    gui.fill(x, y, x + 1, y + 1, color);
+                }
+            }
+        }
+    }
+
+    private static boolean pointInTriangle(double px, double py, int ax, int ay, int bx, int by, int cx, int cy) {
+        double s1 = (px - bx) * (ay - by) - (ax - bx) * (py - by);
+        double s2 = (px - cx) * (by - cy) - (bx - cx) * (py - cy);
+        double s3 = (px - ax) * (cy - ay) - (cx - ax) * (py - ay);
+        boolean hasNeg = s1 < 0 || s2 < 0 || s3 < 0;
+        boolean hasPos = s1 > 0 || s2 > 0 || s3 > 0;
+        return !(hasNeg && hasPos);
+    }
+
+    private static void drawInwardTriangle(GuiGraphics gui, int cx, int cy, int dir, boolean hovered) {
+        int color = hovered ? 0xFFA8FFB8 : 0xFF44FF66;
+        int size = 4;
+        for (int i = 0; i < size; i++) {
+            int half = size - i;
+            switch (dir) {
+                case 0 -> gui.fill(cx - half, cy + i, cx + half + 1, cy + i + 1, color);
+                case 1 -> gui.fill(cx - half, cy - i, cx + half + 1, cy - i + 1, color);
+                case 2 -> gui.fill(cx + i, cy - half, cx + i + 1, cy + half + 1, color);
+                case 3 -> gui.fill(cx - i, cy - half, cx - i + 1, cy + half + 1, color);
+            }
+        }
+    }
+
+    public static int[] computeTabBarBounds() {
+        boolean vertical = currentPositioning != null && currentPositioning.isVertical();
+        int tabW = effectiveTabWidth();
+        int tabH = effectiveTabHeight();
+        int spacing = currentEffectiveTabSpacing();
+        int barLength;
+        int left = leftScreenPos + dragOffsetX;
+        int top;
+        int right;
+        int bottom;
+        if (vertical) {
+            top = topScreenPos + dragOffsetY;
+            right = left + tabW;
+            barLength = currentTabsCount > 0 ? currentTabsCount * tabH + (currentTabsCount - 1) * spacing : 0;
+            bottom = top + barLength;
+        } else {
+            if (currentDisplayMode == TabDisplayMode.INVERTED) {
+                top = topScreenPos + dragOffsetY;
+                bottom = top + tabH;
+            } else {
+                top = topScreenPos + dragOffsetY - tabH;
+                bottom = topScreenPos + dragOffsetY;
+            }
+            barLength = currentTabsCount > 0 ? currentTabsCount * tabW + (currentTabsCount - 1) * spacing : 0;
+            right = left + barLength;
+        }
+        return new int[]{left, top, right, bottom};
+    }
+
+    public static boolean isMouseOnTabBar(double mouseX, double mouseY) {
+        int[] b = computeTabBarBounds();
+        double[] m = inverseRotateMouseToBarFrame(mouseX, mouseY, b);
+        return m[0] >= b[0] && m[0] < b[2] && m[1] >= b[1] && m[1] < b[3];
+    }
+
+    public static boolean isMouseOnNextButton(double mouseX, double mouseY) {
+        Screen s = Minecraft.getInstance().screen;
+        if (s == null) return false;
+        for (var child : s.children()) {
+            if (child instanceof NextTabsButton nb) {
+                if (nb.isMouseOver(mouseX, mouseY)) return true;
+            }
+        }
+        return false;
+    }
+
+    public static double[] nextButtonScreenCenter() {
+        Screen s = Minecraft.getInstance().screen;
+        if (s == null) return new double[]{0, 0};
+        for (var child : s.children()) {
+            if (child instanceof NextTabsButton nb) {
+                int animX = nb.getAnimatedAnchorX();
+                int animY = nb.getAnimatedAnchorY();
+                int cx = animX + nb.getWidth() / 2;
+                int cy = animY + nb.getHeight() / 2;
+                float barRot = currentEffectiveRotation();
+                double px = cx;
+                double py = cy;
+                if (barRot != 0f) {
+                    double[] center = barCenter();
+                    double[] r = rotatePoint(px, py, center[0], center[1], barRot);
+                    px = r[0];
+                    py = r[1];
+                }
+                px += currentNextOffsetX();
+                py += currentNextOffsetY();
+                return new double[]{px, py};
+            }
+        }
+        return new double[]{0, 0};
+    }
+
+    private static double[] inverseRotateMouseToBarFrame(double mouseX, double mouseY, int[] bounds) {
+        float rot = currentEffectiveRotation();
+        if (rot == 0f) return new double[]{mouseX, mouseY};
+        double cx = (bounds[0] + bounds[2]) / 2.0;
+        double cy = (bounds[1] + bounds[3]) / 2.0;
+        return inverseRotatePoint(mouseX, mouseY, cx, cy, rot);
+    }
+
+    public static String getConfigKeyForScreen(Screen screen) {
+        if (screen == null) return null;
+        // Dynamic match first: ask each registered tab whether it owns this screen, and
+        // if so derive the configKey from its @TabConfig annotation. Fallback switch
+        // below handles screens that aren't claimed by any tab.
+        for (ScreenInfo info : tabsScreens.values()) {
+            for (List<TabBase> list : info.tabs.values()) {
+                for (TabBase tab : list) {
+                    if (tab.isCurrentlyUsed(screen)) {
+                        TabConfig tc = tab.getClass().getAnnotation(TabConfig.class);
+                        if (tc != null) {
+                            String key = tc.configKey();
+                            if (key.endsWith("Tab")) {
+                                key = key.substring(0, key.length() - 3);
+                            }
+                            return key;
+                        }
+                    }
+                }
+            }
+        }
+        String screenClassName = screen.getClass().getName();
         switch (screenClassName) {
-            case ScreenClasses.VANILLA_INVENTORY:
-                return ModTabsConfig.inventoryTabDisplayVisibility;
+            case ScreenClasses.VANILLA_INVENTORY: return "inventory";
             case ScreenClasses.VANILLA_ADVANCEMENTS:
-            case ScreenClasses.BETTER_ADVANCEMENTS:
-                return ModTabsConfig.advancementsTabDisplayVisibility;
+            case ScreenClasses.BETTER_ADVANCEMENTS: return "advancements";
             case ScreenClasses.ARS_NOUVEAU_SPELLBOOK_GUI_LEGACY1:
-            case ScreenClasses.ARS_NOUVEAU_SPELLBOOK_GUI_LEGACY2:
-                return ModTabsConfig.arsNouveauTabDisplayVisibility;
+            case ScreenClasses.ARS_NOUVEAU_SPELLBOOK_GUI_LEGACY2: return "arsNouveau";
             case ScreenClasses.BACKPACKED_FLYWHEEL_TRANSFORM:
             case ScreenClasses.BACKPACKED_SCREEN_ALT:
-            case ScreenClasses.BACKPACKED_SCREEN:
-                return ModTabsConfig.backpackedTabDisplayVisibility;
-            case ScreenClasses.LSO_BODY_HEALTH:
-                return ModTabsConfig.bodyDamageTabDisplayVisibility;
+            case ScreenClasses.BACKPACKED_SCREEN: return "backpacked";
+            case ScreenClasses.LSO_BODY_HEALTH: return "bodyDamage";
             case ScreenClasses.COBBLEMON_PARTY_LEGACY:
-            case ScreenClasses.COBBLEMON_PARTY:
-                return ModTabsConfig.cobblemonTabDisplayVisibility;
-            case ScreenClasses.APPLESKIN_FOOD_STATS:
-                return ModTabsConfig.dietTabDisplayVisibility;
-            case ScreenClasses.FTB_LIBRARY_WRAPPER:
-                // This could be FTB Quests or FTB Teams - use FTB Quests setting as default
-                return ModTabsConfig.ftbQuestsTabDisplayVisibility;
-            case ScreenClasses.JOURNEYMAP_FULLSCREEN:
-                return ModTabsConfig.journeyMapTabDisplayVisibility;
+            case ScreenClasses.COBBLEMON_PARTY: return "cobblemon";
+            case ScreenClasses.APPLESKIN_FOOD_STATS: return "diet";
+            case ScreenClasses.FTB_LIBRARY_WRAPPER: return "ftbQuests";
+            case ScreenClasses.JOURNEYMAP_FULLSCREEN: return "journeyMap";
             case ScreenClasses.SCGUNS_ATTACHMENT:
-            case ScreenClasses.DRACONIC_EVOLUTION_GUI:
-                return ModTabsConfig.draconicEvolutionTabDisplayVisibility;
-            case ScreenClasses.MAP_ATLASES_ACCESS_UTILS:
-                return ModTabsConfig.mapAtlasesTabDisplayVisibility;
-            case ScreenClasses.XAEROS_MAP:
-                return ModTabsConfig.xaerosMapTabDisplayVisibility;
+            case ScreenClasses.DRACONIC_EVOLUTION_GUI: return "draconicEvolution";
+            case ScreenClasses.MAP_ATLASES_ACCESS_UTILS: return "mapAtlases";
+            case ScreenClasses.XAEROS_MAP: return "xaerosMap";
             case ScreenClasses.PUFFERFISH_SKILLS_ALT1:
-            case ScreenClasses.PUFFERFISH_SKILLS_ALT2:
-                return ModTabsConfig.pufferfishSkillsTabDisplayVisibility;
-            case ScreenClasses.SCGUNS_PASSIVE_SKILL:
-                return ModTabsConfig.passiveSkillTreeTabDisplayVisibility;
-            case ScreenClasses.BRASSWORKS_MISSIONS_UI:
-                return ModTabsConfig.brassworksMissionsTabDisplayVisibility;
+            case ScreenClasses.PUFFERFISH_SKILLS_ALT2: return "pufferfishSkills";
+            case ScreenClasses.SCGUNS_PASSIVE_SKILL: return "passiveSkillTree";
+            case ScreenClasses.BRASSWORKS_MISSIONS_UI: return "brassworksMissions";
             case ScreenClasses.BIOLOGY_DICTIONARY_HOME_SCREEN:
             case ScreenClasses.BIOLOGY_DICTIONARY_ABOUT_SCREEN:
             case ScreenClasses.BIOLOGY_DICTIONARY_CONFIG_SCREEN:
             case ScreenClasses.BIOLOGY_DICTIONARY_ENTITY_OVERVIEW_SCREEN:
-            case ScreenClasses.BIOLOGY_DICTIONARY_ENTITY_DETAIL_SCREEN:
-                return ModTabsConfig.biologyDictionaryTabDisplayVisibility;
+            case ScreenClasses.BIOLOGY_DICTIONARY_ENTITY_DETAIL_SCREEN: return "biologyDictionary";
             case ScreenClasses.VANILLA_CONTAINER:
-                // Check if it's a sophisticated backpack screen
-                if (screenClassName.contains("sophisticatedbackpacks")) {
-                    return ModTabsConfig.sophisticatedBackpacksTabDisplayVisibility;
-                }
-                // Check if it's a travelers backpack screen
-                if (screenClassName.contains("travelersbackpack")) {
-                    return ModTabsConfig.travelersBackpackTabDisplayVisibility;
-                }
+                if (screenClassName.contains("sophisticatedbackpacks")) return "sophisticatedBackpacks";
+                if (screenClassName.contains("travelersbackpack")) return "travelersBackpack";
                 break;
         }
+        return null;
+    }
 
-        // For unknown screens, default to showing the tab bar
+    /**
+     * Find the registered tab whose class name matches the configKey by convention
+     * (configKey "cobblemon" → CobblemonTab class). Used by the panel preview to draw
+     * a live render of the tab currently being edited. Returns null if no match.
+     */
+    private static TabBase findTabForConfigKey(String configKey) {
+        if (configKey == null || configKey.isEmpty()) return null;
+        String expected = Character.toUpperCase(configKey.charAt(0)) + configKey.substring(1) + "Tab";
+        for (ScreenInfo info : tabsScreens.values()) {
+            for (List<TabBase> list : info.tabs.values()) {
+                for (TabBase tab : list) {
+                    if (tab.getClass().getSimpleName().equals(expected)) {
+                        return tab;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    private static TabDisplayVisibility getTabDisplayVisibilityForScreen(Screen screen) {
+        String key = getConfigKeyForScreen(screen);
+        if (key == null) return TabDisplayVisibility.YES;
+        try {
+            java.lang.reflect.Field f = ModTabsConfig.class.getField(key + "TabDisplayVisibility");
+            Object v = f.get(null);
+            if (v instanceof TabDisplayVisibility tdv) return tdv;
+        } catch (NoSuchFieldException | IllegalAccessException ignored) {}
         return TabDisplayVisibility.YES;
     }
 
@@ -127,54 +1587,58 @@ public class TabsMenu {
         if (!tabsScreens.containsKey(screen.getClass())) {
             return false;
         }
-
-        ScreenInfo screenInfo = tabsScreens.get(screen.getClass());
-
-        if (screenInfo.positioning != null && screenInfo.positioning.isVertical()) {
-            int tabAreaTop = topScreenPos - HOVER_PADDING;
-            int tabAreaBottom = topScreenPos + (currentTabsCount * (TAB_HEIGHT_VERTICAL + 1)) + HOVER_PADDING;
-            int tabAreaLeft = leftScreenPos - HOVER_PADDING;
-            int tabAreaRight = leftScreenPos + TAB_WIDTH_VERTICAL + HOVER_PADDING;
-            return mouseX >= tabAreaLeft && mouseX <= tabAreaRight &&
-                   mouseY >= tabAreaTop && mouseY <= tabAreaBottom;
+        int[] b = computeTabBarBounds();
+        double[] m = inverseRotateMouseToBarFrame(mouseX, mouseY, b);
+        int left = b[0], top = b[1], right = b[2], bottom = b[3];
+        // When tucked, tabs are displaced from natural bounds by the tuck offset vector.
+        // Extend the hover zone by the FULL tuck distance (not the current animation
+        // offset, which would shrink during animate-in and pop the cursor out, causing
+        // flicker). This keeps the union of "natural" and "fully-tucked" rects covered.
+        if (isInTuckMode) {
+            boolean vertical = currentPositioning != null && currentPositioning.isVertical();
+            int crossSize = vertical ? effectiveTabWidth() : effectiveTabHeight();
+            if (currentDisplayMode == TabDisplayMode.INVERTED) crossSize = -crossSize;
+            double rad = Math.toRadians(currentEffectiveRotation());
+            int tx = (int) Math.round(0.6 * crossSize * Math.sin(rad));
+            int ty = (int) Math.round(0.6 * crossSize * Math.cos(rad));
+            if (tx > 0) right += tx; else left += tx;
+            if (ty > 0) bottom += ty; else top += ty;
         }
-
-
-        // Horizontal layout
-        int tabAreaLeft = leftScreenPos - HOVER_PADDING;
-        int tabAreaRight = leftScreenPos + (currentTabsCount * (TAB_WIDTH + 1)) + HOVER_PADDING;
-
-        int tabAreaTop, tabAreaBottom;
-        if (screenInfo.displayMode == TabDisplayMode.INVERTED) {
-            tabAreaTop = topScreenPos - HOVER_PADDING;
-            tabAreaBottom = topScreenPos + TAB_HEIGHT + HOVER_PADDING;
-        } else {
-            tabAreaTop = topScreenPos - TAB_HEIGHT - HOVER_PADDING;
-            tabAreaBottom = topScreenPos + HOVER_PADDING;
-        }
-
-        return mouseX >= tabAreaLeft && mouseX <= tabAreaRight &&
-               mouseY >= tabAreaTop && mouseY <= tabAreaBottom;
+        return m[0] >= left && m[0] <= right && m[1] >= top && m[1] <= bottom;
     }
 
     private static TabDisplayMode currentDisplayMode = TabDisplayMode.NORMAL;
     private static TabPositioning currentPositioning = TabPositioning.GUI_RELATIVE;
 
+    // Tuck offset is computed in the bar's *unrotated* frame and added to tab positions
+    // before the rotation transform is applied. We want the *visual* tuck direction to
+    // always be screen-down regardless of bar rotation, so we pick (offX, offY) such
+    // that rotation by `currentEffectiveRotation()` maps it to (0, +magnitude) on screen.
+    // Solving R(θ) · v = (0, m) gives v = (m·sin θ, m·cos θ).
+    private static int[] computeTuckOffsetVector() {
+        if (animationManager == null || !isInTuckMode) return ZERO_OFFSET;
+        boolean vertical = currentPositioning != null && currentPositioning.isVertical();
+        int crossSize = vertical ? effectiveTabWidth() : effectiveTabHeight();
+        if (currentDisplayMode == TabDisplayMode.INVERTED) crossSize = -crossSize;
+        float magnitude = animationManager.getOffsetFactor() * crossSize;
+        double rad = Math.toRadians(currentEffectiveRotation());
+        int offX = (int) Math.round(magnitude * Math.sin(rad));
+        int offY = (int) Math.round(magnitude * Math.cos(rad));
+        return new int[]{offX, offY};
+    }
+
+    private static final int[] ZERO_OFFSET = new int[]{0, 0};
+
     public static int getAnimatedYOffset() {
-        if (animationManager != null && isInTuckMode && !currentPositioning.isVertical()) {
-            return animationManager.getYOffset(TAB_HEIGHT, currentDisplayMode);
-        }
-        return 0;
+        return computeTuckOffsetVector()[1];
     }
 
     public static int getAnimatedXOffset() {
-        if (animationManager != null && isInTuckMode && currentPositioning.isVertical()) {
-            return animationManager.getXOffset(TAB_WIDTH_VERTICAL, currentPositioning);
-        }
-        return 0;
+        return computeTuckOffsetVector()[0];
     }
 
     public static boolean isCurrentVertical() {
+        if (previewRendering) return false;
         return currentPositioning != null && currentPositioning.isVertical();
     }
 
@@ -199,6 +1663,12 @@ public class TabsMenu {
                 newLeft = guiLeft + guiW;
             }
         }
+
+        // Apply user-saved per-screen offset so the bar stays where the user dragged it,
+        // even as the GUI shifts around (e.g. recipe book opening).
+        ScreenLayout layout = ScreenLayoutStore.get(screen.getClass());
+        newLeft += layout.offsetX;
+        newTop += layout.offsetY;
 
         if (TabsMenu.leftScreenPos != newLeft || TabsMenu.topScreenPos != newTop) {
             TabsMenu.leftScreenPos = newLeft;
@@ -393,6 +1863,13 @@ public class TabsMenu {
                 return;
             }
 
+            // Apply user-saved per-screen offset (Phase 1 of the visual layout editor).
+            // Bounds check above runs against the unshifted position so we don't bail
+            // out just because the user dragged the bar somewhere unusual.
+            ScreenLayout layout = ScreenLayoutStore.get(event.getScreen().getClass());
+            TabsMenu.leftScreenPos += layout.offsetX;
+            TabsMenu.topScreenPos += layout.offsetY;
+
             startTabIndex = screenOpenedViaTab ? preservedStartTabIndex : 0;
             // Don't clear tracking immediately - let the keybind handler do it after use
             currentTabsCount = 0;
@@ -446,7 +1923,10 @@ public class TabsMenu {
 
 
             boolean vertical = effectivePositioning != null && effectivePositioning.isVertical();
-            int axisSize = vertical ? TAB_HEIGHT_VERTICAL : TAB_WIDTH;
+            ScreenLayout savedLayout = ScreenLayoutStore.get(event.getScreen().getClass());
+            int baseAxisSize = vertical ? TAB_HEIGHT_VERTICAL : TAB_WIDTH;
+            int axisSize = Math.max(1, Math.round(baseAxisSize * savedLayout.scale));
+            int spacing = savedLayout.tabSpacing;
 
             int remainingAxis;
             try {
@@ -466,19 +1946,35 @@ public class TabsMenu {
             // If sticky inventory tab is enabled and present, reserve space for it
             if (Config.Baked.stickyInventoryTab && inventoryTab != null) {
                 if (tempAxis > axisSize) {
-                    tempAxis -= axisSize + 1;
+                    tempAxis -= axisSize + spacing;
                     currentTabsCount++; // Count the inventory tab
                 }
             }
 
             // Count remaining space for non-inventory tabs
             List<TabBase> tabsToCheck = Config.Baked.stickyInventoryTab ? nonInventoryTabs : enabledTabs;
+            int perPageCap = Config.Baked.maxTabsPerPage;
+            int naturalTabsCount = currentTabsCount;
             for (TabBase tabBase: tabsToCheck) {
                 if (tempAxis > axisSize) {
-                    tempAxis -= axisSize + 1;
-                    currentTabsCount++;
+                    tempAxis -= axisSize + spacing;
+                    naturalTabsCount++;
                 } else {
                     break;
+                }
+            }
+            currentTabsCount = (perPageCap > 0)
+                    ? Math.min(naturalTabsCount, perPageCap)
+                    : naturalTabsCount;
+            // Keep the bar's CENTER fixed when the cap shortens the bar — otherwise any
+            // non-zero rotation pivots the visible bar away from the user's saved spot.
+            if (currentTabsCount < naturalTabsCount) {
+                int step = axisSize + spacing;
+                int shift = (naturalTabsCount - currentTabsCount) * step / 2;
+                if (effectivePositioning.isVertical()) {
+                    TabsMenu.topScreenPos += shift;
+                } else {
+                    TabsMenu.leftScreenPos += shift;
                 }
             }
 
@@ -537,6 +2033,17 @@ public class TabsMenu {
                 event.addListener(new NextTabsButton(currentTabsCount, TabsMenu.leftScreenPos, TabsMenu.topScreenPos, effectiveDisplayMode, effectivePositioning,
                         button -> nextTabButtons(event.getScreen())));
             }
+
+            // Layout editor controls (always added when tabs are visible on this screen)
+            event.getScreen().children().removeIf(child ->
+                child instanceof vodmordia.modtabs.client.screens.LayoutEditorButtons.EditToggle ||
+                child instanceof vodmordia.modtabs.client.screens.LayoutEditorButtons.EditOnly ||
+                child instanceof vodmordia.modtabs.client.screens.LayoutEditorButtons.CustomIconEditBox);
+            event.getScreen().renderables.removeIf(r ->
+                r instanceof vodmordia.modtabs.client.screens.LayoutEditorButtons.EditToggle ||
+                r instanceof vodmordia.modtabs.client.screens.LayoutEditorButtons.EditOnly ||
+                r instanceof vodmordia.modtabs.client.screens.LayoutEditorButtons.CustomIconEditBox);
+            vodmordia.modtabs.client.screens.LayoutEditorButtons.addToScreen(event.getScreen(), event::addListener);
         }
     }
 

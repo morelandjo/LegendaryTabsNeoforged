@@ -11,6 +11,7 @@ import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.fml.common.Mod;
 import vodmordia.modtabs.ModTabs;
 import vodmordia.modtabs.api.tabs_menu.TabsMenu;
+import vodmordia.modtabs.client.screens.LayoutEditorButtons;
 import vodmordia.modtabs.client.screens.NextTabsButton;
 import vodmordia.modtabs.client.screens.TabButton;
 import vodmordia.modtabs.client.keybinds.ModKeybinds;
@@ -32,6 +33,115 @@ public class ClientNeoForgeEvents {
             if (!TabsMenu.hasCustomPositioning(screen)) {
                 TabsMenu.updateButtonsPosition(screen, containerScreen.getGuiLeft(), containerScreen.getGuiTop());
             }
+        }
+    }
+
+    @SubscribeEvent(priority = EventPriority.HIGHEST)
+    public static void onMousePressedPre(ScreenEvent.MouseButtonPressed.Pre event) {
+        Screen screen = event.getScreen();
+        if (!TabsMenu.isEditing(screen)) return;
+
+        double mx = event.getMouseX();
+        double my = event.getMouseY();
+
+        if (TabsMenu.isGlobalSettingsOpen()) {
+            if (event.getButton() == 0) {
+                TabsMenu.handleGlobalSettingsMouseDown(screen, mx, my);
+            }
+            event.setCanceled(true);
+            return;
+        }
+        if (event.getButton() == 0 && TabsMenu.isMouseOnPanelHandle(screen, mx, my)) {
+            TabsMenu.togglePanelCollapsed();
+            event.setCanceled(true);
+            return;
+        }
+        if (isClickOnEditorWidget(screen, mx, my)) {
+            return;
+        }
+        if (event.getButton() == 0) {
+            TabsMenu.onMousePressed(screen, mx, my);
+        }
+        event.setCanceled(true);
+    }
+
+    @SubscribeEvent(priority = EventPriority.HIGHEST)
+    public static void onMouseDragged(ScreenEvent.MouseDragged.Pre event) {
+        Screen screen = event.getScreen();
+        if (!TabsMenu.isEditing(screen)) return;
+        if (TabsMenu.isGlobalSettingsOpen()) {
+            if (event.getMouseButton() == 0) {
+                TabsMenu.handleGlobalSettingsMouseDrag(screen, event.getMouseX(), event.getMouseY());
+            }
+            event.setCanceled(true);
+            return;
+        }
+        if (event.getMouseButton() == 0) {
+            TabsMenu.onMouseDragged(screen, event.getMouseX(), event.getMouseY());
+        }
+        event.setCanceled(true);
+    }
+
+    @SubscribeEvent(priority = EventPriority.HIGHEST)
+    public static void onMouseReleasedEditor(ScreenEvent.MouseButtonReleased.Pre event) {
+        Screen screen = event.getScreen();
+        if (!TabsMenu.isEditing(screen)) return;
+        if (TabsMenu.isGlobalSettingsOpen()) {
+            TabsMenu.handleGlobalSettingsMouseUp(screen, event.getMouseX(), event.getMouseY());
+            event.setCanceled(true);
+            return;
+        }
+        TabsMenu.onMouseReleased(screen);
+        if (isClickOnEditorWidget(screen, event.getMouseX(), event.getMouseY())) {
+            return;
+        }
+        event.setCanceled(true);
+    }
+
+    @SubscribeEvent(priority = EventPriority.HIGHEST)
+    public static void onCharTyped(ScreenEvent.CharacterTyped.Pre event) {
+        if (!TabsMenu.isEditing(event.getScreen())) return;
+        if (TabsMenu.isGlobalSettingsOpen()
+                && TabsMenu.handleGlobalSettingsCharTyped(event.getCodePoint())) {
+            event.setCanceled(true);
+        }
+    }
+
+    @SubscribeEvent(priority = EventPriority.HIGHEST)
+    public static void onMouseScrolled(ScreenEvent.MouseScrolled.Pre event) {
+        if (!TabsMenu.isEditing(event.getScreen())) return;
+        if (TabsMenu.isGlobalSettingsOpen()) {
+            TabsMenu.handleGlobalSettingsMouseScroll(event.getScreen(),
+                    event.getMouseX(), event.getMouseY(), event.getScrollDelta());
+        }
+        event.setCanceled(true);
+    }
+
+    private static boolean isClickOnEditorWidget(Screen screen, double mx, double my) {
+        for (var child : screen.children()) {
+            if (child instanceof LayoutEditorButtons.EditOnly btn && btn.isMouseOver(mx, my)) {
+                return true;
+            }
+            if (child instanceof LayoutEditorButtons.CustomIconEditBox eb && eb.isMouseOver(mx, my)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean hasFocusedEditorEditBox(Screen screen) {
+        for (var child : screen.children()) {
+            if (child instanceof LayoutEditorButtons.CustomIconEditBox eb && eb.isFocused()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @SubscribeEvent
+    public static void renderEditModeOverlay(ScreenEvent.Render.Post event) {
+        if (TabsMenu.isEditing(event.getScreen())) {
+            TabsMenu.renderEditModeOverlay(event.getGuiGraphics(), event.getScreen(), event.getMouseX(), event.getMouseY());
         }
     }
 
@@ -64,6 +174,43 @@ public class ClientNeoForgeEvents {
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public static void onKeyPressed(ScreenEvent.KeyPressed.Pre event) {
         Minecraft minecraft = Minecraft.getInstance();
+
+        // Layout editor: Esc cancels edit mode; all other keys are swallowed so
+        // hotkeys (e.g. inventory keybind, slot number keys) can't fire — UNLESS the
+        // custom-icon EditBox is focused, in which case backspace/arrows/delete/etc.
+        // need to reach it for normal text-field editing.
+        if (TabsMenu.isEditing(event.getScreen())) {
+            if (event.getKeyCode() == org.lwjgl.glfw.GLFW.GLFW_KEY_ESCAPE) {
+                if (TabsMenu.isGlobalSettingsOpen()) {
+                    TabsMenu.closeGlobalSettings(false);
+                } else {
+                    TabsMenu.exitEditMode();
+                }
+                event.setCanceled(true);
+                return;
+            }
+            if (TabsMenu.isGlobalSettingsOpen()
+                    && TabsMenu.handleGlobalSettingsKey(event.getKeyCode())) {
+                event.setCanceled(true);
+                return;
+            }
+            if (hasFocusedEditorEditBox(event.getScreen())) {
+                return; // let vanilla deliver the key to the EditBox
+            }
+            event.setCanceled(true);
+            return;
+        }
+
+        // Shift+Z to enter the layout editor on the current screen.
+        if (event.getKeyCode() == org.lwjgl.glfw.GLFW.GLFW_KEY_Z && Screen.hasShiftDown()) {
+            Screen currentScreen = event.getScreen();
+            if (currentScreen != null && TabsMenu.hasTabsForScreen(currentScreen.getClass())
+                    && !TabsMenu.isEditing(currentScreen)) {
+                TabsMenu.enterEditMode(currentScreen);
+                event.setCanceled(true);
+                return;
+            }
+        }
 
         // Handle tab cycling keybind
         if (ModKeybinds.TAB_CYCLE.matches(event.getKeyCode(), event.getScanCode()) && Screen.hasShiftDown()) {
@@ -194,36 +341,63 @@ public class ClientNeoForgeEvents {
         }
     }
 
+    /**
+     * Screens whose own {@code mouseClicked} doesn't call {@code super.mouseClicked} —
+     * the standard child-iteration path won't reach our TabButton, so the click /
+     * release handlers below forward events directly.
+     */
+    private static boolean isScreenWithCustomClickRouting(String screenClassName) {
+        return screenClassName.equals("net.puffish.skillsmod.client.gui.SkillsScreen")
+            || screenClassName.equals("dev.ftb.mods.ftblibrary.ui.ScreenWrapper")
+            || screenClassName.equals("xaero.map.gui.GuiMap")
+            || screenClassName.equals("pepjebs.mapatlases.client.screen.AtlasOverviewScreen")
+            || screenClassName.equals("betteradvancements.common.gui.BetterAdvancementsScreen");
+    }
+
     @SubscribeEvent
     public static void onScreenMouseClick(ScreenEvent.MouseButtonPressed.Pre event) {
-        // Special handling for mouse clicks on screens that cover tab buttons
-        String screenClassName = event.getScreen().getClass().getName();
+        if (!isScreenWithCustomClickRouting(event.getScreen().getClass().getName())) return;
 
-        if (screenClassName.equals("net.puffish.skillsmod.client.gui.SkillsScreen") ||
-            screenClassName.equals("dev.ftb.mods.ftblibrary.ui.ScreenWrapper") ||
-            screenClassName.equals("xaero.map.gui.GuiMap") ||
-            screenClassName.equals("pepjebs.mapatlases.client.screen.AtlasOverviewScreen") ||
-            screenClassName.equals("betteradvancements.common.gui.BetterAdvancementsScreen")) {
-
-            // Check if the click is within any tab button bounds and forward the click
-            for (var child : event.getScreen().children()) {
-                if (child instanceof TabButton tabButton) {
-                    if (tabButton.isMouseOver(event.getMouseX(), event.getMouseY())) {
-                        tabButton.onPress();
-                        event.setCanceled(true); // Cancel the original click to prevent it from affecting the background screen
-                        return;
-                    }
+        // Forward to mouseClicked (NOT onPress) so the long-press timer in TabButton.mouseClicked
+        // gets armed. onPress would skip pressStartMs and the gesture would behave as an
+        // instant click, breaking the long-press-to-edit gesture on these screens.
+        for (var child : event.getScreen().children()) {
+            if (child instanceof TabButton tabButton) {
+                if (tabButton.isMouseOver(event.getMouseX(), event.getMouseY())) {
+                    tabButton.mouseClicked(event.getMouseX(), event.getMouseY(), event.getButton());
+                    event.setCanceled(true);
+                    return;
                 }
-                if (child instanceof NextTabsButton nextTabsButton) {
-                    if (nextTabsButton.isMouseOver(event.getMouseX(), event.getMouseY())) {
-                        nextTabsButton.onPress();
-                        event.setCanceled(true); // Cancel the original click to prevent it from affecting the background screen
-                        return;
-                    }
+            }
+            if (child instanceof NextTabsButton nextTabsButton) {
+                if (nextTabsButton.isMouseOver(event.getMouseX(), event.getMouseY())) {
+                    nextTabsButton.mouseClicked(event.getMouseX(), event.getMouseY(), event.getButton());
+                    event.setCanceled(true);
+                    return;
                 }
             }
         }
     }
 
+    /**
+     * Companion to {@link #onScreenMouseClick}: forwards releases on these special screens
+     * so {@code TabButton.mouseReleased} runs the short-click open-target logic and clears
+     * {@code pressStartMs}. Without this, a quick click would never open the target screen
+     * because the timer is set on press but never read on release.
+     */
+    @SubscribeEvent
+    public static void onScreenMouseReleasedSpecial(ScreenEvent.MouseButtonReleased.Pre event) {
+        Screen screen = event.getScreen();
+        if (TabsMenu.isEditing(screen)) return; // edit-mode handler takes over
+        if (!isScreenWithCustomClickRouting(screen.getClass().getName())) return;
 
+        for (var child : screen.children()) {
+            if (child instanceof TabButton tabButton) {
+                tabButton.mouseReleased(event.getMouseX(), event.getMouseY(), event.getButton());
+            }
+            if (child instanceof NextTabsButton nextTabsButton) {
+                nextTabsButton.mouseReleased(event.getMouseX(), event.getMouseY(), event.getButton());
+            }
+        }
+    }
 }

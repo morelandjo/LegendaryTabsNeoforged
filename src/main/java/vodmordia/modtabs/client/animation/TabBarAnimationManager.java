@@ -11,17 +11,15 @@ public class TabBarAnimationManager {
         ANIMATING_OUT  // Animating from visible to tucked
     }
 
-    private AnimationState currentState = AnimationState.VISIBLE;
+    // Start tucked: tabs are hidden by default and reveal on hover. Previous behavior
+    // (start visible, auto-tuck after 800ms) made tabs slide AWAY just as the user
+    // was moving their cursor toward them, which read as backwards.
+    private AnimationState currentState = AnimationState.TUCKED;
     private long animationStartTime = 0;
     private static final long ANIMATION_DURATION_MS = 300; // 300ms for smooth animation
-    private static final long INITIAL_DISPLAY_TIME_MS = 800; // Show for 0.8 seconds initially
     private static final float TUCK_PERCENTAGE = 0.6f; // Tuck in by 60%, show 40% of tab height when tucked
 
-    private long screenOpenTime = 0;
-    private boolean hasInitiallyTucked = false;
-
     public TabBarAnimationManager() {
-        this.screenOpenTime = System.currentTimeMillis();
     }
 
     public void onMouseEnterHoverZone() {
@@ -31,7 +29,7 @@ public class TabBarAnimationManager {
     }
 
     public void onMouseExitHoverZone() {
-        if (currentState == AnimationState.VISIBLE && hasInitiallyTucked) {
+        if (currentState == AnimationState.VISIBLE) {
             startAnimation(AnimationState.ANIMATING_OUT);
         }
     }
@@ -43,12 +41,6 @@ public class TabBarAnimationManager {
 
     public void update() {
         long currentTime = System.currentTimeMillis();
-
-        // Handle initial auto-tuck after screen opens
-        if (!hasInitiallyTucked && currentTime - screenOpenTime > INITIAL_DISPLAY_TIME_MS) {
-            hasInitiallyTucked = true;
-            startAnimation(AnimationState.ANIMATING_OUT);
-        }
 
         // Handle animation completion
         if (currentState == AnimationState.ANIMATING_IN || currentState == AnimationState.ANIMATING_OUT) {
@@ -76,25 +68,27 @@ public class TabBarAnimationManager {
         return t < 0.5f ? 4 * t * t * t : 1 - (float) Math.pow(-2 * t + 2, 3) / 2;
     }
 
-    public int getYOffset(int tabHeight, TabDisplayMode displayMode) {
-        update(); // Update state
+    /** Current 0..TUCK_PERCENTAGE multiplier for the active animation state. */
+    public float getOffsetFactor() {
+        update();
+        return currentOffsetFactor();
+    }
 
+    /** @deprecated TabsMenu now computes the tuck offset as a rotation-aware 2D vector
+     *  via {@link #getOffsetFactor()}. Retained for older call sites. */
+    @Deprecated
+    public int getYOffset(int tabHeight, TabDisplayMode displayMode) {
+        update();
         float offsetFactor = currentOffsetFactor();
         int offset = (int) (tabHeight * offsetFactor);
-
-        // For inverted tabs, move upward (negative offset)
-        // For normal tabs, move downward (positive offset)
         return displayMode == TabDisplayMode.INVERTED ? -offset : offset;
     }
 
-    /**
-     * Cross-axis offset for vertical (right-side) tab bars: positive moves right,
-     * sliding the bar off-screen to tuck it.
-     */
+    /** @deprecated See {@link #getOffsetFactor()}. */
+    @Deprecated
     public int getXOffset(int tabWidth, TabPositioning positioning) {
         update();
-        float offsetFactor = currentOffsetFactor();
-        return (int) (tabWidth * offsetFactor);
+        return (int) (tabWidth * currentOffsetFactor());
     }
 
     private float currentOffsetFactor() {

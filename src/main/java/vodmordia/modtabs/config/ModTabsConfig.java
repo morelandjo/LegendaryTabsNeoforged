@@ -11,6 +11,15 @@ public class ModTabsConfig extends MidnightConfig {
     @Entry(category = "tabs")
     public static StandardTabPlacement standardTabPlacement = StandardTabPlacement.RIGHT;
 
+    // Edited via the in-game global-settings modal (General tab); hidden from the
+    // MidnightConfig list to avoid duplicate UIs.
+    @Entry(category = "tabs") @Hidden public static int iconOffsetTop = 0;
+    @Entry(category = "tabs") @Hidden public static int iconOffsetRight = 0;
+    @Entry(category = "tabs") @Hidden public static int iconOffsetBottom = 0;
+    @Entry(category = "tabs") @Hidden public static int iconOffsetLeft = 0;
+    /** 0 = unlimited (auto-fit by available space). */
+    @Entry(category = "tabs") @Hidden public static int maxTabsPerPage = 0;
+
     @Comment(category = "tabs") public static CommentText spacer_placement;
 
     @Comment(category = "tabs") public static CommentText inventory;
@@ -18,16 +27,16 @@ public class ModTabsConfig extends MidnightConfig {
     @Entry(category = "tabs")
     public static boolean stickyInventoryTab = true;
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static boolean inventoryTabEnabled = true;
 
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static String inventoryTabCustomIcon = "";
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static int inventoryTabOrder = 0;
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static TabDisplayVisibility inventoryTabDisplayVisibility = TabDisplayVisibility.YES;
 
     @Comment(category = "tabs") public static CommentText spacer1;
@@ -36,77 +45,77 @@ public class ModTabsConfig extends MidnightConfig {
 
     @Comment(category = "tabs") public static CommentText advancements;
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static boolean advancementsTabEnabled = true;
 
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static String advancementsTabCustomIcon = "";
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static int advancementsTabOrder = 0;
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static TabDisplayVisibility advancementsTabDisplayVisibility = TabDisplayVisibility.TUCK;
 
     @Comment(category = "tabs") public static CommentText spacer1b;
 
     @Comment(category = "tabs") public static CommentText rpgCrafting;
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static boolean rpgCraftingTabEnabled = true;
 
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static String rpgCraftingTabCustomIcon = "";
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static int rpgCraftingTabOrder = 0;
 
     @Comment(category = "tabs") public static CommentText spacer2;
 
     @Comment(category = "tabs") public static CommentText arsElixirum;
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static boolean arsElixirumTabEnabled = true;
 
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static String arsElixirumTabCustomIcon = "";
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static int arsElixirumTabOrder = 0;
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static TabDisplayVisibility arsElixirumTabDisplayVisibility = TabDisplayVisibility.YES;
 
     @Comment(category = "tabs") public static CommentText spacer3;
 
     @Comment(category = "tabs") public static CommentText arsNouveau;
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static boolean arsNouveauTabEnabled = true;
 
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static String arsNouveauTabCustomIcon = "";
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static int arsNouveauTabOrder = 0;
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static TabDisplayVisibility arsNouveauTabDisplayVisibility = TabDisplayVisibility.YES;
 
     @Comment(category = "tabs") public static CommentText spacer3b;
 
     @Comment(category = "tabs") public static CommentText backpacked;
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static boolean backpackedTabEnabled = true;
 
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static String backpackedTabCustomIcon = "";
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static int backpackedTabOrder = 0;
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static TabDisplayVisibility backpackedTabDisplayVisibility = TabDisplayVisibility.TUCK;
 
 
@@ -114,461 +123,461 @@ public class ModTabsConfig extends MidnightConfig {
 
     @Comment(category = "tabs") public static CommentText bodyDamage;
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static boolean bodyDamageTabEnabled = true;
 
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static String bodyDamageTabCustomIcon = "";
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static int bodyDamageTabOrder = 0;
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static TabDisplayVisibility bodyDamageTabDisplayVisibility = TabDisplayVisibility.YES;
 
     @Comment(category = "tabs") public static CommentText spacer_biologydictionary;
 
     @Comment(category = "tabs") public static CommentText biologyDictionary;
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static boolean biologyDictionaryTabEnabled = true;
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static String biologyDictionaryTabCustomIcon = "";
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static int biologyDictionaryTabOrder = 0;
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static TabDisplayVisibility biologyDictionaryTabDisplayVisibility = TabDisplayVisibility.YES;
 
     @Comment(category = "tabs") public static CommentText spacer_reliable_backpacks;
 
     @Comment(category = "tabs") public static CommentText reliableBackpacks;
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static boolean reliableBackpacksTabEnabled = true;
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static String reliableBackpacksTabCustomIcon = "";
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static int reliableBackpacksTabOrder = 0;
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static TabDisplayVisibility reliableBackpacksTabDisplayVisibility = TabDisplayVisibility.YES;
 
     @Comment(category = "tabs") public static CommentText spacer4b;
 
     @Comment(category = "tabs") public static CommentText brassworksMissions;
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static boolean brassworksMissionsTabEnabled = true;
 
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static String brassworksMissionsTabCustomIcon = "";
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static int brassworksMissionsTabOrder = 0;
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static TabDisplayVisibility brassworksMissionsTabDisplayVisibility = TabDisplayVisibility.YES;
 
     @Comment(category = "tabs") public static CommentText spacer5;
 
     @Comment(category = "tabs") public static CommentText cobblemon;
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static boolean cobblemonTabEnabled = true;
 
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static String cobblemonTabCustomIcon = "";
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static int cobblemonTabOrder = 0;
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static TabDisplayVisibility cobblemonTabDisplayVisibility = TabDisplayVisibility.YES;
 
     @Comment(category = "tabs") public static CommentText spacer6;
 
     @Comment(category = "tabs") public static CommentText cosmeticArmor;
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static boolean cosmeticArmorTabEnabled = true;
 
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static String cosmeticArmorTabCustomIcon = "";
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static int cosmeticArmorTabOrder = 0;
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static TabDisplayVisibility cosmeticArmorTabDisplayVisibility = TabDisplayVisibility.YES;
 
     @Comment(category = "tabs") public static CommentText spacer7;
 
     @Comment(category = "tabs") public static CommentText draconicEvolution;
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static boolean draconicEvolutionTabEnabled = true;
 
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static String draconicEvolutionTabCustomIcon = "";
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static int draconicEvolutionTabOrder = 0;
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static TabDisplayVisibility draconicEvolutionTabDisplayVisibility = TabDisplayVisibility.YES;
 
     @Comment(category = "tabs") public static CommentText spacer7a;
 
     @Comment(category = "tabs") public static CommentText eccentricTome;
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static boolean eccentricTomeTabEnabled = true;
 
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static String eccentricTomeTabCustomIcon = "";
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static int eccentricTomeTabOrder = 0;
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static TabDisplayVisibility eccentricTomeTabDisplayVisibility = TabDisplayVisibility.YES;
 
     @Comment(category = "tabs") public static CommentText spacer7b;
 
     @Comment(category = "tabs") public static CommentText diet;
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static boolean dietTabEnabled = true;
 
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static String dietTabCustomIcon = "";
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static int dietTabOrder = 0;
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static TabDisplayVisibility dietTabDisplayVisibility = TabDisplayVisibility.YES;
 
     @Comment(category = "tabs") public static CommentText spacer8;
 
     @Comment(category = "tabs") public static CommentText ftbQuests;
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static boolean ftbQuestsTabEnabled = true;
 
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static String ftbQuestsTabCustomIcon = "";
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static int ftbQuestsTabOrder = 0;
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static TabDisplayVisibility ftbQuestsTabDisplayVisibility = TabDisplayVisibility.YES;
 
     @Comment(category = "tabs") public static CommentText spacer9;
 
     @Comment(category = "tabs") public static CommentText ftbChunks;
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static boolean ftbChunksTabEnabled = true;
 
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static String ftbChunksTabCustomIcon = "";
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static int ftbChunksTabOrder = 0;
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static TabDisplayVisibility ftbChunksTabDisplayVisibility = TabDisplayVisibility.TUCK;
 
     @Comment(category = "tabs") public static CommentText spacer9b;
 
     @Comment(category = "tabs") public static CommentText ftbTeams;
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static boolean ftbTeamsTabEnabled = true;
 
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static String ftbTeamsTabCustomIcon = "";
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static int ftbTeamsTabOrder = 0;
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static TabDisplayVisibility ftbTeamsTabDisplayVisibility = TabDisplayVisibility.YES;
 
     @Comment(category = "tabs") public static CommentText spacer_advanced_team;
 
     @Comment(category = "tabs") public static CommentText advancedTeam;
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static boolean advancedTeamTabEnabled = true;
 
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static String advancedTeamTabCustomIcon = "";
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static int advancedTeamTabOrder = 0;
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static TabDisplayVisibility advancedTeamTabDisplayVisibility = TabDisplayVisibility.YES;
 
     @Comment(category = "tabs") public static CommentText spacer_villager_recruits;
 
     @Comment(category = "tabs") public static CommentText villagerRecruits;
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static boolean villagerRecruitsTabEnabled = true;
 
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static String villagerRecruitsTabCustomIcon = "";
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static int villagerRecruitsTabOrder = 0;
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static TabDisplayVisibility villagerRecruitsTabDisplayVisibility = TabDisplayVisibility.YES;
 
     @Comment(category = "tabs") public static CommentText spacer_apothic_attributes;
 
     @Comment(category = "tabs") public static CommentText apothicAttributes;
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static boolean apothicAttributesTabEnabled = true;
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static String apothicAttributesTabCustomIcon = "";
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static int apothicAttributesTabOrder = 0;
 
     @Comment(category = "tabs") public static CommentText spacer10;
 
     @Comment(category = "tabs") public static CommentText journeyMap;
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static boolean journeyMapTabEnabled = true;
 
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static String journeyMapTabCustomIcon = "";
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static int journeyMapTabOrder = 0;
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static TabDisplayVisibility journeyMapTabDisplayVisibility = TabDisplayVisibility.YES;
 
     @Comment(category = "tabs") public static CommentText spacer11;
 
     @Comment(category = "tabs") public static CommentText l2Artifacts;
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static boolean l2ArtifactsTabEnabled = true;
 
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static String l2ArtifactsTabCustomIcon = "";
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static int l2ArtifactsTabOrder = 0;
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static TabDisplayVisibility l2ArtifactsTabDisplayVisibility = TabDisplayVisibility.YES;
 
     @Comment(category = "tabs") public static CommentText spacer12;
 
     @Comment(category = "tabs") public static CommentText l2Attributes;
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static boolean l2AttributesTabEnabled = true;
 
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static String l2AttributesTabCustomIcon = "";
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static int l2AttributesTabOrder = 0;
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static TabDisplayVisibility l2AttributesTabDisplayVisibility = TabDisplayVisibility.YES;
 
     @Comment(category = "tabs") public static CommentText spacer13;
 
     @Comment(category = "tabs") public static CommentText l2Hostility;
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static boolean l2HostilityTabEnabled = true;
 
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static String l2HostilityTabCustomIcon = "";
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static int l2HostilityTabOrder = 0;
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static TabDisplayVisibility l2HostilityTabDisplayVisibility = TabDisplayVisibility.YES;
 
     @Comment(category = "tabs") public static CommentText spacer14;
 
     @Comment(category = "tabs") public static CommentText mapAtlases;
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static boolean mapAtlasesTabEnabled = true;
 
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static String mapAtlasesTabCustomIcon = "";
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static int mapAtlasesTabOrder = 0;
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static TabDisplayVisibility mapAtlasesTabDisplayVisibility = TabDisplayVisibility.YES;
 
     @Comment(category = "tabs") public static CommentText spacer15;
 
     @Comment(category = "tabs") public static CommentText modularGolems;
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static boolean modularGolemsTabEnabled = true;
 
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static String modularGolemsTabCustomIcon = "";
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static int modularGolemsTabOrder = 0;
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static TabDisplayVisibility modularGolemsTabDisplayVisibility = TabDisplayVisibility.YES;
 
     @Comment(category = "tabs") public static CommentText spacer16;
 
     @Comment(category = "tabs") public static CommentText motp;
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static boolean motpTabEnabled = true;
 
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static String motpTabCustomIcon = "";
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static int motpTabOrder = 0;
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static TabDisplayVisibility motpTabDisplayVisibility = TabDisplayVisibility.YES;
 
     @Comment(category = "tabs") public static CommentText spacer16a;
 
     @Comment(category = "tabs") public static CommentText passiveSkillTree;
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static boolean passiveSkillTreeTabEnabled = true;
 
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static String passiveSkillTreeTabCustomIcon = "";
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static int passiveSkillTreeTabOrder = 0;
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static TabDisplayVisibility passiveSkillTreeTabDisplayVisibility = TabDisplayVisibility.YES;
 
     @Comment(category = "tabs") public static CommentText spacer17;
 
     @Comment(category = "tabs") public static CommentText pufferfishSkills;
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static boolean pufferfishSkillsTabEnabled = true;
 
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static String pufferfishSkillsTabCustomIcon = "";
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static int pufferfishSkillsTabOrder = 0;
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static TabDisplayVisibility pufferfishSkillsTabDisplayVisibility = TabDisplayVisibility.YES;
 
     @Comment(category = "tabs") public static CommentText spacer_runic_skills;
 
     @Comment(category = "tabs") public static CommentText runicSkills;
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static boolean runicSkillsTabEnabled = true;
 
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static String runicSkillsTabCustomIcon = "";
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static int runicSkillsTabOrder = 0;
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static TabDisplayVisibility runicSkillsTabDisplayVisibility = TabDisplayVisibility.YES;
 
     @Comment(category = "tabs") public static CommentText spacer18;
 
     @Comment(category = "tabs") public static CommentText reskillableReimagined;
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static boolean reskillableReimaginedTabEnabled = true;
 
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static String reskillableReimaginedTabCustomIcon = "";
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static int reskillableReimaginedTabOrder = 0;
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static TabDisplayVisibility reskillableReimaginedTabDisplayVisibility = TabDisplayVisibility.YES;
 
     @Comment(category = "tabs") public static CommentText spacer19;
 
     @Comment(category = "tabs") public static CommentText sophisticatedBackpacks;
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static boolean sophisticatedBackpacksTabEnabled = true;
 
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static String sophisticatedBackpacksTabCustomIcon = "";
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static int sophisticatedBackpacksTabOrder = 0;
 
     @Entry(category = "tabs")
     public static BackpackSlot sophisticatedBackpacksPreferredSlot = BackpackSlot.DEFAULT;
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static TabDisplayVisibility sophisticatedBackpacksTabDisplayVisibility = TabDisplayVisibility.YES;
 
     @Comment(category = "tabs") public static CommentText spacer20;
 
     @Comment(category = "tabs") public static CommentText travelersBackpack;
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static boolean travelersBackpackTabEnabled = true;
 
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static String travelersBackpackTabCustomIcon = "";
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static int travelersBackpackTabOrder = 0;
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static TabDisplayVisibility travelersBackpackTabDisplayVisibility = TabDisplayVisibility.YES;
 
     @Comment(category = "tabs") public static CommentText spacer21;
 
     @Comment(category = "tabs") public static CommentText xaerosMap;
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static boolean xaerosMapTabEnabled = true;
 
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static String xaerosMapTabCustomIcon = "";
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static int xaerosMapTabOrder = 0;
 
-    @Entry(category = "tabs")
+    @Entry(category = "tabs") @Hidden
     public static TabDisplayVisibility xaerosMapTabDisplayVisibility = TabDisplayVisibility.YES;
 
     @Comment(category = "customTabs") public static CommentText spacer22;
