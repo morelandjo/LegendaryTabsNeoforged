@@ -1,0 +1,15 @@
+{
+  "offsetX": 134,
+  "offsetY": 22,
+  "scale": 1.0,
+  "tabSpacing": 1,
+  "rotation": 179.99998,
+  "nextButtonOffsetX": -13,
+  "nextButtonOffsetY": -1,
+  "nextButtonRotation": -180.0,
+  "iconRotation": 180,
+  "tuckDirection": "UP",
+  "anchor": "SCREEN_ABSOLUTE",
+  "tabOrder": "RIGHT_TO_LEFT",
+  "maxTabsPerPage": 6
+}

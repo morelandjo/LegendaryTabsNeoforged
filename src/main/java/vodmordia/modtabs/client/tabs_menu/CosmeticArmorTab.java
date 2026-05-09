@@ -8,7 +8,6 @@ import vodmordia.modtabs.ModTabs;
 import vodmordia.modtabs.api.tabs_menu.ConfigurableIconTab;
 import vodmordia.modtabs.api.tabs_menu.TabConfig;
 import vodmordia.modtabs.api.tabs_menu.ScreenRegistry;
-import vodmordia.modtabs.api.tabs_menu.TabPositioning;
 import vodmordia.modtabs.config.Config;
 import vodmordia.modtabs.integration.ModIntegration;
 import vodmordia.modtabs.integration.ModIntegrationManager;
@@ -69,7 +68,6 @@ public class CosmeticArmorTab extends ConfigurableIconTab {
             Class<? extends Screen> screenClass = (Class<? extends Screen>) guiCosArmorInventoryClass;
             ScreenRegistry.builder()
                 .withStandardDimensions()
-                .withPositioning(TabPositioning.GUI_RELATIVE)
                 .registerAllTabs(screenClass);
         } catch (ClassNotFoundException e) {
             // Cosmetic Armor not present, skip registration

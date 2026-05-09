@@ -7,10 +7,10 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 import vodmordia.modtabs.ModTabs;
 import vodmordia.modtabs.api.tabs_menu.ConfigurableCustomIconTab;
+import vodmordia.modtabs.api.tabs_menu.ScreenRegistry;
 import vodmordia.modtabs.api.tabs_menu.TabConfig;
 import vodmordia.modtabs.api.tabs_menu.TabsMenu;
 import vodmordia.modtabs.api.tabs_menu.TabDisplayMode;
-import vodmordia.modtabs.api.tabs_menu.TabPositioning;
 import vodmordia.modtabs.config.Config;
 import vodmordia.modtabs.integration.ModIntegration;
 import vodmordia.modtabs.integration.ModIntegrationManager;
@@ -27,7 +27,7 @@ public class XaerosMapTab extends ConfigurableCustomIconTab {
                 context.gui.fill(context.x + 7, context.y + 5, context.x + 19, context.y + 17, 0xFF8B4513);
                 context.gui.fill(context.x + 9, context.y + 7, context.x + 17, context.y + 15, 0xFF90EE90);
             }
-        }, Config.Baked.xaerosMapTabCustomIcon, "xaerosMap");
+        }, Config.Baked.xaerosMapTabCustomIcon, "xaerosMap", 13, 12);
     }
 
     @Override
@@ -76,19 +76,15 @@ public class XaerosMapTab extends ConfigurableCustomIconTab {
 
     @Override
     public void initTabOnScreens() {
-        // Register Xaero's World Map screen with custom bottom-left positioning
+        // Register Xaero's World Map screen as a standard GUI-relative tab. Anything
+        // about its placement is now editable via the per-screen layout editor and
+        // ships as a JSON in config/modtabs/screen-layouts/.
         try {
             @SuppressWarnings("unchecked")
             Class<? extends Screen> guiMapClass = (Class<? extends Screen>) Class.forName("xaero.map.gui.GuiMap");
-
-            // Register with custom positioning - bottom-left positioning
-            TabsMenu.registerScreenWithCustomPosition(guiMapClass,
-                (player) -> 176, // Standard GUI width like other tabs
-                (player) -> 166, // Standard GUI height like other tabs
-                TabDisplayMode.NORMAL, // Normal display mode (not inverted)
-                (screen) -> 16, // Left position - 16px offset from left edge
-                (screen) -> screen.height); // Bottom position - TabButton will subtract TAB_HEIGHT for normal mode
-
+            ScreenRegistry.builder()
+                .withStandardDimensions()
+                .registerAllTabs(guiMapClass);
         } catch (ClassNotFoundException e) {
             // Xaero's World Map mod not available
         }

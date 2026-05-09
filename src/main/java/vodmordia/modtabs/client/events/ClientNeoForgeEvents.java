@@ -30,9 +30,40 @@ public class ClientNeoForgeEvents {
         TabsMenu.onMouseMove(event.getMouseX(), event.getMouseY(), screen);
 
         if (screen instanceof AbstractContainerScreen<?> containerScreen) {
-            if (!TabsMenu.hasCustomPositioning(screen)) {
-                TabsMenu.updateButtonsPosition(screen, containerScreen.getGuiLeft(), containerScreen.getGuiTop());
+            TabsMenu.updateButtonsPosition(screen, containerScreen.getGuiLeft(), containerScreen.getGuiTop());
+        }
+
+        // FTB Chunks LargeMapScreen reads `grabbed` directly each frame in drawBackground —
+        // canceling our ScreenEvent presses isn't enough if the field gets set before we enter
+        // edit mode (or by any path we don't intercept). Force it to 0 while editing so the
+        // map can never pan under the editor panel.
+        if (TabsMenu.isEditing(screen)) {
+            neutralizeFtbMapDrag(screen);
+        }
+    }
+
+    private static java.lang.reflect.Field ftbWrappedGuiField;
+    private static java.lang.reflect.Field ftbLargeMapGrabbedField;
+    private static boolean ftbReflectFailed;
+
+    private static void neutralizeFtbMapDrag(Screen screen) {
+        if (ftbReflectFailed) return;
+        if (!"dev.ftb.mods.ftblibrary.ui.ScreenWrapper".equals(screen.getClass().getName())) return;
+        try {
+            if (ftbWrappedGuiField == null) {
+                ftbWrappedGuiField = screen.getClass().getDeclaredField("wrappedGui");
+                ftbWrappedGuiField.setAccessible(true);
             }
+            Object wrapped = ftbWrappedGuiField.get(screen);
+            if (wrapped == null) return;
+            if (!"dev.ftb.mods.ftbchunks.client.gui.LargeMapScreen".equals(wrapped.getClass().getName())) return;
+            if (ftbLargeMapGrabbedField == null) {
+                ftbLargeMapGrabbedField = wrapped.getClass().getDeclaredField("grabbed");
+                ftbLargeMapGrabbedField.setAccessible(true);
+            }
+            ftbLargeMapGrabbedField.setInt(wrapped, 0);
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            ftbReflectFailed = true;
         }
     }
 
@@ -51,12 +82,23 @@ public class ClientNeoForgeEvents {
             event.setCanceled(true);
             return;
         }
+        // Custom-icon dropdown: dispatch popup item clicks here so they aren't consumed by
+        // earlier-registered widgets (e.g. tabs under the popup). Also closes on outside click.
+        if (LayoutEditorButtons.CustomIconDropdown.handleClickPre(screen, mx, my, event.getButton())) {
+            event.setCanceled(true);
+            return;
+        }
         if (event.getButton() == 0 && TabsMenu.isMouseOnPanelHandle(screen, mx, my)) {
             TabsMenu.togglePanelCollapsed();
             event.setCanceled(true);
             return;
         }
-        if (isClickOnEditorWidget(screen, mx, my)) {
+        // Editor buttons / EditBox: dispatch the click manually and cancel. We can't rely on
+        // vanilla's children iteration because FTB Library's ScreenWrapper.mouseClicked
+        // forwards to wrappedGui FIRST — its map/quest panel always consumes, so super
+        // (the children iteration that would reach our editor widgets) never runs.
+        if (dispatchClickToEditorWidget(screen, mx, my, event.getButton())) {
+            event.setCanceled(true);
             return;
         }
         if (event.getButton() == 0) {
@@ -92,9 +134,8 @@ public class ClientNeoForgeEvents {
             return;
         }
         TabsMenu.onMouseReleased(screen);
-        if (isClickOnEditorWidget(screen, event.getMouseX(), event.getMouseY())) {
-            return;
-        }
+        // Dispatch release manually for the same reason as mouseClicked above.
+        dispatchReleaseToEditorWidget(screen, event.getMouseX(), event.getMouseY(), event.getButton());
         event.setCanceled(true);
     }
 
@@ -104,7 +145,18 @@ public class ClientNeoForgeEvents {
         if (TabsMenu.isGlobalSettingsOpen()
                 && TabsMenu.handleGlobalSettingsCharTyped(event.getCodePoint())) {
             event.setCanceled(true);
+            return;
         }
+        // Deliver chars to a focused editor EditBox manually and cancel — same reason as
+        // mouseClicked: FTB Library's ScreenWrapper.charTyped forwards to wrappedGui first,
+        // so vanilla's children iteration never runs and our EditBoxes never see typed chars.
+        // Cancellation also keeps Shift+Z from leaking 'Z' into the host screen's text fields
+        // (e.g. Eccentric Tome's search bar).
+        if (dispatchCharTypedToEditorEditBox(event.getScreen(), event.getCodePoint(), event.getModifiers())) {
+            event.setCanceled(true);
+            return;
+        }
+        event.setCanceled(true);
     }
 
     @SubscribeEvent(priority = EventPriority.HIGHEST)
@@ -117,22 +169,75 @@ public class ClientNeoForgeEvents {
         event.setCanceled(true);
     }
 
-    private static boolean isClickOnEditorWidget(Screen screen, double mx, double my) {
+    private static boolean isEditorWidget(Object child) {
+        return child instanceof LayoutEditorButtons.EditOnly
+            || child instanceof LayoutEditorButtons.IconScaleEditBox
+            || child instanceof LayoutEditorButtons.IconNudgeEditBox
+            || child instanceof LayoutEditorButtons.MaxTabsPerPageEditBox;
+    }
+
+    private static boolean isEditorEditBox(Object child) {
+        return child instanceof LayoutEditorButtons.IconScaleEditBox
+            || child instanceof LayoutEditorButtons.IconNudgeEditBox
+            || child instanceof LayoutEditorButtons.MaxTabsPerPageEditBox;
+    }
+
+    /**
+     * Dispatch a click to the first editor widget at the cursor and update screen focus.
+     * Returns true if a widget consumed the click.
+     */
+    private static boolean dispatchClickToEditorWidget(Screen screen, double mx, double my, int button) {
+        net.minecraft.client.gui.components.events.GuiEventListener focused = null;
+        boolean dispatched = false;
         for (var child : screen.children()) {
-            if (child instanceof LayoutEditorButtons.EditOnly btn && btn.isMouseOver(mx, my)) {
-                return true;
+            if (!isEditorWidget(child)) continue;
+            if (child instanceof net.minecraft.client.gui.components.AbstractWidget w && w.isMouseOver(mx, my)) {
+                if (w.mouseClicked(mx, my, button)) {
+                    focused = w;
+                    dispatched = true;
+                    break;
+                }
             }
-            if (child instanceof LayoutEditorButtons.CustomIconEditBox eb && eb.isMouseOver(mx, my)) {
-                return true;
+        }
+        // Defocus any other editor EditBox so only the clicked one (if any) keeps focus —
+        // otherwise typing routes to whichever was focused last instead of what the user
+        // just clicked.
+        for (var child : screen.children()) {
+            if (isEditorEditBox(child) && child != focused
+                    && child instanceof net.minecraft.client.gui.components.EditBox eb) {
+                eb.setFocused(false);
+            }
+        }
+        if (focused != null) {
+            screen.setFocused(focused);
+        }
+        return dispatched;
+    }
+
+    private static void dispatchReleaseToEditorWidget(Screen screen, double mx, double my, int button) {
+        for (var child : screen.children()) {
+            if (!isEditorWidget(child)) continue;
+            if (child instanceof net.minecraft.client.gui.components.AbstractWidget w) {
+                w.mouseReleased(mx, my, button);
+            }
+        }
+    }
+
+    private static boolean dispatchCharTypedToEditorEditBox(Screen screen, char codePoint, int modifiers) {
+        for (var child : screen.children()) {
+            if (!isEditorEditBox(child)) continue;
+            if (child instanceof net.minecraft.client.gui.components.EditBox eb && eb.isFocused()) {
+                return eb.charTyped(codePoint, modifiers);
             }
         }
         return false;
     }
 
-    private static boolean hasFocusedEditorEditBox(Screen screen) {
+    private static boolean dispatchKeyPressedToEditorEditBox(Screen screen, int keyCode, int scanCode, int modifiers) {
         for (var child : screen.children()) {
-            if (child instanceof LayoutEditorButtons.CustomIconEditBox eb && eb.isFocused()) {
-                return true;
+            if (!isEditorEditBox(child)) continue;
+            if (child instanceof net.minecraft.client.gui.components.EditBox eb && eb.isFocused()) {
+                return eb.keyPressed(keyCode, scanCode, modifiers);
             }
         }
         return false;
@@ -168,6 +273,10 @@ public class ClientNeoForgeEvents {
                 hideL2Tabs(event.getScreen());
             }
         }
+
+        // Runic Skills' tab strip is suppressed via vodmordia.modtabs.mixin.DrawTabsMixin
+        // (cancels DrawTabs.render at HEAD). The mixin is registered in modtabs.mixins.json
+        // and is a no-op when Runic Skills isn't loaded.
     }
 
 
@@ -194,8 +303,20 @@ public class ClientNeoForgeEvents {
                 event.setCanceled(true);
                 return;
             }
-            if (hasFocusedEditorEditBox(event.getScreen())) {
-                return; // let vanilla deliver the key to the EditBox
+            // EditBox-focused keystrokes (digits, backspace, delete, arrows) must reach the
+            // EditBox rather than nudging the bar. Dispatch manually + cancel — see
+            // dispatchClickToEditorWidget for the FTB ScreenWrapper rationale.
+            if (dispatchKeyPressedToEditorEditBox(event.getScreen(), event.getKeyCode(),
+                    event.getScanCode(), event.getModifiers())) {
+                event.setCanceled(true);
+                return;
+            }
+            int step = Screen.hasShiftDown() ? 8 : 1;
+            switch (event.getKeyCode()) {
+                case org.lwjgl.glfw.GLFW.GLFW_KEY_LEFT  -> { TabsMenu.nudgeBar(-step, 0); event.setCanceled(true); return; }
+                case org.lwjgl.glfw.GLFW.GLFW_KEY_RIGHT -> { TabsMenu.nudgeBar(+step, 0); event.setCanceled(true); return; }
+                case org.lwjgl.glfw.GLFW.GLFW_KEY_UP    -> { TabsMenu.nudgeBar(0, -step); event.setCanceled(true); return; }
+                case org.lwjgl.glfw.GLFW.GLFW_KEY_DOWN  -> { TabsMenu.nudgeBar(0, +step); event.setCanceled(true); return; }
             }
             event.setCanceled(true);
             return;
@@ -327,14 +448,15 @@ public class ClientNeoForgeEvents {
             screenClassName.equals("pepjebs.mapatlases.client.screen.AtlasOverviewScreen") ||
             screenClassName.equals("betteradvancements.common.gui.BetterAdvancementsScreen")) {
 
-            // Find and render all TabButton and NextTabsButton widgets for this screen - this renders AFTER the screen content including blur
+            // These screens don't iterate renderables in their render method, so we
+            // manually render TabButton/NextTabsButton at Z=0. Editor widgets are
+            // handled by renderEditModeOverlay's Z=400/Z=700 passes — rendering them
+            // here at Z=0 would put them BEHIND the panel BG drawn at Z=600.
             for (var child : event.getScreen().children()) {
                 if (child instanceof TabButton tabButton) {
-                    // Render the tab button on top of everything the screen just rendered
                     tabButton.renderWidget(event.getGuiGraphics(), event.getMouseX(), event.getMouseY(), event.getPartialTick());
                 }
                 if (child instanceof NextTabsButton nextTabsButton) {
-                    // Render the next tabs button on top of everything the screen just rendered
                     nextTabsButton.renderWidget(event.getGuiGraphics(), event.getMouseX(), event.getMouseY(), event.getPartialTick());
                 }
             }
@@ -354,13 +476,18 @@ public class ClientNeoForgeEvents {
             || screenClassName.equals("betteradvancements.common.gui.BetterAdvancementsScreen");
     }
 
-    @SubscribeEvent
+    /**
+     * Give our tab buttons first dibs on every screen, not just the custom-routing ones.
+     * Without this, host screens with many widgets (e.g. MOTP's PlayerStatsGUIScreen has 13
+     * ImageButtons) iterate their own buttons first; if any has raw clicked() bounds that
+     * overlap our tab area (common at small scale, since vanilla uses unscaled width=32px),
+     * the wrong target screen opens. Forwarding only when isMouseOver matches our scaled
+     * bounds preserves slot interaction on AbstractContainerScreens — we don't cancel
+     * unless the cursor is actually on a tab.
+     */
+    @SubscribeEvent(priority = EventPriority.HIGH)
     public static void onScreenMouseClick(ScreenEvent.MouseButtonPressed.Pre event) {
-        if (!isScreenWithCustomClickRouting(event.getScreen().getClass().getName())) return;
-
-        // Forward to mouseClicked (NOT onPress) so the long-press timer in TabButton.mouseClicked
-        // gets armed. onPress would skip pressStartMs and the gesture would behave as an
-        // instant click, breaking the long-press-to-edit gesture on these screens.
+        if (TabsMenu.isEditing(event.getScreen())) return; // edit-mode handler runs at HIGHEST
         for (var child : event.getScreen().children()) {
             if (child instanceof TabButton tabButton) {
                 if (tabButton.isMouseOver(event.getMouseX(), event.getMouseY())) {
@@ -380,24 +507,28 @@ public class ClientNeoForgeEvents {
     }
 
     /**
-     * Companion to {@link #onScreenMouseClick}: forwards releases on these special screens
-     * so {@code TabButton.mouseReleased} runs the short-click open-target logic and clears
-     * {@code pressStartMs}. Without this, a quick click would never open the target screen
-     * because the timer is set on press but never read on release.
+     * Companion to {@link #onScreenMouseClick}: dispatches releases to whichever tab button
+     * has {@code pressStartMs > 0} (set in {@code mouseClicked}). Runs at HIGH priority for
+     * every screen so the short-click open-target path fires regardless of the host screen
+     * doing custom mouse routing or eating the release through some focused widget.
      */
-    @SubscribeEvent
+    @SubscribeEvent(priority = EventPriority.HIGH)
     public static void onScreenMouseReleasedSpecial(ScreenEvent.MouseButtonReleased.Pre event) {
         Screen screen = event.getScreen();
         if (TabsMenu.isEditing(screen)) return; // edit-mode handler takes over
-        if (!isScreenWithCustomClickRouting(screen.getClass().getName())) return;
-
+        // Only forward (and cancel) when a tab actually owns this release — i.e. it had a
+        // pending press from mouseClicked. Without that gate we'd cancel every left-button
+        // release on every screen with tabs, since AbstractWidget.mouseReleased returns true
+        // for any left release regardless of state — that breaks slot drag-drop in the vanilla
+        // inventory. NextTabsButton doesn't track press state (it fires onPress synchronously
+        // from mouseClicked) so it never needs forwarding here.
+        boolean dispatched = false;
         for (var child : screen.children()) {
-            if (child instanceof TabButton tabButton) {
+            if (child instanceof TabButton tabButton && tabButton.hasPendingPress()) {
                 tabButton.mouseReleased(event.getMouseX(), event.getMouseY(), event.getButton());
-            }
-            if (child instanceof NextTabsButton nextTabsButton) {
-                nextTabsButton.mouseReleased(event.getMouseX(), event.getMouseY(), event.getButton());
+                dispatched = true;
             }
         }
+        if (dispatched) event.setCanceled(true);
     }
 }

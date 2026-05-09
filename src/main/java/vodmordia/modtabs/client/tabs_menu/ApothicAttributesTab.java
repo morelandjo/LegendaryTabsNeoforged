@@ -1,7 +1,6 @@
 package vodmordia.modtabs.client.tabs_menu;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
@@ -57,13 +56,6 @@ public class ApothicAttributesTab extends IntegrationIconTab {
     }
 
     @Override
-    public boolean isCurrentlyUsed(Screen currentScreen) {
-        // The "current" state for this tab is "inventory open with the attributes panel showing".
-        // wasOpen is updated to the per-instance open state on every render tick.
-        return currentScreen instanceof InventoryScreen && readWasOpen();
-    }
-
-    @Override
     public void openTargetScreen(Player player) {
         if (!Config.Baked.apothicAttributesTabEnabled) return;
         // Pre-flip wasOpen so the mod's screen-init listener calls toggleVisibility() on the new GUI.
@@ -84,17 +76,6 @@ public class ApothicAttributesTab extends IntegrationIconTab {
             return !(value instanceof Boolean b) || b;
         } catch (Exception ignored) {
             return true;
-        }
-    }
-
-    private static boolean readWasOpen() {
-        try {
-            Class<?> gui = ClassCache.resolve(ScreenClasses.APOTHIC_ATTRIBUTES_GUI);
-            if (gui == null) return false;
-            Object value = gui.getField("wasOpen").get(null);
-            return value instanceof Boolean b && b;
-        } catch (Exception ignored) {
-            return false;
         }
     }
 

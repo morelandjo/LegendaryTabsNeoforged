@@ -26,7 +26,7 @@ public class BodyDamageTab extends IntegrationItemTab {
             () -> Config.Baked.bodyDamageTabEnabled,
             "bodyDamage",
             "body_damage",
-            new TabSpec.Layout(false, TabSpec.Layout.Position.GUI_RELATIVE, TabSpec.Layout.Dimensions.BODY_HEALTH),
+            new TabSpec.Layout(false, TabSpec.Layout.Dimensions.BODY_HEALTH),
             new String[] { ScreenClasses.LSO_BODY_HEALTH_SCREENS },
             new String[] { ScreenClasses.LSO_BODY_HEALTH_SCREENS }
     );

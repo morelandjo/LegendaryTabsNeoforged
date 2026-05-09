@@ -72,7 +72,6 @@ public class DietTab extends ConfigurableIconTab {
         //    Class<? extends Screen> screenClass = (Class<? extends Screen>) dietScreenClass;
         //    ScreenRegistry.builder()
         //        .withDietDimensions()
-        //        .withPositioning(TabPositioning.GUI_RELATIVE)
         //        .registerAllTabs(screenClass);
         //} catch (ClassNotFoundException e) {
         //    // Diet mod not present, skip registration

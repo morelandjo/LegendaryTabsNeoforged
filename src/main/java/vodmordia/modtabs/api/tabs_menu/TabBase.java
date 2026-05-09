@@ -4,25 +4,18 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
-import vodmordia.modtabs.ModTabs;
-import vodmordia.modtabs.config.Config;
-import vodmordia.modtabs.config.ModTabsConfig;
 
 
 public abstract class TabBase {
     public static final int TAB_HEIGHT = 22;
     public static final int TAB_WIDTH = 26;
 
-    // Rotated dimensions for vertical (left/right edge) tab placement
-    public static final int TAB_WIDTH_VERTICAL = 22;
-    public static final int TAB_HEIGHT_VERTICAL = 26;
-
-    public static int primaryAxisSize(TabPositioning positioning) {
-        return positioning != null && positioning.isVertical() ? TAB_HEIGHT_VERTICAL : TAB_WIDTH;
+    public static int primaryAxisSize() {
+        return TAB_WIDTH;
     }
 
-    public static int crossAxisSize(TabPositioning positioning) {
-        return positioning != null && positioning.isVertical() ? TAB_WIDTH_VERTICAL : TAB_HEIGHT;
+    public static int crossAxisSize() {
+        return TAB_HEIGHT;
     }
 
     public TabBase() {
@@ -44,10 +37,6 @@ public abstract class TabBase {
         }
     }
 
-    public void render(GuiGraphics gui, int x, int y, boolean hover, TabDisplayMode displayMode, TabPositioning positioning) {
-        render(gui, x, y, hover, displayMode);
-    }
-
     protected void renderInverted(GuiGraphics gui, int x, int y, boolean hover) {
         // Default: subclasses should override for custom inverted rendering
         // Most tabs can use TabRenderer which handles inversion automatically
@@ -56,6 +45,18 @@ public abstract class TabBase {
 
 
     public abstract boolean isCurrentlyUsed(Screen currentScreen);
+
+    /**
+     * True when this tab represents the screen the user is currently viewing — used by the
+     * long-press-to-edit gesture so only the home/active tab triggers it.
+     *
+     * <p>Defaults to {@link #isCurrentlyUsed}; tabs that override that to always return false
+     * (so the tab stays clickable for "refresh" semantics — Inventory, FTB Quests, FTB Teams,
+     * CustomJson) should override this method to return the actual home-screen check.
+     */
+    public boolean isHomeTab(Screen currentScreen) {
+        return isCurrentlyUsed(currentScreen);
+    }
 
     public abstract Component getTooltip();
 

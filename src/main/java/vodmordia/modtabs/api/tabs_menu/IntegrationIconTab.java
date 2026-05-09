@@ -52,7 +52,6 @@ public abstract class IntegrationIconTab extends ConfigurableIconTab {
         ScreenRegistry.builder()
                 .withDimensions(layout.dimensions().width, layout.dimensions().height)
                 .withDisplayMode(layout.displayMode())
-                .withPositioning(layout.position().value)
                 .registerAllTabs(fqns);
     }
 }

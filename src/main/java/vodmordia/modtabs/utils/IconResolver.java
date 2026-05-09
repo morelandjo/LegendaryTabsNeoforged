@@ -44,9 +44,13 @@ public class IconResolver {
                 return null;
             }
         } else {
-            // Simple filename - load from config/modtabs/icons/
+            // Simple filename - load from config/modtabs/icons/. The textureId must include
+            // the filename so swapping to a different file for the same tab yields a fresh
+            // DynamicTexture; a tabId-only key would re-serve the previously-cached image.
             String filePath = "config/modtabs/icons/" + trimmed;
-            ResourceLocation texture = DynamicTextureLoader.loadTextureFromFile(filePath, "tab_" + tabId);
+            String safeName = trimmed.toLowerCase().replaceAll("[^a-z0-9_]", "_");
+            ResourceLocation texture = DynamicTextureLoader.loadTextureFromFile(
+                    filePath, "tab_" + tabId + "__" + safeName);
 
             if (texture != null) {
                 ModTabs.LOGGER.info("Resolved icon '" + iconConfig + "' as file texture for tab: " + tabId);

@@ -25,8 +25,6 @@ import java.util.function.Function;
 
 import static vodmordia.modtabs.api.tabs_menu.TabBase.TAB_HEIGHT;
 import static vodmordia.modtabs.api.tabs_menu.TabBase.TAB_WIDTH;
-import static vodmordia.modtabs.api.tabs_menu.TabBase.TAB_HEIGHT_VERTICAL;
-import static vodmordia.modtabs.api.tabs_menu.TabBase.TAB_WIDTH_VERTICAL;
 
 public class TabsMenu {
     private static final Map<Class<? extends Screen>, ScreenInfo> tabsScreens = new HashMap<>();
@@ -123,7 +121,7 @@ public class TabsMenu {
         tempNextRotation = 0.0f;
         tempIconRotation = 0;
         dragMode = DragMode.NONE;
-        panelCollapsed = false;
+        panelCollapsed = true;
         globalSettingsOpen = false;
         setTabTooltipsSuppressed(screen, true);
     }
@@ -133,6 +131,7 @@ public class TabsMenu {
         if (current != null) {
             setTabTooltipsSuppressed(current, false);
         }
+        vodmordia.modtabs.client.screens.LayoutEditorButtons.CustomIconDropdown.closeOpen();
         editingScreenClass = null;
         dragOffsetX = 0;
         dragOffsetY = 0;
@@ -211,6 +210,173 @@ public class TabsMenu {
         tempIconRotation = (tempIconRotation + 90) % 360;
     }
 
+    /** Reads the saved tuck direction for the currently-open screen. */
+    public static vodmordia.modtabs.layout.TuckDirection currentTuckDirection() {
+        Screen s = Minecraft.getInstance().screen;
+        if (s == null) return vodmordia.modtabs.layout.TuckDirection.DOWN;
+        ScreenLayout layout = ScreenLayoutStore.get(s.getClass());
+        return layout.tuckDirection != null ? layout.tuckDirection : vodmordia.modtabs.layout.TuckDirection.DOWN;
+    }
+
+    /** Cycle button writes the new direction directly to the saved layout JSON. */
+    public static void cycleTuckDirection() {
+        Screen s = Minecraft.getInstance().screen;
+        if (s == null) return;
+        ScreenLayout layout = ScreenLayoutStore.get(s.getClass());
+        if (layout.tuckDirection == null) layout.tuckDirection = vodmordia.modtabs.layout.TuckDirection.DOWN;
+        layout.tuckDirection = layout.tuckDirection.next();
+        ScreenLayoutStore.save(s.getClass().getName(), layout);
+    }
+
+    public static int currentMaxTabsPerPage() {
+        Screen s = Minecraft.getInstance().screen;
+        if (s == null) return 0;
+        return ScreenLayoutStore.get(s.getClass()).maxTabsPerPage;
+    }
+
+    /** Persists the per-page cap. The widget triggers re-init on focus-lost so the
+     *  bar repaginates once the user is done typing — re-init on every keystroke
+     *  would tear down the focused EditBox and reset the value. */
+    public static void setMaxTabsPerPage(int value) {
+        Screen s = Minecraft.getInstance().screen;
+        if (s == null) return;
+        ScreenLayout layout = ScreenLayoutStore.get(s.getClass());
+        layout.maxTabsPerPage = Math.max(0, value);
+        ScreenLayoutStore.save(s.getClass().getName(), layout);
+    }
+
+    private static java.lang.reflect.Field screenInitializedField;
+    private static boolean screenInitializedFieldFailed;
+
+    /**
+     * Force a full screen re-init (children cleared, init() callback re-run, ScreenEvent.Init
+     * fired). Vanilla's {@code Screen.init(mc, w, h)} short-circuits on {@code initialized=true}
+     * and only calls {@code repositionElements()}, so a plain {@code mc.setScreen(mc.screen)}
+     * doesn't rebuild our tab buttons. We reset {@code initialized} via reflection first so the
+     * full event-firing path runs.
+     */
+    public static void reinitCurrentScreen() {
+        Minecraft mc = Minecraft.getInstance();
+        Screen screen = mc.screen;
+        if (screen == null) return;
+        if (!screenInitializedFieldFailed) {
+            try {
+                if (screenInitializedField == null) {
+                    screenInitializedField = Screen.class.getDeclaredField("initialized");
+                    screenInitializedField.setAccessible(true);
+                }
+                screenInitializedField.setBoolean(screen, false);
+            } catch (NoSuchFieldException | IllegalAccessException e) {
+                screenInitializedFieldFailed = true;
+            }
+        }
+        mc.setScreen(screen);
+    }
+
+    /** Tab order for the current screen's saved layout (defaults to LEFT_TO_RIGHT). */
+    public static vodmordia.modtabs.layout.TabOrder currentTabOrder() {
+        Screen s = Minecraft.getInstance().screen;
+        if (s == null) return vodmordia.modtabs.layout.TabOrder.LEFT_TO_RIGHT;
+        ScreenLayout layout = ScreenLayoutStore.get(s.getClass());
+        return layout.tabOrder != null ? layout.tabOrder : vodmordia.modtabs.layout.TabOrder.LEFT_TO_RIGHT;
+    }
+
+    public static void cycleTabOrder() {
+        Screen s = Minecraft.getInstance().screen;
+        if (s == null) return;
+        ScreenLayout layout = ScreenLayoutStore.get(s.getClass());
+        if (layout.tabOrder == null) layout.tabOrder = vodmordia.modtabs.layout.TabOrder.LEFT_TO_RIGHT;
+        layout.tabOrder = layout.tabOrder.next();
+        ScreenLayoutStore.save(s.getClass().getName(), layout);
+        reinitCurrentScreen();
+    }
+
+    /** Anchor for the current screen's saved layout (defaults to GUI_RELATIVE). */
+    public static vodmordia.modtabs.layout.Anchor currentAnchor() {
+        Screen s = Minecraft.getInstance().screen;
+        if (s == null) return vodmordia.modtabs.layout.Anchor.GUI_RELATIVE;
+        ScreenLayout layout = ScreenLayoutStore.get(s.getClass());
+        return layout.anchor != null ? layout.anchor : vodmordia.modtabs.layout.Anchor.GUI_RELATIVE;
+    }
+
+    /**
+     * Toggle the per-screen anchor and re-baseline {@code offsetX/Y} so the bar stays at
+     * the same absolute screen position. Saves immediately and re-fires
+     * {@code initScreenButtons} via {@code setScreen}.
+     */
+    public static void cycleAnchor() {
+        Screen s = Minecraft.getInstance().screen;
+        if (s == null) return;
+        ScreenLayout layout = ScreenLayoutStore.get(s.getClass());
+        vodmordia.modtabs.layout.Anchor oldAnchor = (layout.anchor != null)
+                ? layout.anchor
+                : vodmordia.modtabs.layout.Anchor.GUI_RELATIVE;
+        vodmordia.modtabs.layout.Anchor newAnchor = oldAnchor.next();
+        int absX = TabsMenu.leftScreenPos;
+        int absY = TabsMenu.topScreenPos;
+        int[] guiBase = computeGuiBase(s);
+        int newOffsetX, newOffsetY;
+        if (newAnchor == vodmordia.modtabs.layout.Anchor.SCREEN_ABSOLUTE) {
+            newOffsetX = absX;
+            newOffsetY = absY;
+        } else {
+            newOffsetX = absX - guiBase[0];
+            newOffsetY = absY - guiBase[1];
+        }
+        ScreenLayout updated = layout.copy();
+        updated.anchor = newAnchor;
+        updated.offsetX = newOffsetX;
+        updated.offsetY = newOffsetY;
+        ScreenLayoutStore.save(s.getClass().getName(), updated);
+        reinitCurrentScreen();
+    }
+
+    /**
+     * Outlines the active anchor frame as a 1-px yellow rect. GUI_RELATIVE traces the
+     * registered GUI dimensions (centered on the screen); SCREEN_ABSOLUTE traces the
+     * screen edges. Yellow is used (rather than the panel's green) so the anchor
+     * outline reads as distinct from the bar's selection / handle accents.
+     */
+    private static void drawAnchorOutline(GuiGraphics gui, Screen screen) {
+        ScreenLayout layout = ScreenLayoutStore.get(screen.getClass());
+        int color = 0xFFFFD700;
+        int x0, y0, x1, y1;
+        if (layout.anchor == vodmordia.modtabs.layout.Anchor.SCREEN_ABSOLUTE) {
+            x0 = 0;
+            y0 = 0;
+            x1 = screen.width;
+            y1 = screen.height;
+        } else {
+            int[] base = computeGuiBase(screen);
+            ScreenInfo info = tabsScreens.get(screen.getClass());
+            int guiW = (info != null) ? info.width.apply(Minecraft.getInstance().player) : 176;
+            int guiH = (info != null) ? info.height.apply(Minecraft.getInstance().player) : 166;
+            x0 = base[0];
+            y0 = base[1];
+            x1 = x0 + guiW;
+            y1 = y0 + guiH;
+        }
+        boolean inset = layout.anchor == vodmordia.modtabs.layout.Anchor.SCREEN_ABSOLUTE;
+        if (inset) { x1 -= 1; y1 -= 1; }
+        gui.fill(x0, y0, x1, y0 + 1, color);
+        gui.fill(x0, y1, x1 + 1, y1 + 1, color);
+        gui.fill(x0, y0, x0 + 1, y1, color);
+        gui.fill(x1, y0, x1 + 1, y1, color);
+    }
+
+    /** Top-left of the host GUI box on the current screen, for the registered dimensions. */
+    private static int[] computeGuiBase(Screen screen) {
+        ScreenInfo info = tabsScreens.get(screen.getClass());
+        if (info == null) return new int[]{0, 0};
+        try {
+            int guiW = info.width.apply(Minecraft.getInstance().player);
+            int guiH = info.height.apply(Minecraft.getInstance().player);
+            return new int[]{(screen.width - guiW) / 2, (screen.height - guiH) / 2};
+        } catch (Exception ignored) {
+            return new int[]{0, 0};
+        }
+    }
+
     public static float currentEffectiveRotation() {
         Screen s = Minecraft.getInstance().screen;
         if (s == null) return 0f;
@@ -240,14 +406,8 @@ public class TabsMenu {
     }
 
     private static double[] primaryAxisUnit() {
-        boolean vertical = currentPositioning != null && currentPositioning.isVertical();
         double rad = Math.toRadians(currentEffectiveRotation());
-        double cos = Math.cos(rad);
-        double sin = Math.sin(rad);
-        if (vertical) {
-            return new double[]{-sin, cos};
-        }
-        return new double[]{cos, sin};
+        return new double[]{Math.cos(rad), Math.sin(rad)};
     }
 
     public static int currentEffectiveTabSpacing() {
@@ -258,21 +418,15 @@ public class TabsMenu {
     }
 
     public static int primaryAxisStep() {
-        boolean vertical = currentPositioning != null && currentPositioning.isVertical();
-        int baseSize = vertical ? TAB_HEIGHT_VERTICAL : TAB_WIDTH;
-        return Math.round(baseSize * currentEffectiveScale()) + currentEffectiveTabSpacing();
+        return Math.round(TAB_WIDTH * currentEffectiveScale()) + currentEffectiveTabSpacing();
     }
 
     public static int effectiveTabWidth() {
-        boolean vertical = currentPositioning != null && currentPositioning.isVertical();
-        int baseSize = vertical ? TAB_WIDTH_VERTICAL : TAB_WIDTH;
-        return Math.round(baseSize * currentEffectiveScale());
+        return Math.round(TAB_WIDTH * currentEffectiveScale());
     }
 
     public static int effectiveTabHeight() {
-        boolean vertical = currentPositioning != null && currentPositioning.isVertical();
-        int baseSize = vertical ? TAB_HEIGHT_VERTICAL : TAB_HEIGHT;
-        return Math.round(baseSize * currentEffectiveScale());
+        return Math.round(TAB_HEIGHT * currentEffectiveScale());
     }
 
     public static void saveEdit(Screen screen) {
@@ -289,8 +443,37 @@ public class TabsMenu {
             existing.nextButtonOffsetY + tempNextOffsetY,
             existing.nextButtonRotation + tempNextRotation,
             (((existing.iconRotation + tempIconRotation) % 360) + 360) % 360);
+        // Preserve tuckDirection, anchor, tabOrder, and maxTabsPerPage from existing —
+        // the 9-arg ctor doesn't set them, and clobbering each one caused observable bugs.
+        updated.tuckDirection = existing.tuckDirection;
+        updated.anchor = existing.anchor;
+        updated.tabOrder = existing.tabOrder;
+        updated.maxTabsPerPage = existing.maxTabsPerPage;
         ScreenLayoutStore.save(fqn, updated);
+        // Re-anchor the bar position to the saved offsets directly. We can't rely on the
+        // setScreen(same) call below to fire ScreenEvent.Init.Post — vanilla Screen.init
+        // short-circuits on `initialized=true` and only calls repositionElements, skipping
+        // our handler. AbstractContainerScreen masks this via per-frame updateButtonsPosition,
+        // but plain Screen subclasses (AdvancementsScreen, Xaero, etc.) would otherwise keep
+        // the stale leftScreenPos and the bar would snap back to its pre-edit position once
+        // dragOffsetX resets.
+        ScreenInfo info = tabsScreens.get(screen.getClass());
+        if (info != null) {
+            if (updated.anchor == vodmordia.modtabs.layout.Anchor.SCREEN_ABSOLUTE) {
+                leftScreenPos = updated.offsetX;
+                topScreenPos = updated.offsetY;
+            } else {
+                Player player = Minecraft.getInstance().player;
+                int guiLeft = (screen.width - info.width.apply(player)) / 2;
+                int guiTop = (screen.height - info.height.apply(player)) / 2;
+                leftScreenPos = guiLeft + updated.offsetX;
+                topScreenPos = guiTop + updated.offsetY;
+            }
+        }
         exitEditMode();
+        // Re-init the screen so non-container screens (Xaero map, advancements,
+        // skill screens, etc.) pick up the new position immediately.
+        reinitCurrentScreen();
     }
 
     public static void resetEdit(Screen screen) {
@@ -348,11 +531,11 @@ public class TabsMenu {
 
     public static void onMouseDragged(Screen screen, double mouseX, double mouseY) {
         if (!isEditing(screen) || dragMode == DragMode.NONE) return;
-        boolean vertical = currentPositioning != null && currentPositioning.isVertical();
         switch (dragMode) {
             case BAR -> {
                 dragOffsetX = dragStartOffsetX + (int) (mouseX - dragAnchorMouseX);
                 dragOffsetY = dragStartOffsetY + (int) (mouseY - dragAnchorMouseY);
+                applyEdgeSnap(screen);
             }
             case SCALE -> {
                 double now = Math.hypot(mouseX - dragStartCenterX, mouseY - dragStartCenterY);
@@ -423,6 +606,11 @@ public class TabsMenu {
         dragMode = DragMode.NONE;
     }
 
+    public static void nudgeBar(int dx, int dy) {
+        dragOffsetX += dx;
+        dragOffsetY += dy;
+    }
+
     private static int handleHitTest(double mouseX, double mouseY) {
         int[] b = computeTabBarBounds();
         double[] m = inverseRotateMouseToBarFrame(mouseX, mouseY, b);
@@ -436,23 +624,24 @@ public class TabsMenu {
         if (insideCornerHit(mx, my, fr, ft,  1, -1, cornerExtent)) return 1;
         if (insideCornerHit(mx, my, fl, fb, -1,  1, cornerExtent)) return 2;
         if (insideCornerHit(mx, my, fr, fb,  1,  1, cornerExtent)) return 3;
-        boolean vertical = currentPositioning != null && currentPositioning.isVertical();
         int midX = (fl + fr) / 2;
         int midY = (ft + fb) / 2;
-        if (vertical) {
-            if (within(mx, my, midX, ft, midHit)) return 4;
-            if (within(mx, my, midX, fb, midHit)) return 5;
-        } else {
-            if (within(mx, my, fl, midY, midHit)) return 4;
-            if (within(mx, my, fr, midY, midHit)) return 5;
-        }
+        if (within(mx, my, fl, midY, midHit)) return 4;
+        if (within(mx, my, fr, midY, midHit)) return 5;
         if (within(mx, my, midX, ft - ROTATION_HANDLE_OFFSET, rotHit)) return 6;
-        double[] nbCenter = nextButtonScreenCenter();
-        float totalNextRot = currentEffectiveRotation() + currentNextEffectiveRotation();
-        double rad = Math.toRadians(totalNextRot - 90);
-        double hx = nbCenter[0] + Math.cos(rad) * (ROTATION_HANDLE_OFFSET + 6);
-        double hy = nbCenter[1] + Math.sin(rad) * (ROTATION_HANDLE_OFFSET + 6);
-        if (Math.hypot(mouseX - hx, mouseY - hy) <= rotHit) return 7;
+        // Only test handle 7 when an actual next button exists, otherwise a click near
+        // (0,0) would hit it (nextButtonScreenCenter falls back to (0,0) without one).
+        Screen current = Minecraft.getInstance().screen;
+        boolean hasNextButton = current != null
+                && current.children().stream().anyMatch(c -> c instanceof NextTabsButton);
+        if (hasNextButton) {
+            double[] nbCenter = nextButtonScreenCenter();
+            float totalNextRot = currentEffectiveRotation() + currentNextEffectiveRotation();
+            double rad = Math.toRadians(totalNextRot - 90);
+            double hx = nbCenter[0] + Math.cos(rad) * (ROTATION_HANDLE_OFFSET + 6);
+            double hy = nbCenter[1] + Math.sin(rad) * (ROTATION_HANDLE_OFFSET + 6);
+            if (Math.hypot(mouseX - hx, mouseY - hy) <= rotHit) return 7;
+        }
         return -1;
     }
 
@@ -494,12 +683,18 @@ public class TabsMenu {
 
         gui.fill(0, 0, sw, sh, dim);
 
+        // Anchor outline: thin green rect around the host GUI box (when GUI_RELATIVE)
+        // or the screen edges (when SCREEN_ABSOLUTE).
+        drawAnchorOutline(gui, screen);
+
         for (var child : screen.children()) {
             if (child instanceof net.minecraft.client.gui.components.AbstractWidget w) {
                 if (child instanceof vodmordia.modtabs.client.screens.TabButton
                         || child instanceof vodmordia.modtabs.client.screens.NextTabsButton
                         || child instanceof vodmordia.modtabs.client.screens.LayoutEditorButtons.EditOnly
-                        || child instanceof vodmordia.modtabs.client.screens.LayoutEditorButtons.CustomIconEditBox) {
+                        || child instanceof vodmordia.modtabs.client.screens.LayoutEditorButtons.IconScaleEditBox
+                        || child instanceof vodmordia.modtabs.client.screens.LayoutEditorButtons.IconNudgeEditBox
+                        || child instanceof vodmordia.modtabs.client.screens.LayoutEditorButtons.MaxTabsPerPageEditBox) {
                     w.render(gui, mouseX, mouseY, 0f);
                 }
             }
@@ -552,20 +747,14 @@ public class TabsMenu {
         gui.fill(fl, ft, fl + t, fb, green);
         gui.fill(fr - t, ft, fr, fb, green);
 
-        boolean vertical = currentPositioning != null && currentPositioning.isVertical();
         int midX = (fl + fr) / 2;
         int midY = (ft + fb) / 2;
         drawCornerHandle(gui, fl, ft, 0, hovered == 0);
         drawCornerHandle(gui, fr, ft, 1, hovered == 1);
         drawCornerHandle(gui, fl, fb, 2, hovered == 2);
         drawCornerHandle(gui, fr, fb, 3, hovered == 3);
-        if (vertical) {
-            drawInwardTriangle(gui, midX, ft - 4, 0, hovered == 4);
-            drawInwardTriangle(gui, midX, fb + 4, 1, hovered == 5);
-        } else {
-            drawInwardTriangle(gui, fl - 4, midY, 2, hovered == 4);
-            drawInwardTriangle(gui, fr + 4, midY, 3, hovered == 5);
-        }
+        drawInwardTriangle(gui, fl - 4, midY, 2, hovered == 4);
+        drawInwardTriangle(gui, fr + 4, midY, 3, hovered == 5);
 
         int rotHandleX = midX;
         int rotHandleY = ft - ROTATION_HANDLE_OFFSET;
@@ -574,13 +763,19 @@ public class TabsMenu {
 
         gui.pose().popPose();
 
-        double[] nbCenter = nextButtonScreenCenter();
-        float totalNextRot = currentEffectiveRotation() + currentNextEffectiveRotation();
-        double rad = Math.toRadians(totalNextRot - 90);
-        int hx = (int) Math.round(nbCenter[0] + Math.cos(rad) * (ROTATION_HANDLE_OFFSET + 6));
-        int hy = (int) Math.round(nbCenter[1] + Math.sin(rad) * (ROTATION_HANDLE_OFFSET + 6));
-        drawLineBetween(gui, (int) Math.round(nbCenter[0]), (int) Math.round(nbCenter[1]), hx, hy, 0xFFB36BFF);
-        drawNextRotationHandle(gui, hx, hy, hovered == 7);
+        // Next-button rotation handle — only when a next button actually exists, otherwise
+        // nextButtonScreenCenter falls back to (0,0) and parks a stray purple disc in the
+        // upper-left corner.
+        boolean hasNextButton = screen.children().stream().anyMatch(c -> c instanceof NextTabsButton);
+        if (hasNextButton) {
+            double[] nbCenter = nextButtonScreenCenter();
+            float totalNextRot = currentEffectiveRotation() + currentNextEffectiveRotation();
+            double rad = Math.toRadians(totalNextRot - 90);
+            int hx = (int) Math.round(nbCenter[0] + Math.cos(rad) * (ROTATION_HANDLE_OFFSET + 6));
+            int hy = (int) Math.round(nbCenter[1] + Math.sin(rad) * (ROTATION_HANDLE_OFFSET + 6));
+            drawLineBetween(gui, (int) Math.round(nbCenter[0]), (int) Math.round(nbCenter[1]), hx, hy, 0xFFB36BFF);
+            drawNextRotationHandle(gui, hx, hy, hovered == 7);
+        }
 
         drawOptionsPanel(gui, screen);
 
@@ -593,7 +788,15 @@ public class TabsMenu {
             if (child instanceof net.minecraft.client.gui.components.AbstractWidget w) {
                 if (child instanceof vodmordia.modtabs.client.screens.LayoutEditorButtons.IconRotationCycle
                         || child instanceof vodmordia.modtabs.client.screens.LayoutEditorButtons.VisibilityCycle
-                        || child instanceof vodmordia.modtabs.client.screens.LayoutEditorButtons.CustomIconEditBox) {
+                        || child instanceof vodmordia.modtabs.client.screens.LayoutEditorButtons.TuckDirectionCycle
+                        || child instanceof vodmordia.modtabs.client.screens.LayoutEditorButtons.CustomIconDropdown
+                        || child instanceof vodmordia.modtabs.client.screens.LayoutEditorButtons.CustomIconRefresh
+                        || child instanceof vodmordia.modtabs.client.screens.LayoutEditorButtons.CustomIconFolder
+                        || child instanceof vodmordia.modtabs.client.screens.LayoutEditorButtons.IconScaleEditBox
+                        || child instanceof vodmordia.modtabs.client.screens.LayoutEditorButtons.IconNudgeEditBox
+                        || child instanceof vodmordia.modtabs.client.screens.LayoutEditorButtons.AnchorCycle
+                        || child instanceof vodmordia.modtabs.client.screens.LayoutEditorButtons.TabOrderCycle
+                        || child instanceof vodmordia.modtabs.client.screens.LayoutEditorButtons.MaxTabsPerPageEditBox) {
                     w.render(gui, mouseX, mouseY, 0f);
                 }
             }
@@ -610,7 +813,7 @@ public class TabsMenu {
     }
 
     public static final int PANEL_W = 230;
-    public static final int PANEL_H = 116;
+    public static final int PANEL_H = 224;
     public static final int PANEL_TITLE_H = 14;
     public static final int PANEL_ROW_H = 16;
     public static final int PANEL_LABEL_W = 78;
@@ -661,13 +864,12 @@ public class TabsMenu {
     // GLOBALLY (across all screens). Bound to the in-edit-mode cogwheel button.
     // ============================================================================
     public enum GlobalSettingsTab { VISIBILITY, ORDER, GENERAL }
-    private enum GsField { NONE, OFFSET_TOP, OFFSET_RIGHT, OFFSET_BOTTOM, OFFSET_LEFT, TABS_PER_PAGE }
+    private enum GsField { NONE, OFFSET_TOP, OFFSET_RIGHT, OFFSET_BOTTOM, OFFSET_LEFT }
     private static GsField gsFocusedField = GsField.NONE;
     private static String gsDraftOffsetTop = "0";
     private static String gsDraftOffsetRight = "0";
     private static String gsDraftOffsetBottom = "0";
     private static String gsDraftOffsetLeft = "0";
-    private static String gsDraftTabsPerPage = "0";
     private static boolean globalSettingsOpen = false;
     private static GlobalSettingsTab gsActiveTab = GlobalSettingsTab.VISIBILITY;
     private static java.util.Map<String, Boolean> gsDraftEnabled = null;
@@ -790,7 +992,6 @@ public class TabsMenu {
         gsDraftOffsetRight = String.valueOf(Config.Baked.iconOffsetRight);
         gsDraftOffsetBottom = String.valueOf(Config.Baked.iconOffsetBottom);
         gsDraftOffsetLeft = String.valueOf(Config.Baked.iconOffsetLeft);
-        gsDraftTabsPerPage = String.valueOf(Config.Baked.maxTabsPerPage);
         globalSettingsOpen = true;
     }
 
@@ -810,7 +1011,6 @@ public class TabsMenu {
             ModTabsConfig.iconOffsetRight = parseSafeInt(gsDraftOffsetRight, 0);
             ModTabsConfig.iconOffsetBottom = parseSafeInt(gsDraftOffsetBottom, 0);
             ModTabsConfig.iconOffsetLeft = parseSafeInt(gsDraftOffsetLeft, 0);
-            ModTabsConfig.maxTabsPerPage = Math.max(0, parseSafeInt(gsDraftTabsPerPage, 0));
             ModTabsConfig.write("modtabs");
             Config.Baked.bakeClient();
             configChanged = true;
@@ -1055,21 +1255,12 @@ public class TabsMenu {
         return new int[]{rowX + index * (GS_INPUT_W + gap), rowY, GS_INPUT_W, GS_INPUT_H};
     }
 
-    private static int[] gsTabsPerPageRect(Screen screen) {
-        int[] cr = gsContentRect(screen);
-        int rowY = cr[1] + GS_HEADER_H + 70;
-        int rowX = cr[0] + (cr[2] - GS_INPUT_W) / 2;
-        return new int[]{rowX, rowY, GS_INPUT_W, GS_INPUT_H};
-    }
-
     private static GsField gsHitGeneralInput(Screen screen, double mx, double my) {
         GsField[] offsetFields = { GsField.OFFSET_TOP, GsField.OFFSET_RIGHT, GsField.OFFSET_BOTTOM, GsField.OFFSET_LEFT };
         for (int i = 0; i < 4; i++) {
             int[] r = gsOffsetInputRect(screen, i);
             if (mx >= r[0] && mx < r[0] + r[2] && my >= r[1] && my < r[1] + r[3]) return offsetFields[i];
         }
-        int[] tpr = gsTabsPerPageRect(screen);
-        if (mx >= tpr[0] && mx < tpr[0] + tpr[2] && my >= tpr[1] && my < tpr[1] + tpr[3]) return GsField.TABS_PER_PAGE;
         return null;
     }
 
@@ -1079,7 +1270,6 @@ public class TabsMenu {
             case OFFSET_RIGHT: return gsDraftOffsetRight;
             case OFFSET_BOTTOM: return gsDraftOffsetBottom;
             case OFFSET_LEFT: return gsDraftOffsetLeft;
-            case TABS_PER_PAGE: return gsDraftTabsPerPage;
             default: return "";
         }
     }
@@ -1090,7 +1280,6 @@ public class TabsMenu {
             case OFFSET_RIGHT: gsDraftOffsetRight = value; break;
             case OFFSET_BOTTOM: gsDraftOffsetBottom = value; break;
             case OFFSET_LEFT: gsDraftOffsetLeft = value; break;
-            case TABS_PER_PAGE: gsDraftTabsPerPage = value; break;
             default: break;
         }
     }
@@ -1110,12 +1299,6 @@ public class TabsMenu {
                     r[0] + (r[2] - lw) / 2, r[1] - 10, 0xFFCCCCCC, false);
             gsRenderInput(gui, r, gsDraftValue(fields[i]), gsFocusedField == fields[i]);
         }
-
-        int tppLabelY = cr[1] + GS_HEADER_H + 56;
-        gui.drawString(Minecraft.getInstance().font, "Tabs per page (0 = unlimited)",
-                cr[0] + GS_PAD, tppLabelY, 0xFFAAAAAA, false);
-        gsRenderInput(gui, gsTabsPerPageRect(screen),
-                gsDraftTabsPerPage, gsFocusedField == GsField.TABS_PER_PAGE);
     }
 
     private static void gsRenderInput(GuiGraphics gui, int[] r, String value, boolean focused) {
@@ -1275,11 +1458,12 @@ public class TabsMenu {
         int rowY = y + PANEL_TITLE_H + PANEL_PAD;
         gui.drawString(Minecraft.getInstance().font, "Icon rotation:", x + PANEL_PAD, rowY + 4, 0xFFCCCCCC, false);
         gui.drawString(Minecraft.getInstance().font, "Tab visibility:", x + PANEL_PAD, rowY + PANEL_ROW_H + 4, 0xFFCCCCCC, false);
-        gui.drawString(Minecraft.getInstance().font, "Custom icon:", x + PANEL_PAD, rowY + PANEL_ROW_H * 2 + 4, 0xFFCCCCCC, false);
+        gui.drawString(Minecraft.getInstance().font, "Tuck direction:", x + PANEL_PAD, rowY + PANEL_ROW_H * 2 + 4, 0xFFCCCCCC, false);
+        gui.drawString(Minecraft.getInstance().font, "Custom icon:", x + PANEL_PAD, rowY + PANEL_ROW_H * 3 + 4, 0xFFCCCCCC, false);
 
-        // Preview row — render of the tab's icon (no background, no rotation, no vertical
-        // re-orientation) so the user sees the icon at its natural pose for comparison.
-        int previewRowY = rowY + PANEL_ROW_H * 3 + PANEL_PAD;
+        // Preview row — render of the tab's icon at its natural pose (no rotation,
+        // no vertical re-orientation) so the user can compare against tweaks.
+        int previewRowY = rowY + PANEL_ROW_H * 4 + PANEL_PAD;
         gui.drawString(Minecraft.getInstance().font, "Preview:", x + PANEL_PAD, previewRowY + 8, 0xFFCCCCCC, false);
         TabBase previewTab = findTabForConfigKey(getConfigKeyForScreen(screen));
         if (previewTab != null) {
@@ -1292,6 +1476,43 @@ public class TabsMenu {
                 previewRendering = false;
             }
         }
+
+        // Scale-factor row sits below the preview. The trailing "%" is drawn after the
+        // editor's IconScaleEditBox; both anchor off PANEL_PAD + PANEL_LABEL_W like other rows.
+        int scaleRowY = previewRowY + PANEL_PREVIEW_H + PANEL_PAD;
+        gui.drawString(Minecraft.getInstance().font, "Scale factor:", x + PANEL_PAD, scaleRowY + 4, 0xFFCCCCCC, false);
+        gui.drawString(Minecraft.getInstance().font, "%",
+                x + PANEL_W - PANEL_PAD - 8, scaleRowY + 4, 0xFFCCCCCC, false);
+
+        // Icon-nudge row: four small inputs (U/D/L/R) for per-direction pixel offsets.
+        // Letters are drawn here; addToScreen registers the IconNudgeEditBox widgets.
+        int nudgeRowY = scaleRowY + PANEL_ROW_H;
+        gui.drawString(Minecraft.getInstance().font, "Icon nudge:", x + PANEL_PAD, nudgeRowY + 4, 0xFFCCCCCC, false);
+        int relCellX = PANEL_PAD + PANEL_LABEL_W;
+        int controlW = PANEL_W - PANEL_PAD - PANEL_LABEL_W - PANEL_PAD;
+        int nudgeLetterW = 8;
+        int nudgeBoxW = 22;
+        int nudgeCellW = nudgeLetterW + nudgeBoxW;
+        int nudgePitch = (controlW - nudgeCellW) / 3;
+        String[] nudgeLetters = { "U", "D", "L", "R" };
+        for (int i = 0; i < 4; i++) {
+            int cellX = x + relCellX + i * nudgePitch;
+            gui.drawString(Minecraft.getInstance().font, nudgeLetters[i], cellX, nudgeRowY + 4, 0xFFCCCCCC, false);
+        }
+
+        // Anchor row: GUI/SCREEN toggle. The corresponding outline (GUI box vs screen
+        // edges) is drawn during pass 1 of renderEditModeOverlay so the user sees the
+        // chosen frame.
+        int anchorRowY = nudgeRowY + PANEL_ROW_H;
+        gui.drawString(Minecraft.getInstance().font, "Anchor:", x + PANEL_PAD, anchorRowY + 4, 0xFFCCCCCC, false);
+
+        // Tab Order row: L→R vs R→L visual ordering of tabs in the bar.
+        int tabOrderRowY = anchorRowY + PANEL_ROW_H;
+        gui.drawString(Minecraft.getInstance().font, "Tab order:", x + PANEL_PAD, tabOrderRowY + 4, 0xFFCCCCCC, false);
+
+        // Max tabs/page row: per-screen pagination cap. 0 = unlimited (single page).
+        int maxTabsRowY = tabOrderRowY + PANEL_ROW_H;
+        gui.drawString(Minecraft.getInstance().font, "Tabs/page:", x + PANEL_PAD, maxTabsRowY + 4, 0xFFCCCCCC, false);
 
         int hx = panelHandleX(screen);
         int hy = panelHandleY(screen);
@@ -1402,31 +1623,21 @@ public class TabsMenu {
     }
 
     public static int[] computeTabBarBounds() {
-        boolean vertical = currentPositioning != null && currentPositioning.isVertical();
         int tabW = effectiveTabWidth();
         int tabH = effectiveTabHeight();
         int spacing = currentEffectiveTabSpacing();
-        int barLength;
         int left = leftScreenPos + dragOffsetX;
         int top;
-        int right;
         int bottom;
-        if (vertical) {
+        if (currentDisplayMode == TabDisplayMode.INVERTED) {
             top = topScreenPos + dragOffsetY;
-            right = left + tabW;
-            barLength = currentTabsCount > 0 ? currentTabsCount * tabH + (currentTabsCount - 1) * spacing : 0;
-            bottom = top + barLength;
+            bottom = top + tabH;
         } else {
-            if (currentDisplayMode == TabDisplayMode.INVERTED) {
-                top = topScreenPos + dragOffsetY;
-                bottom = top + tabH;
-            } else {
-                top = topScreenPos + dragOffsetY - tabH;
-                bottom = topScreenPos + dragOffsetY;
-            }
-            barLength = currentTabsCount > 0 ? currentTabsCount * tabW + (currentTabsCount - 1) * spacing : 0;
-            right = left + barLength;
+            top = topScreenPos + dragOffsetY - tabH;
+            bottom = topScreenPos + dragOffsetY;
         }
+        int barLength = currentTabsCount > 0 ? currentTabsCount * tabW + (currentTabsCount - 1) * spacing : 0;
+        int right = left + barLength;
         return new int[]{left, top, right, bottom};
     }
 
@@ -1434,6 +1645,68 @@ public class TabsMenu {
         int[] b = computeTabBarBounds();
         double[] m = inverseRotateMouseToBarFrame(mouseX, mouseY, b);
         return m[0] >= b[0] && m[0] < b[2] && m[1] >= b[1] && m[1] < b[3];
+    }
+
+    private static final int EDGE_SNAP_DIST = 8;
+
+    private static void applyEdgeSnap(Screen screen) {
+        if (screen == null) return;
+        int[] b = computeTabBarBounds();
+        float rot = currentEffectiveRotation();
+        double cx = (b[0] + b[2]) / 2.0;
+        double cy = (b[1] + b[3]) / 2.0;
+        double cosA = Math.cos(Math.toRadians(rot));
+        double sinA = Math.sin(Math.toRadians(rot));
+        double minX = Double.POSITIVE_INFINITY, maxX = Double.NEGATIVE_INFINITY;
+        double minY = Double.POSITIVE_INFINITY, maxY = Double.NEGATIVE_INFINITY;
+        double[][] corners = { {b[0], b[1]}, {b[2], b[1]}, {b[2], b[3]}, {b[0], b[3]} };
+        for (double[] c : corners) {
+            double dx = c[0] - cx;
+            double dy = c[1] - cy;
+            double rx = cx + dx * cosA - dy * sinA;
+            double ry = cy + dx * sinA + dy * cosA;
+            if (rx < minX) minX = rx;
+            if (rx > maxX) maxX = rx;
+            if (ry < minY) minY = ry;
+            if (ry > maxY) maxY = ry;
+        }
+        // Snap target follows the active anchor: GUI mode snaps to the GUI box edges,
+        // SCREEN mode snaps to the screen edges. Falls back to screen edges if the
+        // GUI bounds aren't resolvable.
+        int snapL = 0, snapT = 0, snapR = screen.width, snapB = screen.height;
+        ScreenLayout layout = ScreenLayoutStore.get(screen.getClass());
+        if (layout.anchor != vodmordia.modtabs.layout.Anchor.SCREEN_ABSOLUTE) {
+            ScreenInfo info = tabsScreens.get(screen.getClass());
+            if (info != null) {
+                try {
+                    int guiW = info.width.apply(Minecraft.getInstance().player);
+                    int guiH = info.height.apply(Minecraft.getInstance().player);
+                    snapL = (screen.width - guiW) / 2;
+                    snapT = (screen.height - guiH) / 2;
+                    snapR = snapL + guiW;
+                    snapB = snapT + guiH;
+                } catch (Exception ignored) {}
+            }
+        }
+        // Horizontal snaps are inside-aligned in both anchor modes.
+        int snapX = 0;
+        if (Math.abs(minX - snapL) < EDGE_SNAP_DIST) snapX = (int) Math.round(snapL - minX);
+        else if (Math.abs(snapR - maxX) < EDGE_SNAP_DIST) snapX = (int) Math.round(snapR - maxX);
+
+        // Vertical snaps differ by anchor: GUI mode snaps the bar OUTSIDE the GUI box
+        // (bottom edge to GUI top / top edge to GUI bottom); SCREEN mode is inside-aligned.
+        int snapY = 0;
+        boolean guiMode = layout.anchor != vodmordia.modtabs.layout.Anchor.SCREEN_ABSOLUTE
+                && tabsScreens.containsKey(screen.getClass());
+        if (guiMode) {
+            if (Math.abs(maxY - snapT) < EDGE_SNAP_DIST) snapY = (int) Math.round(snapT - maxY);
+            else if (Math.abs(minY - snapB) < EDGE_SNAP_DIST) snapY = (int) Math.round(snapB - minY);
+        } else {
+            if (Math.abs(minY - snapT) < EDGE_SNAP_DIST) snapY = (int) Math.round(snapT - minY);
+            else if (Math.abs(snapB - maxY) < EDGE_SNAP_DIST) snapY = (int) Math.round(snapB - maxY);
+        }
+        dragOffsetX += snapX;
+        dragOffsetY += snapY;
     }
 
     public static boolean isMouseOnNextButton(double mouseX, double mouseY) {
@@ -1559,6 +1832,23 @@ public class TabsMenu {
         return null;
     }
 
+    /**
+     * Re-reads visibility for the given screen from config and rebuilds {@code isInTuckMode}
+     * / {@code animationManager} accordingly. Call this after writing a new TabDisplayVisibility
+     * value so the tabs respond without needing a full screen re-init.
+     */
+    public static void refreshTuckModeForScreen(Screen screen) {
+        if (screen == null) return;
+        TabDisplayVisibility visibility = getTabDisplayVisibilityForScreen(screen);
+        boolean shouldTuck = (visibility == TabDisplayVisibility.TUCK);
+        if (shouldTuck && !isInTuckMode) {
+            animationManager = new TabBarAnimationManager();
+        } else if (!shouldTuck) {
+            animationManager = null;
+        }
+        isInTuckMode = shouldTuck;
+    }
+
     private static TabDisplayVisibility getTabDisplayVisibilityForScreen(Screen screen) {
         String key = getConfigKeyForScreen(screen);
         if (key == null) return TabDisplayVisibility.YES;
@@ -1590,41 +1880,53 @@ public class TabsMenu {
         int[] b = computeTabBarBounds();
         double[] m = inverseRotateMouseToBarFrame(mouseX, mouseY, b);
         int left = b[0], top = b[1], right = b[2], bottom = b[3];
-        // When tucked, tabs are displaced from natural bounds by the tuck offset vector.
-        // Extend the hover zone by the FULL tuck distance (not the current animation
-        // offset, which would shrink during animate-in and pop the cursor out, causing
-        // flicker). This keeps the union of "natural" and "fully-tucked" rects covered.
         if (isInTuckMode) {
-            boolean vertical = currentPositioning != null && currentPositioning.isVertical();
-            int crossSize = vertical ? effectiveTabWidth() : effectiveTabHeight();
-            if (currentDisplayMode == TabDisplayMode.INVERTED) crossSize = -crossSize;
-            double rad = Math.toRadians(currentEffectiveRotation());
-            int tx = (int) Math.round(0.6 * crossSize * Math.sin(rad));
-            int ty = (int) Math.round(0.6 * crossSize * Math.cos(rad));
+            int[] tuck = computeTuckUnrotatedDirection(0.6 * effectiveTabHeight());
+            int tx = tuck[0];
+            int ty = tuck[1];
             if (tx > 0) right += tx; else left += tx;
             if (ty > 0) bottom += ty; else top += ty;
         }
-        return m[0] >= left && m[0] <= right && m[1] >= top && m[1] <= bottom;
+        if (m[0] >= left && m[0] <= right && m[1] >= top && m[1] <= bottom) {
+            return true;
+        }
+        // Also count the next-page chevron: it sits outside the bar bounds but is
+        // functionally part of the bar — hovering it should reveal the tabs.
+        for (var child : screen.children()) {
+            if (child instanceof vodmordia.modtabs.client.screens.NextTabsButton btn
+                    && btn.isMouseOver(mouseX, mouseY)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static TabDisplayMode currentDisplayMode = TabDisplayMode.NORMAL;
-    private static TabPositioning currentPositioning = TabPositioning.GUI_RELATIVE;
 
-    // Tuck offset is computed in the bar's *unrotated* frame and added to tab positions
-    // before the rotation transform is applied. We want the *visual* tuck direction to
-    // always be screen-down regardless of bar rotation, so we pick (offX, offY) such
-    // that rotation by `currentEffectiveRotation()` maps it to (0, +magnitude) on screen.
-    // Solving R(θ) · v = (0, m) gives v = (m·sin θ, m·cos θ).
+    /**
+     * Tuck offset in the bar's *unrotated* frame. The direction in screen-space is set
+     * per-screen via TuckDirection; we inverse-rotate that vector through the current
+     * bar rotation so R(rotation) · v lands at the chosen direction.
+     */
+    private static int[] computeTuckUnrotatedDirection(double magnitude) {
+        Screen s = Minecraft.getInstance().screen;
+        vodmordia.modtabs.layout.TuckDirection dir = (s != null)
+                ? ScreenLayoutStore.get(s.getClass()).tuckDirection
+                : vodmordia.modtabs.layout.TuckDirection.DOWN;
+        if (dir == null) dir = vodmordia.modtabs.layout.TuckDirection.DOWN;
+        double sx = dir.dx();
+        double sy = dir.dy();
+        double rad = Math.toRadians(currentEffectiveRotation());
+        double cos = Math.cos(rad);
+        double sin = Math.sin(rad);
+        int offX = (int) Math.round(magnitude * (sx * cos + sy * sin));
+        int offY = (int) Math.round(magnitude * (-sx * sin + sy * cos));
+        return new int[]{offX, offY};
+    }
+
     private static int[] computeTuckOffsetVector() {
         if (animationManager == null || !isInTuckMode) return ZERO_OFFSET;
-        boolean vertical = currentPositioning != null && currentPositioning.isVertical();
-        int crossSize = vertical ? effectiveTabWidth() : effectiveTabHeight();
-        if (currentDisplayMode == TabDisplayMode.INVERTED) crossSize = -crossSize;
-        float magnitude = animationManager.getOffsetFactor() * crossSize;
-        double rad = Math.toRadians(currentEffectiveRotation());
-        int offX = (int) Math.round(magnitude * Math.sin(rad));
-        int offY = (int) Math.round(magnitude * Math.cos(rad));
-        return new int[]{offX, offY};
+        return computeTuckUnrotatedDirection(animationManager.getOffsetFactor() * effectiveTabHeight());
     }
 
     private static final int[] ZERO_OFFSET = new int[]{0, 0};
@@ -1637,38 +1939,19 @@ public class TabsMenu {
         return computeTuckOffsetVector()[0];
     }
 
-    public static boolean isCurrentVertical() {
-        if (previewRendering) return false;
-        return currentPositioning != null && currentPositioning.isVertical();
-    }
-
-    public static boolean hasCustomPositioning(Screen screen) {
-        ScreenInfo screenInfo = tabsScreens.get(screen.getClass());
-        if (screenInfo == null) {
-            return false;
-        }
-        return screenInfo.positioning != TabPositioning.GUI_RELATIVE;
-    }
-
     public static void updateButtonsPosition(Screen screen, int guiLeft, int guiTop) {
-        // Translate the GUI's actual position into our tab anchor.
-        // Horizontal GUI_RELATIVE: anchor matches the GUI's top-left.
-        // Vertical GUI_RELATIVE_RIGHT: anchor sits at the GUI's right edge (guiLeft + guiWidth).
-        int newLeft = guiLeft;
-        int newTop = guiTop;
-        if (currentPositioning == TabPositioning.GUI_RELATIVE_RIGHT) {
-            ScreenInfo info = tabsScreens.get(screen.getClass());
-            if (info != null) {
-                int guiW = info.width.apply(Minecraft.getInstance().player);
-                newLeft = guiLeft + guiW;
-            }
-        }
-
-        // Apply user-saved per-screen offset so the bar stays where the user dragged it,
-        // even as the GUI shifts around (e.g. recipe book opening).
         ScreenLayout layout = ScreenLayoutStore.get(screen.getClass());
-        newLeft += layout.offsetX;
-        newTop += layout.offsetY;
+        // Anchor decides the reference frame: GUI_RELATIVE tracks the GUI's top-left
+        // (so the bar follows things like recipe book opening); SCREEN_ABSOLUTE pins
+        // the bar to a fixed screen position regardless of GUI movement.
+        int newLeft, newTop;
+        if (layout.anchor == vodmordia.modtabs.layout.Anchor.SCREEN_ABSOLUTE) {
+            newLeft = layout.offsetX;
+            newTop = layout.offsetY;
+        } else {
+            newLeft = guiLeft + layout.offsetX;
+            newTop = guiTop + layout.offsetY;
+        }
 
         if (TabsMenu.leftScreenPos != newLeft || TabsMenu.topScreenPos != newTop) {
             TabsMenu.leftScreenPos = newLeft;
@@ -1699,46 +1982,18 @@ public class TabsMenu {
     }
 
     public static void registerScreenWithAllTabs(Class<? extends Screen> screen, Function<Player, Integer> screenWidth, Function<Player, Integer> screenHeight, TabDisplayMode displayMode) {
-        // Store the registration for later processing
         pendingScreenRegistrations.add(new ScreenRegistration(screen, screenWidth, screenHeight, displayMode));
     }
 
-    public static void registerScreenWithAllTabs(Class<? extends Screen> screen, Function<Player, Integer> screenWidth, Function<Player, Integer> screenHeight, TabDisplayMode displayMode, TabPositioning positioning) {
-        // Store the registration for later processing
-        pendingScreenRegistrations.add(new ScreenRegistration(screen, screenWidth, screenHeight, displayMode, positioning, null, null, 0));
-    }
-
-    public static void registerScreenWithAllTabs(Class<? extends Screen> screen, Function<Player, Integer> screenWidth, Function<Player, Integer> screenHeight, TabDisplayMode displayMode, TabPositioning positioning, int screenEdgeOffset) {
-        // Store the registration for later processing
-        pendingScreenRegistrations.add(new ScreenRegistration(screen, screenWidth, screenHeight, displayMode, positioning, null, null, screenEdgeOffset));
-    }
-
-    public static void forceRegisterScreenWithAllTabs(Class<? extends Screen> screen, Function<Player, Integer> screenWidth, Function<Player, Integer> screenHeight, TabDisplayMode displayMode, TabPositioning positioning) {
-        // Force registration - remove any existing registration for this screen class first
+    public static void forceRegisterScreenWithAllTabs(Class<? extends Screen> screen, Function<Player, Integer> screenWidth, Function<Player, Integer> screenHeight, TabDisplayMode displayMode) {
         pendingScreenRegistrations.removeIf(reg -> reg.screenClass.equals(screen));
-        // Then add our new registration
-        pendingScreenRegistrations.add(new ScreenRegistration(screen, screenWidth, screenHeight, displayMode, positioning, null, null, 0));
-    }
-
-    public static void registerScreenWithCustomPosition(Class<? extends Screen> screen, Function<Player, Integer> screenWidth, Function<Player, Integer> screenHeight, Function<Screen, Integer> customTabX, Function<Screen, Integer> customTabY) {
-        // Store the registration for later processing
-        pendingScreenRegistrations.add(new ScreenRegistration(screen, screenWidth, screenHeight, TabDisplayMode.NORMAL, TabPositioning.CUSTOM, customTabX, customTabY, 0));
-    }
-
-    public static void registerScreenWithCustomPosition(Class<? extends Screen> screen, Function<Player, Integer> screenWidth, Function<Player, Integer> screenHeight, TabDisplayMode displayMode, Function<Screen, Integer> customTabX, Function<Screen, Integer> customTabY) {
-        // Store the registration for later processing
-        pendingScreenRegistrations.add(new ScreenRegistration(screen, screenWidth, screenHeight, displayMode, TabPositioning.CUSTOM, customTabX, customTabY, 0));
+        pendingScreenRegistrations.add(new ScreenRegistration(screen, screenWidth, screenHeight, displayMode));
     }
 
     public static void finalizePendingRegistrations() {
-        // Process all pending screen registrations now that all tabs are registered
         for (ScreenRegistration registration : pendingScreenRegistrations) {
             if (!tabsScreens.containsKey(registration.screenClass)) {
                 ScreenInfo screenInfo = new ScreenInfo(registration.screenWidth, registration.screenHeight, registration.displayMode);
-                screenInfo.positioning = registration.positioning;
-                screenInfo.customTabX = registration.customTabX;
-                screenInfo.customTabY = registration.customTabY;
-                screenInfo.screenEdgeOffset = registration.screenEdgeOffset;
                 tabsScreens.put(registration.screenClass, screenInfo);
             }
 
@@ -1755,10 +2010,15 @@ public class TabsMenu {
 
         if (tabsScreens.containsKey(event.getScreen().getClass())) {
 
-            // Check tab display visibility for this screen type
+            // Check tab display visibility for this screen type. NO hides tabs from the
+            // bar but we still register the editor widgets so the user can enter the
+            // layout editor (Shift+Z) and flip visibility back to YES/TUCK. The editor
+            // widgets self-gate on isEditing — they don't render in play mode.
             TabDisplayVisibility visibility = getTabDisplayVisibilityForScreen(event.getScreen());
             if (visibility == TabDisplayVisibility.NO) {
-                return; // Don't display any tabs for this screen
+                vodmordia.modtabs.client.screens.LayoutEditorButtons.addToScreen(
+                        event.getScreen(), event::addListener);
+                return;
             }
 
             // Initialize tuck mode if needed
@@ -1780,95 +2040,20 @@ public class TabsMenu {
 
             ScreenInfo screenInfo = tabsScreens.get(event.getScreen().getClass());
 
-            // Apply user placement override only to GUI_RELATIVE registrations.
-            // Tabs hardcoded as SCREEN_TOP, SCREEN_BOTTOM, SCREEN_RIGHT, or CUSTOM
-            // are left untouched.
-            TabPositioning effectivePositioning = screenInfo.positioning;
-            TabDisplayMode effectiveDisplayMode = screenInfo.displayMode;
-            if (screenInfo.positioning == TabPositioning.GUI_RELATIVE && Config.Baked.standardTabPlacement != null) {
-                switch (Config.Baked.standardTabPlacement) {
-                    case TOP:
-                        effectiveDisplayMode = TabDisplayMode.NORMAL;
-                        break;
-                    case BOTTOM:
-                        effectiveDisplayMode = TabDisplayMode.INVERTED;
-                        break;
-                    case RIGHT:
-                        effectivePositioning = TabPositioning.GUI_RELATIVE_RIGHT;
-                        effectiveDisplayMode = TabDisplayMode.NORMAL;
-                        break;
-                }
-            }
-            // Store current display mode and positioning for animation/render
+            TabDisplayMode effectiveDisplayMode = TabDisplayMode.NORMAL;
             currentDisplayMode = effectiveDisplayMode;
-            currentPositioning = effectivePositioning;
 
-            // Calculate tab position based on positioning mode
-            switch (effectivePositioning) {
-                case GUI_RELATIVE:
-                    // Original behavior - position relative to GUI center
-                    TabsMenu.leftScreenPos = (event.getScreen().width - screenInfo.width.apply(Minecraft.getInstance().player)) / 2;
-                    TabsMenu.topScreenPos = (event.getScreen().height - screenInfo.height.apply(Minecraft.getInstance().player)) / 2;
-                    break;
-                case SCREEN_TOP:
-                    // Position at top of screen with offset
-                    int guiWidth = screenInfo.width.apply(Minecraft.getInstance().player);
-                    int screenWidth = event.getScreen().width;
-                    TabsMenu.leftScreenPos = (screenWidth - guiWidth) / 2;
-
-                    // For inverted tabs, position at absolute top (y=0), otherwise use offset
-                    TabsMenu.topScreenPos = effectiveDisplayMode == TabDisplayMode.INVERTED ? 0 : screenInfo.screenEdgeOffset;
-                    break;
-                case SCREEN_BOTTOM:
-                    // Position at bottom of screen with offset
-                    TabsMenu.leftScreenPos = (event.getScreen().width - screenInfo.width.apply(Minecraft.getInstance().player)) / 2;
-                    // For NORMAL display mode, TabButton will subtract TAB_HEIGHT again, so we need to add it back
-                    // For INVERTED display mode, TabButton will use the position as-is
-                    if (effectiveDisplayMode == TabDisplayMode.NORMAL) {
-                        TabsMenu.topScreenPos = event.getScreen().height - screenInfo.screenEdgeOffset;
-                    } else {
-                        TabsMenu.topScreenPos = event.getScreen().height - TAB_HEIGHT - screenInfo.screenEdgeOffset;
-                    }
-                    break;
-                case SCREEN_RIGHT: {
-                    int guiHeightR = screenInfo.height.apply(Minecraft.getInstance().player);
-                    TabsMenu.leftScreenPos = event.getScreen().width - TAB_WIDTH_VERTICAL - screenInfo.screenEdgeOffset;
-                    TabsMenu.topScreenPos = (event.getScreen().height - guiHeightR) / 2;
-                    break;
-                }
-                case GUI_RELATIVE_RIGHT: {
-                    int guiW = screenInfo.width.apply(Minecraft.getInstance().player);
-                    int guiH = screenInfo.height.apply(Minecraft.getInstance().player);
-                    int guiLeft = (event.getScreen().width - guiW) / 2;
-                    TabsMenu.leftScreenPos = guiLeft + guiW;
-                    TabsMenu.topScreenPos = (event.getScreen().height - guiH) / 2;
-                    break;
-                }
-                case CUSTOM:
-                    // Use custom position functions
-                    if (screenInfo.customTabX != null && screenInfo.customTabY != null) {
-                        TabsMenu.leftScreenPos = screenInfo.customTabX.apply(event.getScreen());
-                        TabsMenu.topScreenPos = screenInfo.customTabY.apply(event.getScreen());
-                    } else {
-                        // Fallback to GUI_RELATIVE if custom functions not provided
-                        TabsMenu.leftScreenPos = (event.getScreen().width - screenInfo.width.apply(Minecraft.getInstance().player)) / 2;
-                        TabsMenu.topScreenPos = (event.getScreen().height - screenInfo.height.apply(Minecraft.getInstance().player)) / 2;
-                    }
-                    break;
-            }
-
-            // Only check bounds for GUI_RELATIVE positioning
-            if (effectivePositioning == TabPositioning.GUI_RELATIVE && TabsMenu.topScreenPos - TAB_HEIGHT < 0) {
-                ModTabs.LOGGER.warn("TabsMenu: EARLY RETURN - Tab position would be off-screen");
-                return;
-            }
-
-            // Apply user-saved per-screen offset (Phase 1 of the visual layout editor).
-            // Bounds check above runs against the unshifted position so we don't bail
-            // out just because the user dragged the bar somewhere unusual.
+            // Bar position is fully data-driven via the layout JSON's anchor + offsets.
             ScreenLayout layout = ScreenLayoutStore.get(event.getScreen().getClass());
-            TabsMenu.leftScreenPos += layout.offsetX;
-            TabsMenu.topScreenPos += layout.offsetY;
+            if (layout.anchor == vodmordia.modtabs.layout.Anchor.SCREEN_ABSOLUTE) {
+                TabsMenu.leftScreenPos = layout.offsetX;
+                TabsMenu.topScreenPos = layout.offsetY;
+            } else {
+                int guiLeft = (event.getScreen().width - screenInfo.width.apply(Minecraft.getInstance().player)) / 2;
+                int guiTop = (event.getScreen().height - screenInfo.height.apply(Minecraft.getInstance().player)) / 2;
+                TabsMenu.leftScreenPos = guiLeft + layout.offsetX;
+                TabsMenu.topScreenPos = guiTop + layout.offsetY;
+            }
 
             startTabIndex = screenOpenedViaTab ? preservedStartTabIndex : 0;
             // Don't clear tracking immediately - let the keybind handler do it after use
@@ -1922,94 +2107,42 @@ public class TabsMenu {
             }
 
 
-            boolean vertical = effectivePositioning != null && effectivePositioning.isVertical();
+            // Pagination is now driven purely by the per-screen layout cap
+            // (layout.maxTabsPerPage). Auto-fit-by-axis-space was removed because it
+            // made the visible count drift on window resize.
             ScreenLayout savedLayout = ScreenLayoutStore.get(event.getScreen().getClass());
-            int baseAxisSize = vertical ? TAB_HEIGHT_VERTICAL : TAB_WIDTH;
-            int axisSize = Math.max(1, Math.round(baseAxisSize * savedLayout.scale));
-            int spacing = savedLayout.tabSpacing;
-
-            int remainingAxis;
-            try {
-                remainingAxis = vertical
-                    ? screenInfo.height.apply(Minecraft.getInstance().player)
-                    : screenInfo.width.apply(Minecraft.getInstance().player);
-            } catch (Exception e) {
-                ModTabs.LOGGER.error("TabsMenu: Axis size calculation failed: " + e.getMessage());
-                return;
-            }
-
-
-            // First pass: determine how many tabs can fit
-            currentTabsCount = 0;
-            int tempAxis = remainingAxis;
-
-            // If sticky inventory tab is enabled and present, reserve space for it
-            if (Config.Baked.stickyInventoryTab && inventoryTab != null) {
-                if (tempAxis > axisSize) {
-                    tempAxis -= axisSize + spacing;
-                    currentTabsCount++; // Count the inventory tab
-                }
-            }
-
-            // Count remaining space for non-inventory tabs
-            List<TabBase> tabsToCheck = Config.Baked.stickyInventoryTab ? nonInventoryTabs : enabledTabs;
-            int perPageCap = Config.Baked.maxTabsPerPage;
-            int naturalTabsCount = currentTabsCount;
-            for (TabBase tabBase: tabsToCheck) {
-                if (tempAxis > axisSize) {
-                    tempAxis -= axisSize + spacing;
-                    naturalTabsCount++;
-                } else {
-                    break;
-                }
-            }
+            int totalEnabledIncludingSticky = enabledTabs.size();
+            int perPageCap = savedLayout.maxTabsPerPage;
             currentTabsCount = (perPageCap > 0)
-                    ? Math.min(naturalTabsCount, perPageCap)
-                    : naturalTabsCount;
-            // Keep the bar's CENTER fixed when the cap shortens the bar — otherwise any
-            // non-zero rotation pivots the visible bar away from the user's saved spot.
-            if (currentTabsCount < naturalTabsCount) {
-                int step = axisSize + spacing;
-                int shift = (naturalTabsCount - currentTabsCount) * step / 2;
-                if (effectivePositioning.isVertical()) {
-                    TabsMenu.topScreenPos += shift;
-                } else {
-                    TabsMenu.leftScreenPos += shift;
-                }
-            }
+                    ? Math.min(totalEnabledIncludingSticky, perPageCap)
+                    : totalEnabledIncludingSticky;
 
 
-            // Clear existing tab buttons to prevent duplicates and conflicts
-            int removedChildren = 0;
-
-            // Count and log what we're removing
-            for (var child : event.getScreen().children()) {
-                if (child instanceof TabButton) {
-                    TabButton tabButton = (TabButton) child;
-                    removedChildren++;
-                }
-            }
-
-            // Count renderables separately
-            int removedRenderables = (int) event.getScreen().renderables.stream()
-                .filter(renderable -> renderable instanceof TabButton)
-                .count();
-
-            event.getScreen().children().removeIf(child -> child instanceof TabButton);
-            event.getScreen().renderables.removeIf(renderable -> renderable instanceof TabButton);
+            // Sweep both children AND renderables for any leftover TabButton or
+            // NextTabsButton from a prior init. Skipping renderables for NextTabsButton
+            // would leave a ghost chevron behind on save (e.g. raising the per-page cap
+            // re-inits, the old chevron stays in renderables, the new one is added,
+            // and the user sees two arrows).
+            event.getScreen().children().removeIf(child ->
+                child instanceof TabButton || child instanceof NextTabsButton);
+            event.getScreen().renderables.removeIf(renderable ->
+                renderable instanceof TabButton || renderable instanceof NextTabsButton);
 
 
-            // Second pass: create buttons for the correct range starting from startTabIndex
+            // Second pass: create buttons for the correct range starting from startTabIndex.
+            // RIGHT_TO_LEFT flips every visual slot to (count - 1 - i) so that "first"
+            // tabs land at the rightmost natural-frame slot — combined with a 180° rotation
+            // that lands them on the screen-left visually.
             int buttonPosition = 0;
+            boolean reverseOrder = layout.tabOrder == vodmordia.modtabs.layout.TabOrder.RIGHT_TO_LEFT;
 
-            // If sticky inventory tab is enabled and present, always render it first
             if (Config.Baked.stickyInventoryTab && inventoryTab != null && currentTabsCount > 0) {
-                TabButton inventoryButton = new TabButton(inventoryTab, Minecraft.getInstance().player, event.getScreen(), buttonPosition, TabsMenu.leftScreenPos, TabsMenu.topScreenPos, effectiveDisplayMode, effectivePositioning);
+                int slot = reverseOrder ? (currentTabsCount - 1 - buttonPosition) : buttonPosition;
+                TabButton inventoryButton = new TabButton(inventoryTab, Minecraft.getInstance().player, event.getScreen(), slot, TabsMenu.leftScreenPos, TabsMenu.topScreenPos, effectiveDisplayMode);
                 event.addListener(inventoryButton);
                 buttonPosition++;
             }
 
-            // Render other tabs based on pagination
             List<TabBase> tabsToRender = Config.Baked.stickyInventoryTab ? nonInventoryTabs : enabledTabs;
             int availableSlots = Config.Baked.stickyInventoryTab && inventoryTab != null ? currentTabsCount - 1 : currentTabsCount;
 
@@ -2018,19 +2151,19 @@ public class TabsMenu {
                 int tabIndexToShow = tabIndex - startTabIndex;
 
                 if (tabIndexToShow >= 0 && tabIndexToShow < availableSlots) {
-                    TabButton newButton = new TabButton(tabBase, Minecraft.getInstance().player, event.getScreen(), buttonPosition, TabsMenu.leftScreenPos, TabsMenu.topScreenPos, effectiveDisplayMode, effectivePositioning);
+                    int slot = reverseOrder ? (currentTabsCount - 1 - buttonPosition) : buttonPosition;
+                    TabButton newButton = new TabButton(tabBase, Minecraft.getInstance().player, event.getScreen(), slot, TabsMenu.leftScreenPos, TabsMenu.topScreenPos, effectiveDisplayMode);
                     event.addListener(newButton);
                     buttonPosition++;
                 }
             }
 
-            // Determine if next button is needed based on sticky inventory tab mode
             int totalTabsToPage = Config.Baked.stickyInventoryTab ? nonInventoryTabs.size() : enabledTabs.size();
             int maxVisibleTabs = Config.Baked.stickyInventoryTab && inventoryTab != null ? currentTabsCount - 1 : currentTabsCount;
 
             if (totalTabsToPage > maxVisibleTabs) {
-                // Use the same positioning logic as TabButton - pass topScreenPos directly and let NextTabsButton handle display mode
-                event.addListener(new NextTabsButton(currentTabsCount, TabsMenu.leftScreenPos, TabsMenu.topScreenPos, effectiveDisplayMode, effectivePositioning,
+                int nextSlot = reverseOrder ? -1 : currentTabsCount;
+                event.addListener(new NextTabsButton(nextSlot, TabsMenu.leftScreenPos, TabsMenu.topScreenPos, effectiveDisplayMode,
                         button -> nextTabButtons(event.getScreen())));
             }
 
@@ -2038,11 +2171,15 @@ public class TabsMenu {
             event.getScreen().children().removeIf(child ->
                 child instanceof vodmordia.modtabs.client.screens.LayoutEditorButtons.EditToggle ||
                 child instanceof vodmordia.modtabs.client.screens.LayoutEditorButtons.EditOnly ||
-                child instanceof vodmordia.modtabs.client.screens.LayoutEditorButtons.CustomIconEditBox);
+                child instanceof vodmordia.modtabs.client.screens.LayoutEditorButtons.IconScaleEditBox ||
+                child instanceof vodmordia.modtabs.client.screens.LayoutEditorButtons.IconNudgeEditBox ||
+                child instanceof vodmordia.modtabs.client.screens.LayoutEditorButtons.MaxTabsPerPageEditBox);
             event.getScreen().renderables.removeIf(r ->
                 r instanceof vodmordia.modtabs.client.screens.LayoutEditorButtons.EditToggle ||
                 r instanceof vodmordia.modtabs.client.screens.LayoutEditorButtons.EditOnly ||
-                r instanceof vodmordia.modtabs.client.screens.LayoutEditorButtons.CustomIconEditBox);
+                r instanceof vodmordia.modtabs.client.screens.LayoutEditorButtons.IconScaleEditBox ||
+                r instanceof vodmordia.modtabs.client.screens.LayoutEditorButtons.IconNudgeEditBox ||
+                r instanceof vodmordia.modtabs.client.screens.LayoutEditorButtons.MaxTabsPerPageEditBox);
             vodmordia.modtabs.client.screens.LayoutEditorButtons.addToScreen(event.getScreen(), event::addListener);
         }
     }
@@ -2225,31 +2362,17 @@ public class TabsMenu {
         public Function<Player, Integer> height;
         public Map<Integer, List<TabBase>> tabs;
         public TabDisplayMode displayMode;
-        public TabPositioning positioning;
-        public Function<Screen, Integer> customTabX;
-        public Function<Screen, Integer> customTabY;
-        public int screenEdgeOffset;
+
         public ScreenInfo(Function<Player, Integer> width, Function<Player, Integer> height, TabBase newTab, int priority) {
             this.width = width;
             this.height = height;
             this.tabs = new TreeMap<>();
-            this.displayMode = TabDisplayMode.NORMAL; // Default to normal
-            this.positioning = TabPositioning.GUI_RELATIVE; // Default to GUI relative
-            this.customTabX = null;
-            this.customTabY = null;
-            this.screenEdgeOffset = 0; // Default offset from screen edges
+            this.displayMode = TabDisplayMode.NORMAL;
             this.addTab(priority, newTab);
         }
 
         public ScreenInfo(Function<Player, Integer> width, Function<Player, Integer> height) {
-            this.width = width;
-            this.height = height;
-            this.tabs = new TreeMap<>();
-            this.displayMode = TabDisplayMode.NORMAL; // Default to normal
-            this.positioning = TabPositioning.GUI_RELATIVE; // Default to GUI relative
-            this.customTabX = null;
-            this.customTabY = null;
-            this.screenEdgeOffset = 0; // Default offset from screen edges
+            this(width, height, TabDisplayMode.NORMAL);
         }
 
         public ScreenInfo(Function<Player, Integer> width, Function<Player, Integer> height, TabDisplayMode displayMode) {
@@ -2257,10 +2380,6 @@ public class TabsMenu {
             this.height = height;
             this.tabs = new TreeMap<>();
             this.displayMode = displayMode;
-            this.positioning = TabPositioning.GUI_RELATIVE; // Default to GUI relative
-            this.customTabX = null;
-            this.customTabY = null;
-            this.screenEdgeOffset = 0; // Default offset from screen edges
         }
 
         public void addTab(int priority, TabBase newTab) {
@@ -2285,20 +2404,9 @@ public class TabsMenu {
         public final Function<Player, Integer> screenWidth;
         public final Function<Player, Integer> screenHeight;
         public final TabDisplayMode displayMode;
-        public final TabPositioning positioning;
-        public final Function<Screen, Integer> customTabX;
-        public final Function<Screen, Integer> customTabY;
-        public final int screenEdgeOffset;
 
         public ScreenRegistration(Class<? extends Screen> screenClass, Function<Player, Integer> screenWidth, Function<Player, Integer> screenHeight) {
-            this.screenClass = screenClass;
-            this.screenWidth = screenWidth;
-            this.screenHeight = screenHeight;
-            this.displayMode = TabDisplayMode.NORMAL;
-            this.positioning = TabPositioning.GUI_RELATIVE;
-            this.customTabX = null;
-            this.customTabY = null;
-            this.screenEdgeOffset = 0;
+            this(screenClass, screenWidth, screenHeight, TabDisplayMode.NORMAL);
         }
 
         public ScreenRegistration(Class<? extends Screen> screenClass, Function<Player, Integer> screenWidth, Function<Player, Integer> screenHeight, TabDisplayMode displayMode) {
@@ -2306,21 +2414,6 @@ public class TabsMenu {
             this.screenWidth = screenWidth;
             this.screenHeight = screenHeight;
             this.displayMode = displayMode;
-            this.positioning = TabPositioning.GUI_RELATIVE;
-            this.customTabX = null;
-            this.customTabY = null;
-            this.screenEdgeOffset = 0;
-        }
-
-        public ScreenRegistration(Class<? extends Screen> screenClass, Function<Player, Integer> screenWidth, Function<Player, Integer> screenHeight, TabDisplayMode displayMode, TabPositioning positioning, Function<Screen, Integer> customTabX, Function<Screen, Integer> customTabY, int screenEdgeOffset) {
-            this.screenClass = screenClass;
-            this.screenWidth = screenWidth;
-            this.screenHeight = screenHeight;
-            this.displayMode = displayMode;
-            this.positioning = positioning;
-            this.customTabX = customTabX;
-            this.customTabY = customTabY;
-            this.screenEdgeOffset = screenEdgeOffset;
         }
     }
 }

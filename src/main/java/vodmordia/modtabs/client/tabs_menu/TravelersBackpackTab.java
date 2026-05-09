@@ -8,7 +8,6 @@ import net.minecraft.world.item.Items;
 import vodmordia.modtabs.api.tabs_menu.IntegrationItemTab;
 import vodmordia.modtabs.api.tabs_menu.ScreenRegistry;
 import vodmordia.modtabs.api.tabs_menu.TabConfig;
-import vodmordia.modtabs.api.tabs_menu.TabPositioning;
 import vodmordia.modtabs.api.tabs_menu.TabSpec;
 import vodmordia.modtabs.config.Config;
 import vodmordia.modtabs.integration.ModIntegration;
@@ -119,7 +118,6 @@ public class TravelersBackpackTab extends IntegrationItemTab {
                 (Class<? extends net.minecraft.client.gui.screens.Screen>) screenClass;
         ScreenRegistry.builder()
                 .withDimensions(IntegrationUtils::getTravelersBackpackWidth, IntegrationUtils::getTravelersBackpackHeight)
-                .withPositioning(TabPositioning.GUI_RELATIVE)
                 .registerAllTabs(typed);
     }
 

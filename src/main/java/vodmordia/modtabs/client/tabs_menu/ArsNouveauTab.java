@@ -232,7 +232,6 @@ public class ArsNouveauTab extends ConfigurableItemTab {
         ScreenRegistry.builder()
             .withStandardDimensions()
             .inverted()
-            .atTop()
             .registerAllTabs(vodmordia.modtabs.utils.ScreenClasses.ARS_NOUVEAU_SPELLBOOK_GUI);
     }
 }

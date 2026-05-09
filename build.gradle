@@ -146,9 +146,10 @@ dependencies {
     // Curse Maven blocks direct download of the runic-skills artifact (403 Forbidden),
     // so we vendor the jar in libs/runicskills-1.0.0.jar and resolve it through the
     // flatDir repo above. The "blank" group is required by ForgeGradle's deobf cache key.
-    implementation fg.deobf("blank:runicskills:1.0.0")
+    // Disabled — its bundled l2tabs 0.3.3 conflicts with the L2 stack's TabRegistry API.
+    // implementation fg.deobf("blank:runicskills:1.0.0")
     // Required by Runic Skills (yet_another_config_lib_v3 >= 3.4.2).
-    implementation fg.deobf("curse.maven:yacl-667299:6336646")
+    // implementation fg.deobf("curse.maven:yacl-667299:6336646")
 
     // Backpacks.
     implementation fg.deobf("curse.maven:sophisticated-core-618298:8014107")
@@ -181,14 +182,11 @@ dependencies {
     implementation fg.deobf("curse.maven:map-atlases-forge-519759:7660146")
 
     // L2 stack (xkmc) + Modular Golems.
-    // L2 stack temporarily disabled to test Runic Skills crash — l2library jar-in-jars
-    // l2tabs 0.3.3 which lacks TabRegistry$TabFactory, breaking Runic Skills' integration.
-    // The other L2 mods depend on l2library so they're disabled together.
-    // implementation fg.deobf("curse.maven:l2library-620203:6806000")
-    // implementation fg.deobf("curse.maven:l2hostility-909207:7815389")
-    // implementation fg.deobf("curse.maven:l2-complements-758349:7606338")
-    // implementation fg.deobf("curse.maven:l2-artifacts-659547:6801939")
-    // implementation fg.deobf("curse.maven:modulargolems-690937:7948763")
+    implementation fg.deobf("curse.maven:l2library-620203:6806000")
+    implementation fg.deobf("curse.maven:l2hostility-909207:7815389")
+    implementation fg.deobf("curse.maven:l2-complements-758349:7606338")
+    implementation fg.deobf("curse.maven:l2-artifacts-659547:6801939")
+    implementation fg.deobf("curse.maven:modulargolems-690937:7948763")
 
     // Cobblemon (+ Kotlin for Forge runtime requirement).
     implementation fg.deobf("curse.maven:kotlin-for-forge-351264:7291067")

@@ -3,75 +3,139 @@ package vodmordia.modtabs.api.tabs_menu;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
+import org.jetbrains.annotations.NotNull;
+import vodmordia.modtabs.config.ModTabsConfig;
 import vodmordia.modtabs.utils.IconResolver;
 
+import java.lang.reflect.Field;
+import java.util.Objects;
 import java.util.function.Supplier;
 
 /**
- * Base class for tabs that render an item icon but support custom texture overrides from config
+ * Base class for tabs that render an item icon but support custom texture overrides from config.
+ * Custom icon string is read dynamically from {@link ModTabsConfig} via the subclass's
+ * {@code @TabConfig} annotation, so layout-editor changes apply without tab re-registration.
  */
 public abstract class ConfigurableItemTab extends SimpleItemTab {
 
-    private final String customIconConfig;
     private final String tabId;
-    private ResourceLocation cachedCustomIcon;
-    private boolean iconResolved = false;
+    private String lastResolvedFor;
+    private ResourceLocation lastResolved;
 
-    /**
-     * Creates a configurable item tab with a dynamic item supplier
-     */
     protected ConfigurableItemTab(Supplier<ItemStack> iconItemSupplier, String customIconConfig, String tabId) {
         super(iconItemSupplier);
-        this.customIconConfig = customIconConfig;
         this.tabId = tabId;
     }
 
-    /**
-     * Creates a configurable item tab with a fixed item
-     */
     protected ConfigurableItemTab(ItemStack iconItem, String customIconConfig, String tabId) {
         super(iconItem);
-        this.customIconConfig = customIconConfig;
         this.tabId = tabId;
     }
 
     @Override
-    public void render(GuiGraphics gui, int x, int y, boolean hover) {
-        // Check if custom icon is configured
-        ResourceLocation customIcon = getCustomIcon();
+    public void render(@NotNull GuiGraphics gui, int x, int y, boolean hover) {
+        ResourceLocation customIcon = currentCustomIcon();
+        float scale = currentIconScale();
+        int[] n = currentIconNudge();
+        boolean nudged = n[0] != 0 || n[1] != 0;
         if (customIcon != null) {
-            // Render with custom texture
             TabRenderer.builder()
                 .withBackground()
                 .withTextureIcon(customIcon, 5, 4, 0, 0, 16, 16, 16, 16)
+                .withIconScale(scale)
+                .withIconNudge(n[0], n[1])
+                .render(gui, x, y, hover, false);
+        } else if (scale != 1.0f || nudged) {
+            TabRenderer.builder()
+                .withBackground()
+                .withItemIcon(getIconItem(), 5, 4)
+                .withIconScale(scale)
+                .withIconNudge(n[0], n[1])
                 .render(gui, x, y, hover, false);
         } else {
-            // Render with item (default behavior)
             super.render(gui, x, y, hover);
         }
     }
 
     @Override
-    protected void renderInverted(GuiGraphics gui, int x, int y, boolean hover) {
-        // Check if custom icon is configured
-        ResourceLocation customIcon = getCustomIcon();
+    protected void renderInverted(@NotNull GuiGraphics gui, int x, int y, boolean hover) {
+        ResourceLocation customIcon = currentCustomIcon();
+        float scale = currentIconScale();
+        int[] n = currentIconNudge();
+        boolean nudged = n[0] != 0 || n[1] != 0;
         if (customIcon != null) {
-            // Render with custom texture
             TabRenderer.builder()
                 .withBackground()
                 .withTextureIcon(customIcon, 5, 4, 0, 0, 16, 16, 16, 16)
+                .withIconScale(scale)
+                .withIconNudge(n[0], n[1])
+                .render(gui, x, y, hover, true);
+        } else if (scale != 1.0f || nudged) {
+            TabRenderer.builder()
+                .withBackground()
+                .withItemIcon(getIconItem(), 5, 4)
+                .withIconScale(scale)
+                .withIconNudge(n[0], n[1])
                 .render(gui, x, y, hover, true);
         } else {
-            // Render with item (default behavior)
             super.renderInverted(gui, x, y, hover);
         }
     }
 
-    private ResourceLocation getCustomIcon() {
-        if (!iconResolved) {
-            cachedCustomIcon = IconResolver.resolveIcon(customIconConfig, tabId);
-            iconResolved = true;
+    private float currentIconScale() {
+        try {
+            TabConfig tc = this.getClass().getAnnotation(TabConfig.class);
+            if (tc == null) return 1.0f;
+            String key = tc.configKey();
+            Field f = ModTabsConfig.class.getField(key + "IconScale");
+            Object v = f.get(null);
+            if (v instanceof Integer i) return Math.max(0, i) / 100f;
+        } catch (Exception ignored) {}
+        return 1.0f;
+    }
+
+    private int[] currentIconNudge() {
+        try {
+            TabConfig tc = this.getClass().getAnnotation(TabConfig.class);
+            if (tc == null) return new int[]{0, 0};
+            String key = tc.configKey();
+            int up = readNudge(key + "IconNudgeUp");
+            int down = readNudge(key + "IconNudgeDown");
+            int left = readNudge(key + "IconNudgeLeft");
+            int right = readNudge(key + "IconNudgeRight");
+            return new int[]{ right - left, down - up };
+        } catch (Exception ignored) {}
+        return new int[]{0, 0};
+    }
+
+    private static int readNudge(String fieldName) {
+        try {
+            Field f = ModTabsConfig.class.getField(fieldName);
+            Object v = f.get(null);
+            if (v instanceof Integer i) return i;
+        } catch (Exception ignored) {}
+        return 0;
+    }
+
+    private ResourceLocation currentCustomIcon() {
+        String cfg = readCurrentCustomIconConfig();
+        if (!Objects.equals(cfg, lastResolvedFor)) {
+            lastResolvedFor = cfg;
+            lastResolved = IconResolver.resolveIcon(cfg, tabId);
         }
-        return cachedCustomIcon;
+        return lastResolved;
+    }
+
+    private String readCurrentCustomIconConfig() {
+        try {
+            TabConfig tc = this.getClass().getAnnotation(TabConfig.class);
+            if (tc == null) return null;
+            String key = tc.configKey();
+            Field f = ModTabsConfig.class.getField(key + "CustomIcon");
+            Object v = f.get(null);
+            return v instanceof String s ? s : null;
+        } catch (Exception ignored) {
+            return null;
+        }
     }
 }

@@ -8,11 +8,8 @@ import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
 import vodmordia.modtabs.ModTabs;
 import vodmordia.modtabs.api.tabs_menu.TabDisplayMode;
-import vodmordia.modtabs.api.tabs_menu.TabPositioning;
 import vodmordia.modtabs.api.tabs_menu.TabsMenu;
 
-import static vodmordia.modtabs.api.tabs_menu.TabBase.TAB_WIDTH;
-import static vodmordia.modtabs.api.tabs_menu.TabBase.TAB_WIDTH_VERTICAL;
 
 public class NextTabsButton extends Button {
     private final ResourceLocation TAB_ICONS = new ResourceLocation(ModTabs.MOD_ID, "textures/gui/tab_menu_buttons.png");
@@ -22,48 +19,28 @@ public class NextTabsButton extends Button {
     public static final int NEXT_TABS_BUTTON_HEIGHT = 21;
     public int tabPositionIndex;
     public TabDisplayMode displayMode;
-    public TabPositioning positioning;
+    private int barLeft;
+    private int barTop;
 
     public NextTabsButton(int tabPositionIndex, int leftScreenPos, int topScreenPos, net.minecraft.client.gui.components.Button.OnPress press) {
-        super(leftScreenPos + tabPositionIndex * TabsMenu.primaryAxisStep(), topScreenPos, NEXT_TABS_BUTTON_WIDTH, NEXT_TABS_BUTTON_HEIGHT, Component.literal(""), press, DEFAULT_NARRATION);
-        this.tabPositionIndex = tabPositionIndex;
-        this.displayMode = TabDisplayMode.NORMAL;
-        this.positioning = TabPositioning.GUI_RELATIVE;
+        this(tabPositionIndex, leftScreenPos, topScreenPos, TabDisplayMode.NORMAL, press);
     }
 
     public NextTabsButton(int tabPositionIndex, int leftScreenPos, int topScreenPos, TabDisplayMode displayMode, net.minecraft.client.gui.components.Button.OnPress press) {
-        this(tabPositionIndex, leftScreenPos, topScreenPos, displayMode, TabPositioning.GUI_RELATIVE, press);
-    }
-
-    public NextTabsButton(int tabPositionIndex, int leftScreenPos, int topScreenPos, TabDisplayMode displayMode, TabPositioning positioning, net.minecraft.client.gui.components.Button.OnPress press) {
-        super(calculateX(leftScreenPos, tabPositionIndex, positioning),
-              calculateY(topScreenPos, tabPositionIndex, displayMode, positioning),
-              widthFor(positioning), heightFor(positioning), Component.literal(""), press, DEFAULT_NARRATION);
+        super(calculateX(leftScreenPos, tabPositionIndex),
+              calculateY(topScreenPos, tabPositionIndex, displayMode),
+              NEXT_TABS_BUTTON_WIDTH, NEXT_TABS_BUTTON_HEIGHT, Component.literal(""), press, DEFAULT_NARRATION);
         this.tabPositionIndex = tabPositionIndex;
         this.displayMode = displayMode;
-        this.positioning = positioning;
+        this.barLeft = leftScreenPos;
+        this.barTop = topScreenPos;
     }
 
-    private static int widthFor(TabPositioning positioning) {
-        // Vertical: keep the next-tab button slim (12px wide is fine), but shorter than a tab.
-        return positioning != null && positioning.isVertical() ? TAB_WIDTH_VERTICAL : NEXT_TABS_BUTTON_WIDTH;
-    }
-
-    private static int heightFor(TabPositioning positioning) {
-        return positioning != null && positioning.isVertical() ? NEXT_TABS_BUTTON_WIDTH : NEXT_TABS_BUTTON_HEIGHT;
-    }
-
-    private static int calculateX(int leftScreenPos, int tabPositionIndex, TabPositioning positioning) {
-        if (positioning != null && positioning.isVertical()) {
-            return leftScreenPos;
-        }
+    private static int calculateX(int leftScreenPos, int tabPositionIndex) {
         return leftScreenPos + tabPositionIndex * TabsMenu.primaryAxisStep();
     }
 
-    private static int calculateY(int topScreenPos, int tabPositionIndex, TabDisplayMode displayMode, TabPositioning positioning) {
-        if (positioning != null && positioning.isVertical()) {
-            return topScreenPos + tabPositionIndex * TabsMenu.primaryAxisStep();
-        }
+    private static int calculateY(int topScreenPos, int tabPositionIndex, TabDisplayMode displayMode) {
         return displayMode == TabDisplayMode.INVERTED ?
             topScreenPos :
             topScreenPos - TabsMenu.effectiveTabHeight();
@@ -101,7 +78,12 @@ public class NextTabsButton extends Button {
         } else {
             if (TabsMenu.renderingBehindPanel) return;
         }
-        boolean vertical = positioning != null && positioning.isVertical();
+        // Recompute natural-frame position each render. Without this, live scale / spacing
+        // edits don't shift the chevron's anchor — the user compensates with tempNextOffset,
+        // and on save the natural anchor jumps to its correct (recomputed) spot while the
+        // baked-in offset still applies, making the chevron visibly shift.
+        setX(calculateX(this.barLeft, this.tabPositionIndex));
+        setY(calculateY(this.barTop, this.tabPositionIndex, this.displayMode));
         int animatedX = getAnimatedAnchorX();
         int animatedY = getAnimatedAnchorY();
         float barRotation = TabsMenu.currentEffectiveRotation();
@@ -149,24 +131,38 @@ public class NextTabsButton extends Button {
             }
         }
 
-        if (vertical) {
-            gui.pose().pushPose();
-            gui.pose().translate(animatedX + TAB_WIDTH_VERTICAL / 2.0f, animatedY + NEXT_TABS_BUTTON_WIDTH / 2.0f, 0);
-            gui.pose().mulPose(com.mojang.math.Axis.ZP.rotationDegrees(90));
-            gui.pose().translate(-NEXT_TABS_BUTTON_WIDTH / 2.0f, -NEXT_TABS_BUTTON_HEIGHT / 2.0f, 0);
-            gui.blit(TAB_ICONS, 0, 0, NEXT_TABS_ICON_TEX_X + texOffsetX, NEXT_TABS_ICON_TEX_Y, NEXT_TABS_BUTTON_WIDTH, NEXT_TABS_BUTTON_HEIGHT);
-            gui.pose().popPose();
-        } else {
-            gui.blit(TAB_ICONS, animatedX, animatedY, NEXT_TABS_ICON_TEX_X + texOffsetX, NEXT_TABS_ICON_TEX_Y, NEXT_TABS_BUTTON_WIDTH, NEXT_TABS_BUTTON_HEIGHT);
-        }
+        gui.blit(TAB_ICONS, animatedX, animatedY, NEXT_TABS_ICON_TEX_X + texOffsetX, NEXT_TABS_ICON_TEX_Y, NEXT_TABS_BUTTON_WIDTH, NEXT_TABS_BUTTON_HEIGHT);
         if (needsPose) {
             gui.pose().popPose();
         }
     }
 
     public void updatePosition(int leftScreenPos, int topScreenPos) {
-        setX(calculateX(leftScreenPos, tabPositionIndex, positioning));
-        setY(calculateY(topScreenPos, tabPositionIndex, displayMode, positioning));
+        this.barLeft = leftScreenPos;
+        this.barTop = topScreenPos;
+        setX(calculateX(leftScreenPos, tabPositionIndex));
+        setY(calculateY(topScreenPos, tabPositionIndex, displayMode));
+    }
+
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        // In edit mode, don't consume clicks — let editor widgets registered after us
+        // in screen.children() receive them. Without this, vanilla Button.mouseClicked
+        // would swallow any click in our bounds.
+        net.minecraft.client.gui.screens.Screen current = net.minecraft.client.Minecraft.getInstance().screen;
+        if (current != null && TabsMenu.isEditing(current)) {
+            return false;
+        }
+        // Custom hit-test path: vanilla Button.mouseClicked uses clicked() which compares
+        // against raw getX()/getY() bounds and ignores rotation. With a rotated bar (e.g.
+        // 180°), those bounds don't match the on-screen position, so the next-page button
+        // is unclickable. isMouseOver() already inverse-rotates the cursor.
+        if (button == 0 && this.active && this.visible && this.isMouseOver(mouseX, mouseY)) {
+            this.playDownSound(net.minecraft.client.Minecraft.getInstance().getSoundManager());
+            this.onPress();
+            return true;
+        }
+        return false;
     }
 
     @Override

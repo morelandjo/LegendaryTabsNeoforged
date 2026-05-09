@@ -40,6 +40,11 @@ public class InventoryTab extends ConfigurableIconTab {
     }
 
     @Override
+    public boolean isHomeTab(Screen currentScreen) {
+        return currentScreen instanceof InventoryScreen;
+    }
+
+    @Override
     public Component getTooltip() {
         return Component.translatable("tooltip." + ModTabs.MOD_ID + ".tab.inventory.description");
     }

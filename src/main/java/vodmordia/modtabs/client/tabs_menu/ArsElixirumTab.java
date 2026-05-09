@@ -103,9 +103,16 @@ public class ArsElixirumTab extends ConfigurableItemTab {
 
     @Override
     public void initTabOnScreens() {
+        // Forge 1.20.1 build of Ars Elixirum has no single `ElixirumScreen` — each page is
+        // its own Screen subclass under .widgets.pages. Register all four concrete pages so
+        // tabs render on whichever page the user is viewing and Shift+Z opens the editor.
         ScreenRegistry.builder()
             .withStandardDimensions()
-            .atBottom()
-            .registerAllTabs("dev.obscuria.elixirum.client.screen.ElixirumScreen");
+            .registerAllTabs(
+                "dev.obscuria.elixirum.client.screen.widgets.pages.CompendiumPage",
+                "dev.obscuria.elixirum.client.screen.widgets.pages.collection.CollectionPage",
+                "dev.obscuria.elixirum.client.screen.widgets.pages.discoveries.DiscoveriesPage",
+                "dev.obscuria.elixirum.client.screen.widgets.pages.recent.RecentlyBrewedPage"
+            );
     }
 }

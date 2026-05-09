@@ -11,7 +11,6 @@ import vodmordia.modtabs.ModTabs;
 import vodmordia.modtabs.api.tabs_menu.ScaledItemTab;
 import vodmordia.modtabs.api.tabs_menu.TabConfig;
 import vodmordia.modtabs.api.tabs_menu.ScreenRegistry;
-import vodmordia.modtabs.api.tabs_menu.TabPositioning;
 import vodmordia.modtabs.config.Config;
 import vodmordia.modtabs.integration.ModIntegration;
 import vodmordia.modtabs.integration.ModIntegrationManager;
@@ -92,7 +91,6 @@ public class L2AttributeTab extends ScaledItemTab {
     public void initTabOnScreens() {
         ScreenRegistry.builder()
             .withStandardDimensions()
-            .withPositioning(TabPositioning.GUI_RELATIVE)
             .registerAllTabs("dev.xkmc.l2tabs.tabs.contents.AttributeScreen");
     }
 }

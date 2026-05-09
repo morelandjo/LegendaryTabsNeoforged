@@ -8,17 +8,12 @@ public class ModTabsConfig extends MidnightConfig {
 
     @Comment(category = "tabs") public static CommentText placement;
 
-    @Entry(category = "tabs")
-    public static StandardTabPlacement standardTabPlacement = StandardTabPlacement.RIGHT;
-
     // Edited via the in-game global-settings modal (General tab); hidden from the
     // MidnightConfig list to avoid duplicate UIs.
     @Entry(category = "tabs") @Hidden public static int iconOffsetTop = 0;
     @Entry(category = "tabs") @Hidden public static int iconOffsetRight = 0;
     @Entry(category = "tabs") @Hidden public static int iconOffsetBottom = 0;
     @Entry(category = "tabs") @Hidden public static int iconOffsetLeft = 0;
-    /** 0 = unlimited (auto-fit by available space). */
-    @Entry(category = "tabs") @Hidden public static int maxTabsPerPage = 0;
 
     @Comment(category = "tabs") public static CommentText spacer_placement;
 
@@ -33,6 +28,16 @@ public class ModTabsConfig extends MidnightConfig {
 
     @Entry(category = "tabs") @Hidden
     public static String inventoryTabCustomIcon = "";
+    @Entry(category = "tabs") @Hidden
+    public static int inventoryTabIconScale = 100;
+    @Entry(category = "tabs") @Hidden
+    public static int inventoryTabIconNudgeUp = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int inventoryTabIconNudgeDown = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int inventoryTabIconNudgeLeft = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int inventoryTabIconNudgeRight = 0;
     @Entry(category = "tabs") @Hidden
     public static int inventoryTabOrder = 0;
 
@@ -52,6 +57,16 @@ public class ModTabsConfig extends MidnightConfig {
     @Entry(category = "tabs") @Hidden
     public static String advancementsTabCustomIcon = "";
     @Entry(category = "tabs") @Hidden
+    public static int advancementsTabIconScale = 100;
+    @Entry(category = "tabs") @Hidden
+    public static int advancementsTabIconNudgeUp = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int advancementsTabIconNudgeDown = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int advancementsTabIconNudgeLeft = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int advancementsTabIconNudgeRight = 0;
+    @Entry(category = "tabs") @Hidden
     public static int advancementsTabOrder = 0;
 
     @Entry(category = "tabs") @Hidden
@@ -68,6 +83,16 @@ public class ModTabsConfig extends MidnightConfig {
     @Entry(category = "tabs") @Hidden
     public static String rpgCraftingTabCustomIcon = "";
     @Entry(category = "tabs") @Hidden
+    public static int rpgCraftingTabIconScale = 100;
+    @Entry(category = "tabs") @Hidden
+    public static int rpgCraftingTabIconNudgeUp = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int rpgCraftingTabIconNudgeDown = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int rpgCraftingTabIconNudgeLeft = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int rpgCraftingTabIconNudgeRight = 0;
+    @Entry(category = "tabs") @Hidden
     public static int rpgCraftingTabOrder = 0;
 
     @Comment(category = "tabs") public static CommentText spacer2;
@@ -80,6 +105,16 @@ public class ModTabsConfig extends MidnightConfig {
 
     @Entry(category = "tabs") @Hidden
     public static String arsElixirumTabCustomIcon = "";
+    @Entry(category = "tabs") @Hidden
+    public static int arsElixirumTabIconScale = 100;
+    @Entry(category = "tabs") @Hidden
+    public static int arsElixirumTabIconNudgeUp = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int arsElixirumTabIconNudgeDown = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int arsElixirumTabIconNudgeLeft = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int arsElixirumTabIconNudgeRight = 0;
     @Entry(category = "tabs") @Hidden
     public static int arsElixirumTabOrder = 0;
 
@@ -97,6 +132,16 @@ public class ModTabsConfig extends MidnightConfig {
     @Entry(category = "tabs") @Hidden
     public static String arsNouveauTabCustomIcon = "";
     @Entry(category = "tabs") @Hidden
+    public static int arsNouveauTabIconScale = 100;
+    @Entry(category = "tabs") @Hidden
+    public static int arsNouveauTabIconNudgeUp = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int arsNouveauTabIconNudgeDown = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int arsNouveauTabIconNudgeLeft = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int arsNouveauTabIconNudgeRight = 0;
+    @Entry(category = "tabs") @Hidden
     public static int arsNouveauTabOrder = 0;
 
     @Entry(category = "tabs") @Hidden
@@ -112,6 +157,16 @@ public class ModTabsConfig extends MidnightConfig {
 
     @Entry(category = "tabs") @Hidden
     public static String backpackedTabCustomIcon = "";
+    @Entry(category = "tabs") @Hidden
+    public static int backpackedTabIconScale = 100;
+    @Entry(category = "tabs") @Hidden
+    public static int backpackedTabIconNudgeUp = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int backpackedTabIconNudgeDown = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int backpackedTabIconNudgeLeft = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int backpackedTabIconNudgeRight = 0;
     @Entry(category = "tabs") @Hidden
     public static int backpackedTabOrder = 0;
 
@@ -130,6 +185,16 @@ public class ModTabsConfig extends MidnightConfig {
     @Entry(category = "tabs") @Hidden
     public static String bodyDamageTabCustomIcon = "";
     @Entry(category = "tabs") @Hidden
+    public static int bodyDamageTabIconScale = 100;
+    @Entry(category = "tabs") @Hidden
+    public static int bodyDamageTabIconNudgeUp = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int bodyDamageTabIconNudgeDown = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int bodyDamageTabIconNudgeLeft = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int bodyDamageTabIconNudgeRight = 0;
+    @Entry(category = "tabs") @Hidden
     public static int bodyDamageTabOrder = 0;
 
     @Entry(category = "tabs") @Hidden
@@ -145,6 +210,16 @@ public class ModTabsConfig extends MidnightConfig {
     @Entry(category = "tabs") @Hidden
     public static String biologyDictionaryTabCustomIcon = "";
     @Entry(category = "tabs") @Hidden
+    public static int biologyDictionaryTabIconScale = 100;
+    @Entry(category = "tabs") @Hidden
+    public static int biologyDictionaryTabIconNudgeUp = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int biologyDictionaryTabIconNudgeDown = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int biologyDictionaryTabIconNudgeLeft = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int biologyDictionaryTabIconNudgeRight = 0;
+    @Entry(category = "tabs") @Hidden
     public static int biologyDictionaryTabOrder = 0;
 
     @Entry(category = "tabs") @Hidden
@@ -159,6 +234,16 @@ public class ModTabsConfig extends MidnightConfig {
 
     @Entry(category = "tabs") @Hidden
     public static String reliableBackpacksTabCustomIcon = "";
+    @Entry(category = "tabs") @Hidden
+    public static int reliableBackpacksTabIconScale = 100;
+    @Entry(category = "tabs") @Hidden
+    public static int reliableBackpacksTabIconNudgeUp = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int reliableBackpacksTabIconNudgeDown = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int reliableBackpacksTabIconNudgeLeft = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int reliableBackpacksTabIconNudgeRight = 0;
     @Entry(category = "tabs") @Hidden
     public static int reliableBackpacksTabOrder = 0;
 
@@ -176,6 +261,16 @@ public class ModTabsConfig extends MidnightConfig {
     @Entry(category = "tabs") @Hidden
     public static String brassworksMissionsTabCustomIcon = "";
     @Entry(category = "tabs") @Hidden
+    public static int brassworksMissionsTabIconScale = 100;
+    @Entry(category = "tabs") @Hidden
+    public static int brassworksMissionsTabIconNudgeUp = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int brassworksMissionsTabIconNudgeDown = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int brassworksMissionsTabIconNudgeLeft = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int brassworksMissionsTabIconNudgeRight = 0;
+    @Entry(category = "tabs") @Hidden
     public static int brassworksMissionsTabOrder = 0;
 
     @Entry(category = "tabs") @Hidden
@@ -191,6 +286,16 @@ public class ModTabsConfig extends MidnightConfig {
 
     @Entry(category = "tabs") @Hidden
     public static String cobblemonTabCustomIcon = "";
+    @Entry(category = "tabs") @Hidden
+    public static int cobblemonTabIconScale = 100;
+    @Entry(category = "tabs") @Hidden
+    public static int cobblemonTabIconNudgeUp = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int cobblemonTabIconNudgeDown = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int cobblemonTabIconNudgeLeft = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int cobblemonTabIconNudgeRight = 0;
     @Entry(category = "tabs") @Hidden
     public static int cobblemonTabOrder = 0;
 
@@ -208,6 +313,16 @@ public class ModTabsConfig extends MidnightConfig {
     @Entry(category = "tabs") @Hidden
     public static String cosmeticArmorTabCustomIcon = "";
     @Entry(category = "tabs") @Hidden
+    public static int cosmeticArmorTabIconScale = 100;
+    @Entry(category = "tabs") @Hidden
+    public static int cosmeticArmorTabIconNudgeUp = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int cosmeticArmorTabIconNudgeDown = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int cosmeticArmorTabIconNudgeLeft = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int cosmeticArmorTabIconNudgeRight = 0;
+    @Entry(category = "tabs") @Hidden
     public static int cosmeticArmorTabOrder = 0;
 
     @Entry(category = "tabs") @Hidden
@@ -223,6 +338,16 @@ public class ModTabsConfig extends MidnightConfig {
 
     @Entry(category = "tabs") @Hidden
     public static String draconicEvolutionTabCustomIcon = "";
+    @Entry(category = "tabs") @Hidden
+    public static int draconicEvolutionTabIconScale = 100;
+    @Entry(category = "tabs") @Hidden
+    public static int draconicEvolutionTabIconNudgeUp = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int draconicEvolutionTabIconNudgeDown = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int draconicEvolutionTabIconNudgeLeft = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int draconicEvolutionTabIconNudgeRight = 0;
     @Entry(category = "tabs") @Hidden
     public static int draconicEvolutionTabOrder = 0;
 
@@ -240,6 +365,16 @@ public class ModTabsConfig extends MidnightConfig {
     @Entry(category = "tabs") @Hidden
     public static String eccentricTomeTabCustomIcon = "";
     @Entry(category = "tabs") @Hidden
+    public static int eccentricTomeTabIconScale = 100;
+    @Entry(category = "tabs") @Hidden
+    public static int eccentricTomeTabIconNudgeUp = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int eccentricTomeTabIconNudgeDown = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int eccentricTomeTabIconNudgeLeft = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int eccentricTomeTabIconNudgeRight = 0;
+    @Entry(category = "tabs") @Hidden
     public static int eccentricTomeTabOrder = 0;
 
     @Entry(category = "tabs") @Hidden
@@ -255,6 +390,16 @@ public class ModTabsConfig extends MidnightConfig {
 
     @Entry(category = "tabs") @Hidden
     public static String dietTabCustomIcon = "";
+    @Entry(category = "tabs") @Hidden
+    public static int dietTabIconScale = 100;
+    @Entry(category = "tabs") @Hidden
+    public static int dietTabIconNudgeUp = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int dietTabIconNudgeDown = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int dietTabIconNudgeLeft = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int dietTabIconNudgeRight = 0;
     @Entry(category = "tabs") @Hidden
     public static int dietTabOrder = 0;
 
@@ -272,6 +417,16 @@ public class ModTabsConfig extends MidnightConfig {
     @Entry(category = "tabs") @Hidden
     public static String ftbQuestsTabCustomIcon = "";
     @Entry(category = "tabs") @Hidden
+    public static int ftbQuestsTabIconScale = 100;
+    @Entry(category = "tabs") @Hidden
+    public static int ftbQuestsTabIconNudgeUp = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int ftbQuestsTabIconNudgeDown = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int ftbQuestsTabIconNudgeLeft = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int ftbQuestsTabIconNudgeRight = 0;
+    @Entry(category = "tabs") @Hidden
     public static int ftbQuestsTabOrder = 0;
 
     @Entry(category = "tabs") @Hidden
@@ -287,6 +442,16 @@ public class ModTabsConfig extends MidnightConfig {
 
     @Entry(category = "tabs") @Hidden
     public static String ftbChunksTabCustomIcon = "";
+    @Entry(category = "tabs") @Hidden
+    public static int ftbChunksTabIconScale = 100;
+    @Entry(category = "tabs") @Hidden
+    public static int ftbChunksTabIconNudgeUp = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int ftbChunksTabIconNudgeDown = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int ftbChunksTabIconNudgeLeft = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int ftbChunksTabIconNudgeRight = 0;
     @Entry(category = "tabs") @Hidden
     public static int ftbChunksTabOrder = 0;
 
@@ -304,6 +469,16 @@ public class ModTabsConfig extends MidnightConfig {
     @Entry(category = "tabs") @Hidden
     public static String ftbTeamsTabCustomIcon = "";
     @Entry(category = "tabs") @Hidden
+    public static int ftbTeamsTabIconScale = 100;
+    @Entry(category = "tabs") @Hidden
+    public static int ftbTeamsTabIconNudgeUp = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int ftbTeamsTabIconNudgeDown = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int ftbTeamsTabIconNudgeLeft = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int ftbTeamsTabIconNudgeRight = 0;
+    @Entry(category = "tabs") @Hidden
     public static int ftbTeamsTabOrder = 0;
 
     @Entry(category = "tabs") @Hidden
@@ -319,6 +494,16 @@ public class ModTabsConfig extends MidnightConfig {
 
     @Entry(category = "tabs") @Hidden
     public static String advancedTeamTabCustomIcon = "";
+    @Entry(category = "tabs") @Hidden
+    public static int advancedTeamTabIconScale = 100;
+    @Entry(category = "tabs") @Hidden
+    public static int advancedTeamTabIconNudgeUp = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int advancedTeamTabIconNudgeDown = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int advancedTeamTabIconNudgeLeft = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int advancedTeamTabIconNudgeRight = 0;
     @Entry(category = "tabs") @Hidden
     public static int advancedTeamTabOrder = 0;
 
@@ -336,6 +521,16 @@ public class ModTabsConfig extends MidnightConfig {
     @Entry(category = "tabs") @Hidden
     public static String villagerRecruitsTabCustomIcon = "";
     @Entry(category = "tabs") @Hidden
+    public static int villagerRecruitsTabIconScale = 100;
+    @Entry(category = "tabs") @Hidden
+    public static int villagerRecruitsTabIconNudgeUp = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int villagerRecruitsTabIconNudgeDown = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int villagerRecruitsTabIconNudgeLeft = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int villagerRecruitsTabIconNudgeRight = 0;
+    @Entry(category = "tabs") @Hidden
     public static int villagerRecruitsTabOrder = 0;
 
     @Entry(category = "tabs") @Hidden
@@ -351,6 +546,16 @@ public class ModTabsConfig extends MidnightConfig {
     @Entry(category = "tabs") @Hidden
     public static String apothicAttributesTabCustomIcon = "";
     @Entry(category = "tabs") @Hidden
+    public static int apothicAttributesTabIconScale = 100;
+    @Entry(category = "tabs") @Hidden
+    public static int apothicAttributesTabIconNudgeUp = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int apothicAttributesTabIconNudgeDown = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int apothicAttributesTabIconNudgeLeft = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int apothicAttributesTabIconNudgeRight = 0;
+    @Entry(category = "tabs") @Hidden
     public static int apothicAttributesTabOrder = 0;
 
     @Comment(category = "tabs") public static CommentText spacer10;
@@ -363,6 +568,16 @@ public class ModTabsConfig extends MidnightConfig {
 
     @Entry(category = "tabs") @Hidden
     public static String journeyMapTabCustomIcon = "";
+    @Entry(category = "tabs") @Hidden
+    public static int journeyMapTabIconScale = 100;
+    @Entry(category = "tabs") @Hidden
+    public static int journeyMapTabIconNudgeUp = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int journeyMapTabIconNudgeDown = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int journeyMapTabIconNudgeLeft = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int journeyMapTabIconNudgeRight = 0;
     @Entry(category = "tabs") @Hidden
     public static int journeyMapTabOrder = 0;
 
@@ -380,6 +595,16 @@ public class ModTabsConfig extends MidnightConfig {
     @Entry(category = "tabs") @Hidden
     public static String l2ArtifactsTabCustomIcon = "";
     @Entry(category = "tabs") @Hidden
+    public static int l2ArtifactsTabIconScale = 100;
+    @Entry(category = "tabs") @Hidden
+    public static int l2ArtifactsTabIconNudgeUp = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int l2ArtifactsTabIconNudgeDown = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int l2ArtifactsTabIconNudgeLeft = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int l2ArtifactsTabIconNudgeRight = 0;
+    @Entry(category = "tabs") @Hidden
     public static int l2ArtifactsTabOrder = 0;
 
     @Entry(category = "tabs") @Hidden
@@ -395,6 +620,16 @@ public class ModTabsConfig extends MidnightConfig {
 
     @Entry(category = "tabs") @Hidden
     public static String l2AttributesTabCustomIcon = "";
+    @Entry(category = "tabs") @Hidden
+    public static int l2AttributesTabIconScale = 100;
+    @Entry(category = "tabs") @Hidden
+    public static int l2AttributesTabIconNudgeUp = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int l2AttributesTabIconNudgeDown = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int l2AttributesTabIconNudgeLeft = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int l2AttributesTabIconNudgeRight = 0;
     @Entry(category = "tabs") @Hidden
     public static int l2AttributesTabOrder = 0;
 
@@ -412,6 +647,16 @@ public class ModTabsConfig extends MidnightConfig {
     @Entry(category = "tabs") @Hidden
     public static String l2HostilityTabCustomIcon = "";
     @Entry(category = "tabs") @Hidden
+    public static int l2HostilityTabIconScale = 100;
+    @Entry(category = "tabs") @Hidden
+    public static int l2HostilityTabIconNudgeUp = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int l2HostilityTabIconNudgeDown = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int l2HostilityTabIconNudgeLeft = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int l2HostilityTabIconNudgeRight = 0;
+    @Entry(category = "tabs") @Hidden
     public static int l2HostilityTabOrder = 0;
 
     @Entry(category = "tabs") @Hidden
@@ -427,6 +672,16 @@ public class ModTabsConfig extends MidnightConfig {
 
     @Entry(category = "tabs") @Hidden
     public static String mapAtlasesTabCustomIcon = "";
+    @Entry(category = "tabs") @Hidden
+    public static int mapAtlasesTabIconScale = 100;
+    @Entry(category = "tabs") @Hidden
+    public static int mapAtlasesTabIconNudgeUp = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int mapAtlasesTabIconNudgeDown = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int mapAtlasesTabIconNudgeLeft = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int mapAtlasesTabIconNudgeRight = 0;
     @Entry(category = "tabs") @Hidden
     public static int mapAtlasesTabOrder = 0;
 
@@ -444,6 +699,16 @@ public class ModTabsConfig extends MidnightConfig {
     @Entry(category = "tabs") @Hidden
     public static String modularGolemsTabCustomIcon = "";
     @Entry(category = "tabs") @Hidden
+    public static int modularGolemsTabIconScale = 100;
+    @Entry(category = "tabs") @Hidden
+    public static int modularGolemsTabIconNudgeUp = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int modularGolemsTabIconNudgeDown = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int modularGolemsTabIconNudgeLeft = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int modularGolemsTabIconNudgeRight = 0;
+    @Entry(category = "tabs") @Hidden
     public static int modularGolemsTabOrder = 0;
 
     @Entry(category = "tabs") @Hidden
@@ -459,6 +724,16 @@ public class ModTabsConfig extends MidnightConfig {
 
     @Entry(category = "tabs") @Hidden
     public static String motpTabCustomIcon = "";
+    @Entry(category = "tabs") @Hidden
+    public static int motpTabIconScale = 100;
+    @Entry(category = "tabs") @Hidden
+    public static int motpTabIconNudgeUp = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int motpTabIconNudgeDown = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int motpTabIconNudgeLeft = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int motpTabIconNudgeRight = 0;
     @Entry(category = "tabs") @Hidden
     public static int motpTabOrder = 0;
 
@@ -476,6 +751,16 @@ public class ModTabsConfig extends MidnightConfig {
     @Entry(category = "tabs") @Hidden
     public static String passiveSkillTreeTabCustomIcon = "";
     @Entry(category = "tabs") @Hidden
+    public static int passiveSkillTreeTabIconScale = 100;
+    @Entry(category = "tabs") @Hidden
+    public static int passiveSkillTreeTabIconNudgeUp = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int passiveSkillTreeTabIconNudgeDown = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int passiveSkillTreeTabIconNudgeLeft = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int passiveSkillTreeTabIconNudgeRight = 0;
+    @Entry(category = "tabs") @Hidden
     public static int passiveSkillTreeTabOrder = 0;
 
     @Entry(category = "tabs") @Hidden
@@ -491,6 +776,16 @@ public class ModTabsConfig extends MidnightConfig {
 
     @Entry(category = "tabs") @Hidden
     public static String pufferfishSkillsTabCustomIcon = "";
+    @Entry(category = "tabs") @Hidden
+    public static int pufferfishSkillsTabIconScale = 100;
+    @Entry(category = "tabs") @Hidden
+    public static int pufferfishSkillsTabIconNudgeUp = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int pufferfishSkillsTabIconNudgeDown = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int pufferfishSkillsTabIconNudgeLeft = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int pufferfishSkillsTabIconNudgeRight = 0;
     @Entry(category = "tabs") @Hidden
     public static int pufferfishSkillsTabOrder = 0;
 
@@ -508,6 +803,16 @@ public class ModTabsConfig extends MidnightConfig {
     @Entry(category = "tabs") @Hidden
     public static String runicSkillsTabCustomIcon = "";
     @Entry(category = "tabs") @Hidden
+    public static int runicSkillsTabIconScale = 100;
+    @Entry(category = "tabs") @Hidden
+    public static int runicSkillsTabIconNudgeUp = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int runicSkillsTabIconNudgeDown = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int runicSkillsTabIconNudgeLeft = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int runicSkillsTabIconNudgeRight = 0;
+    @Entry(category = "tabs") @Hidden
     public static int runicSkillsTabOrder = 0;
 
     @Entry(category = "tabs") @Hidden
@@ -524,6 +829,16 @@ public class ModTabsConfig extends MidnightConfig {
     @Entry(category = "tabs") @Hidden
     public static String reskillableReimaginedTabCustomIcon = "";
     @Entry(category = "tabs") @Hidden
+    public static int reskillableReimaginedTabIconScale = 100;
+    @Entry(category = "tabs") @Hidden
+    public static int reskillableReimaginedTabIconNudgeUp = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int reskillableReimaginedTabIconNudgeDown = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int reskillableReimaginedTabIconNudgeLeft = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int reskillableReimaginedTabIconNudgeRight = 0;
+    @Entry(category = "tabs") @Hidden
     public static int reskillableReimaginedTabOrder = 0;
 
     @Entry(category = "tabs") @Hidden
@@ -539,6 +854,16 @@ public class ModTabsConfig extends MidnightConfig {
 
     @Entry(category = "tabs") @Hidden
     public static String sophisticatedBackpacksTabCustomIcon = "";
+    @Entry(category = "tabs") @Hidden
+    public static int sophisticatedBackpacksTabIconScale = 100;
+    @Entry(category = "tabs") @Hidden
+    public static int sophisticatedBackpacksTabIconNudgeUp = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int sophisticatedBackpacksTabIconNudgeDown = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int sophisticatedBackpacksTabIconNudgeLeft = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int sophisticatedBackpacksTabIconNudgeRight = 0;
     @Entry(category = "tabs") @Hidden
     public static int sophisticatedBackpacksTabOrder = 0;
 
@@ -559,6 +884,16 @@ public class ModTabsConfig extends MidnightConfig {
     @Entry(category = "tabs") @Hidden
     public static String travelersBackpackTabCustomIcon = "";
     @Entry(category = "tabs") @Hidden
+    public static int travelersBackpackTabIconScale = 100;
+    @Entry(category = "tabs") @Hidden
+    public static int travelersBackpackTabIconNudgeUp = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int travelersBackpackTabIconNudgeDown = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int travelersBackpackTabIconNudgeLeft = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int travelersBackpackTabIconNudgeRight = 0;
+    @Entry(category = "tabs") @Hidden
     public static int travelersBackpackTabOrder = 0;
 
     @Entry(category = "tabs") @Hidden
@@ -574,6 +909,16 @@ public class ModTabsConfig extends MidnightConfig {
 
     @Entry(category = "tabs") @Hidden
     public static String xaerosMapTabCustomIcon = "";
+    @Entry(category = "tabs") @Hidden
+    public static int xaerosMapTabIconScale = 100;
+    @Entry(category = "tabs") @Hidden
+    public static int xaerosMapTabIconNudgeUp = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int xaerosMapTabIconNudgeDown = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int xaerosMapTabIconNudgeLeft = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int xaerosMapTabIconNudgeRight = 0;
     @Entry(category = "tabs") @Hidden
     public static int xaerosMapTabOrder = 0;
 

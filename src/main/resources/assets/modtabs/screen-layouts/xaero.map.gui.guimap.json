@@ -1,0 +1,14 @@
+{
+  "offsetX": 41,
+  "offsetY": 240,
+  "scale": 0.79022276,
+  "tabSpacing": 1,
+  "rotation": 0.0,
+  "nextButtonOffsetX": 0,
+  "nextButtonOffsetY": -1,
+  "nextButtonRotation": 0.0,
+  "iconRotation": 0,
+  "tuckDirection": "DOWN",
+  "anchor": "SCREEN_ABSOLUTE",
+  "tabOrder": "LEFT_TO_RIGHT"
+}

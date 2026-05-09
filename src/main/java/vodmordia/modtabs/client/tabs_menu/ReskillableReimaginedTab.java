@@ -9,7 +9,6 @@ import vodmordia.modtabs.ModTabs;
 import vodmordia.modtabs.api.tabs_menu.ConfigurableCustomIconTab;
 import vodmordia.modtabs.api.tabs_menu.TabConfig;
 import vodmordia.modtabs.api.tabs_menu.ScreenRegistry;
-import vodmordia.modtabs.api.tabs_menu.TabPositioning;
 import vodmordia.modtabs.config.Config;
 import vodmordia.modtabs.integration.ModIntegration;
 import vodmordia.modtabs.integration.ModIntegrationManager;
@@ -32,7 +31,7 @@ public class ReskillableReimaginedTab extends ConfigurableCustomIconTab {
                 context.gui.fill(context.x + 7, context.y + 5, context.x + 19, context.y + 17, 0xFF8B4513);
                 context.gui.fill(context.x + 9, context.y + 7, context.x + 17, context.y + 15, 0xFFFFF8DC);
             }
-        }, Config.Baked.reskillableReimaginedTabCustomIcon, "reskillableReimagined");
+        }, Config.Baked.reskillableReimaginedTabCustomIcon, "reskillableReimagined", 13, 13);
     }
 
     @Override
@@ -76,7 +75,6 @@ public class ReskillableReimaginedTab extends ConfigurableCustomIconTab {
             Class<? extends Screen> screenClass = (Class<? extends Screen>) skillScreenClass;
             ScreenRegistry.builder()
                 .withStandardDimensions()
-                .withPositioning(TabPositioning.GUI_RELATIVE)
                 .registerAllTabs(screenClass);
         } catch (ClassNotFoundException e) {
             // Reskillable Reimagined not present, skip registration

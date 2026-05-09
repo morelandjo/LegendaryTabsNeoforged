@@ -8,14 +8,11 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
 import org.jetbrains.annotations.NotNull;
 import vodmordia.modtabs.api.tabs_menu.TabBase;
-import vodmordia.modtabs.api.tabs_menu.TabPositioning;
 import vodmordia.modtabs.api.tabs_menu.TabsMenu;
 import vodmordia.modtabs.api.tabs_menu.TabDisplayMode;
 
 import static vodmordia.modtabs.api.tabs_menu.TabBase.TAB_HEIGHT;
 import static vodmordia.modtabs.api.tabs_menu.TabBase.TAB_WIDTH;
-import static vodmordia.modtabs.api.tabs_menu.TabBase.TAB_HEIGHT_VERTICAL;
-import static vodmordia.modtabs.api.tabs_menu.TabBase.TAB_WIDTH_VERTICAL;
 
 
 public class TabButton extends Button {
@@ -30,55 +27,38 @@ public class TabButton extends Button {
     public Screen screen;
     public boolean isDisabled;
     public TabDisplayMode displayMode;
-    public TabPositioning positioning;
 
     // Long-press state — set when the user starts holding the mouse on the current screen's tab.
     private long pressStartMs = 0L;
+
+    /** True between mouseClicked and mouseReleased on this specific tab. Used by the
+     *  screenwide release handler so it only cancels vanilla's release flow when the
+     *  release actually belongs to a tab — otherwise releases over slots are swallowed. */
+    public boolean hasPendingPress() { return pressStartMs > 0L; }
 
     /** Stored anchor (top-left of the tab BAR for this screen). Per-tab position derives from this + index + scale + spacing. */
     private int barLeft;
     private int barTop;
 
     public TabButton(TabBase tabBase, Player player, Screen screen, int tabPositionIndex, int leftScreenPos, int topScreenPos, TabDisplayMode displayMode) {
-        this(tabBase, player, screen, tabPositionIndex, leftScreenPos, topScreenPos, displayMode, TabPositioning.GUI_RELATIVE);
-    }
-
-    public TabButton(TabBase tabBase, Player player, Screen screen, int tabPositionIndex, int leftScreenPos, int topScreenPos, TabDisplayMode displayMode, TabPositioning positioning) {
-        // Initial position uses *current* effective scale/spacing so the first frame is correct.
-        super(calculateX(leftScreenPos, tabPositionIndex, positioning),
-              calculateY(topScreenPos, tabPositionIndex, displayMode, positioning),
-              widthFor(positioning), heightFor(positioning), Component.literal(""), button -> {}, DEFAULT_NARRATION);
+        super(calculateX(leftScreenPos, tabPositionIndex),
+              calculateY(topScreenPos, tabPositionIndex, displayMode),
+              TAB_WIDTH, TAB_HEIGHT, Component.literal(""), button -> {}, DEFAULT_NARRATION);
 
         this.tabPositionIndex = tabPositionIndex;
         this.player = player;
         this.screen = screen;
         this.displayMode = displayMode;
-        this.positioning = positioning;
         this.barLeft = leftScreenPos;
         this.barTop = topScreenPos;
         this.setTabBase(tabBase);
     }
 
-    private static int widthFor(TabPositioning positioning) {
-        return positioning != null && positioning.isVertical() ? TAB_WIDTH_VERTICAL : TAB_WIDTH;
-    }
-
-    private static int heightFor(TabPositioning positioning) {
-        return positioning != null && positioning.isVertical() ? TAB_HEIGHT_VERTICAL : TAB_HEIGHT;
-    }
-
-    private static int calculateX(int leftScreenPos, int tabPositionIndex, TabPositioning positioning) {
-        if (positioning != null && positioning.isVertical()) {
-            return leftScreenPos;
-        }
+    private static int calculateX(int leftScreenPos, int tabPositionIndex) {
         return leftScreenPos + tabPositionIndex * TabsMenu.primaryAxisStep();
     }
 
-    private static int calculateY(int topScreenPos, int tabPositionIndex, TabDisplayMode displayMode, TabPositioning positioning) {
-        if (positioning != null && positioning.isVertical()) {
-            return topScreenPos + tabPositionIndex * TabsMenu.primaryAxisStep();
-        }
-        // Horizontal: inverted hangs below the GUI top edge, normal floats above by the scaled tab height.
+    private static int calculateY(int topScreenPos, int tabPositionIndex, TabDisplayMode displayMode) {
         return displayMode == TabDisplayMode.INVERTED ?
             topScreenPos :
             topScreenPos - TabsMenu.effectiveTabHeight();
@@ -90,6 +70,13 @@ public class TabButton extends Button {
             pressStartMs = System.currentTimeMillis();
             setTooltip(null); // suppress tooltip while gesturing
             return true;
+        }
+        // In edit mode, never consume the click. Vanilla Button.mouseClicked would
+        // return true for any click in our bounds (calling our onPress, which is a no-op
+        // in edit mode) — that swallows clicks that should reach editor-panel widgets
+        // registered AFTER us in the screen's children list.
+        if (TabsMenu.isEditing(this.screen)) {
+            return false;
         }
         return super.mouseClicked(mouseX, mouseY, button);
     }
@@ -147,10 +134,17 @@ public class TabButton extends Button {
             if (TabsMenu.renderingBehindPanel) return;
         }
         // Recompute position from the bar anchor each render so live scale/spacing edits are visible.
-        int x = calculateX(barLeft, tabPositionIndex, positioning);
-        int y = calculateY(barTop, tabPositionIndex, displayMode, positioning);
+        int x = calculateX(barLeft, tabPositionIndex);
+        int y = calculateY(barTop, tabPositionIndex, displayMode);
         setX(x);
         setY(y);
+
+        // Override raw-bounds isHovered (set by AbstractWidget.render before this method) with
+        // our scaled-bounds isMouseOver. updateTooltip runs AFTER renderWidget and reads
+        // isHovered, so this ensures only the tab actually under the cursor shows its tooltip —
+        // otherwise neighboring tabs' raw 32px-wide bounds overlap at small scale and the last-
+        // rendered tab's tooltip wins, making R→L tab tooltips appear backwards.
+        this.isHovered = this.isMouseOver(mouseX, mouseY);
 
         // Tuck offset is now a rotation-aware 2D vector (always points screen-down after
         // rotation), so consume both axes regardless of bar orientation.
@@ -195,16 +189,23 @@ public class TabButton extends Button {
             if (scale != 1.0f) {
                 gui.pose().translate(animatedX, animatedY, 0);
                 gui.pose().scale(scale, scale, 1.0f);
-                this.tabBase.render(gui, 0, 0, effectiveHover, this.displayMode, this.positioning);
+                this.tabBase.render(gui, 0, 0, effectiveHover, this.displayMode);
             } else {
-                this.tabBase.render(gui, animatedX, animatedY, effectiveHover, this.displayMode, this.positioning);
+                this.tabBase.render(gui, animatedX, animatedY, effectiveHover, this.displayMode);
             }
             gui.pose().popPose();
         } else {
-            this.tabBase.render(gui, animatedX, animatedY, effectiveHover, this.displayMode, this.positioning);
+            this.tabBase.render(gui, animatedX, animatedY, effectiveHover, this.displayMode);
         }
 
-        if (pressStartMs > 0L && !TabsMenu.isEditing(this.screen)) {
+        // Long-press to enter edit mode is only armed on the *home* tab — i.e. the one whose
+        // openTargetScreen() represents the screen the user is currently viewing. This stops
+        // users from accidentally entering edit mode by holding any tab, and gives a single
+        // discoverable gesture per screen (long-press the home icon). isHomeTab is distinct
+        // from isCurrentlyUsed because some tabs (Inventory, FTB Quests, etc.) deliberately
+        // return false from isCurrentlyUsed to keep the click action available — but they're
+        // still the "home" tab for their screen as far as the long-press gesture is concerned.
+        if (pressStartMs > 0L && this.tabBase.isHomeTab(this.screen) && !TabsMenu.isEditing(this.screen)) {
             long elapsed = System.currentTimeMillis() - pressStartMs;
             if (elapsed >= LONG_PRESS_MS) {
                 pressStartMs = 0L;
@@ -229,8 +230,8 @@ public class TabButton extends Button {
     public void updatePosition(int leftScreenPos, int topScreenPos) {
         this.barLeft = leftScreenPos;
         this.barTop = topScreenPos;
-        setX(calculateX(leftScreenPos, tabPositionIndex, positioning));
-        setY(calculateY(topScreenPos, tabPositionIndex, displayMode, positioning));
+        setX(calculateX(leftScreenPos, tabPositionIndex));
+        setY(calculateY(topScreenPos, tabPositionIndex, displayMode));
     }
 
     @Override
@@ -239,8 +240,8 @@ public class TabButton extends Button {
         // updatePosition is called once per frame, but a click event arriving before that
         // frame's render runs would otherwise see stale coordinates after save/scale/spacing
         // changes.
-        int x = calculateX(barLeft, tabPositionIndex, positioning);
-        int y = calculateY(barTop, tabPositionIndex, displayMode, positioning);
+        int x = calculateX(barLeft, tabPositionIndex);
+        int y = calculateY(barTop, tabPositionIndex, displayMode);
 
         // Tuck offset is now a rotation-aware 2D vector (always points screen-down after
         // rotation), so consume both axes regardless of bar orientation.

@@ -11,7 +11,6 @@ import vodmordia.modtabs.ModTabs;
 import vodmordia.modtabs.api.tabs_menu.ConfigurableItemTab;
 import vodmordia.modtabs.api.tabs_menu.TabConfig;
 import vodmordia.modtabs.api.tabs_menu.ScreenRegistry;
-import vodmordia.modtabs.api.tabs_menu.TabPositioning;
 import vodmordia.modtabs.config.BackpackSlot;
 import vodmordia.modtabs.config.Config;
 import vodmordia.modtabs.integration.ModIntegration;
@@ -317,7 +316,6 @@ public class SophisticatedBackpacksTab extends ConfigurableItemTab {
     public void initTabOnScreens() {
         ScreenRegistry.builder()
             .withStandardDimensions()
-            .withPositioning(TabPositioning.GUI_RELATIVE)
             .registerAllTabs("net.p3pp3rf1y.sophisticatedbackpacks.client.gui.BackpackScreen");
     }
 

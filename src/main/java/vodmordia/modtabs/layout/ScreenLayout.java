@@ -25,6 +25,30 @@ public class ScreenLayout {
     /** Rotation applied to each icon around its own center (0, 90, 180, 270). */
     public int iconRotation = 0;
 
+    /** Direction (in screen-space) tabs slide when tucked. Default DOWN matches legacy. */
+    public TuckDirection tuckDirection = TuckDirection.DOWN;
+
+    /**
+     * Reference frame for {@link #offsetX}/{@link #offsetY}. Default
+     * {@link Anchor#GUI_RELATIVE} matches today's centered-on-GUI behavior.
+     */
+    public Anchor anchor = Anchor.GUI_RELATIVE;
+
+    /**
+     * Visual order of tabs in the bar. {@link TabOrder#RIGHT_TO_LEFT} flips the
+     * indices so the first tab renders on the right end of the unrotated bar —
+     * useful when the bar is rotated 180° and the user wants inventory to stay
+     * on the visible left after rotation.
+     */
+    public TabOrder tabOrder = TabOrder.LEFT_TO_RIGHT;
+
+    /**
+     * Maximum tabs visible on one page for this screen. {@code 0} means unlimited
+     * (all enabled tabs render on a single page). Pagination kicks in when this is
+     * positive and less than the total enabled tab count.
+     */
+    public int maxTabsPerPage = 6;
+
     public ScreenLayout() {}
 
     public ScreenLayout(int offsetX, int offsetY) {
@@ -70,11 +94,18 @@ public class ScreenLayout {
     public boolean isDefault() {
         return offsetX == 0 && offsetY == 0 && scale == 1.0f && tabSpacing == 1 && rotation == 0.0f
             && nextButtonOffsetX == 0 && nextButtonOffsetY == 0 && nextButtonRotation == 0.0f
-            && iconRotation == 0;
+            && iconRotation == 0 && tuckDirection == TuckDirection.DOWN
+            && anchor == Anchor.GUI_RELATIVE && tabOrder == TabOrder.LEFT_TO_RIGHT
+            && maxTabsPerPage == 6;
     }
 
     public ScreenLayout copy() {
-        return new ScreenLayout(offsetX, offsetY, scale, tabSpacing, rotation,
+        ScreenLayout c = new ScreenLayout(offsetX, offsetY, scale, tabSpacing, rotation,
             nextButtonOffsetX, nextButtonOffsetY, nextButtonRotation, iconRotation);
+        c.tuckDirection = tuckDirection;
+        c.anchor = anchor;
+        c.tabOrder = tabOrder;
+        c.maxTabsPerPage = maxTabsPerPage;
+        return c;
     }
 }

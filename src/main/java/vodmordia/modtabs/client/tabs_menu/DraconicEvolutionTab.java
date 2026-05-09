@@ -82,7 +82,6 @@ public class DraconicEvolutionTab extends IntegrationIconTab {
         ScreenRegistry.builder()
                 .withDimensions(p -> 218, p -> 230)
                 .inverted()
-                .atTop()
                 .forceRegisterAllTabs(ScreenClasses.DRACONIC_EVOLUTION_CONFIGURABLE_ITEM);
     }
 

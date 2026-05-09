@@ -52,7 +52,6 @@ public abstract class IntegrationItemTab extends ConfigurableItemTab {
         ScreenRegistry.builder()
                 .withDimensions(layout.dimensions().width, layout.dimensions().height)
                 .withDisplayMode(layout.displayMode())
-                .withPositioning(layout.position().value)
                 .registerAllTabs(fqns);
     }
 }

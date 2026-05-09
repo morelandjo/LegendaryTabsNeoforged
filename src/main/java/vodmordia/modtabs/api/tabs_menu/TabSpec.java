@@ -53,20 +53,10 @@ public record TabSpec(
     }
 
     /**
-     * Layout describes both dimensions (width/height of the host GUI) and where the
-     * tab bar sits relative to it (bottom, top, GUI-relative).
+     * Layout describes the host GUI's nominal dimensions and whether the tab background
+     * renders inverted. Bar position is decided per-screen by the layout JSON, not here.
      */
-    public record Layout(boolean inverted, Position position, Dimensions dimensions) {
-
-        public enum Position {
-            GUI_RELATIVE(TabPositioning.GUI_RELATIVE),
-            SCREEN_TOP(TabPositioning.SCREEN_TOP),
-            SCREEN_BOTTOM(TabPositioning.SCREEN_BOTTOM),
-            SCREEN_RIGHT(TabPositioning.SCREEN_RIGHT);
-
-            public final TabPositioning value;
-            Position(TabPositioning v) { this.value = v; }
-        }
+    public record Layout(boolean inverted, Dimensions dimensions) {
 
         /**
          * Common host-screen sizes. Backed by fixed Function<Player,Integer> instances so
@@ -91,11 +81,9 @@ public record TabSpec(
             return inverted ? TabDisplayMode.INVERTED : TabDisplayMode.NORMAL;
         }
 
-        // Common preset shortcuts
-        public static Layout invertedTop() { return new Layout(true, Position.SCREEN_TOP, Dimensions.STANDARD); }
-        public static Layout standardBottom() { return new Layout(false, Position.SCREEN_BOTTOM, Dimensions.STANDARD); }
-        public static Layout guiRelative() { return new Layout(false, Position.GUI_RELATIVE, Dimensions.STANDARD); }
-        public static Layout guiRelativeInverted() { return new Layout(true, Position.GUI_RELATIVE, Dimensions.STANDARD); }
-        public static Layout screenRight() { return new Layout(false, Position.SCREEN_RIGHT, Dimensions.STANDARD); }
+        public static Layout invertedTop() { return new Layout(true, Dimensions.STANDARD); }
+        public static Layout standardBottom() { return new Layout(false, Dimensions.STANDARD); }
+        public static Layout guiRelative() { return new Layout(false, Dimensions.STANDARD); }
+        public static Layout guiRelativeInverted() { return new Layout(true, Dimensions.STANDARD); }
     }
 }

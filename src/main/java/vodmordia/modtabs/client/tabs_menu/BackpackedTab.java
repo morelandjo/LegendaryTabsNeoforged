@@ -12,7 +12,6 @@ import vodmordia.modtabs.ModTabs;
 import vodmordia.modtabs.api.tabs_menu.ConfigurableItemTab;
 import vodmordia.modtabs.api.tabs_menu.TabConfig;
 import vodmordia.modtabs.api.tabs_menu.ScreenRegistry;
-import vodmordia.modtabs.api.tabs_menu.TabPositioning;
 import vodmordia.modtabs.config.Config;
 import vodmordia.modtabs.integration.ModIntegration;
 import vodmordia.modtabs.integration.ModIntegrationManager;
@@ -142,7 +141,6 @@ public class BackpackedTab extends ConfigurableItemTab {
     public void initTabOnScreens() {
         ScreenRegistry.builder()
             .withStandardDimensions()
-            .withPositioning(TabPositioning.GUI_RELATIVE)
             .inverted()
             .registerAllTabs(vodmordia.modtabs.utils.ScreenClasses.BACKPACKED_SCREEN);
     }

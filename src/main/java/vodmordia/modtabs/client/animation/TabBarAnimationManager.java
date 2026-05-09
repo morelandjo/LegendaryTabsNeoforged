@@ -1,7 +1,6 @@
 package vodmordia.modtabs.client.animation;
 
 import vodmordia.modtabs.api.tabs_menu.TabDisplayMode;
-import vodmordia.modtabs.api.tabs_menu.TabPositioning;
 
 public class TabBarAnimationManager {
     public enum AnimationState {
@@ -86,7 +85,7 @@ public class TabBarAnimationManager {
 
     /** @deprecated See {@link #getOffsetFactor()}. */
     @Deprecated
-    public int getXOffset(int tabWidth, TabPositioning positioning) {
+    public int getXOffset(int tabWidth) {
         update();
         return (int) (tabWidth * currentOffsetFactor());
     }

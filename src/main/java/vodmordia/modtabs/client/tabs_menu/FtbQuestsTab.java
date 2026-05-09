@@ -72,7 +72,6 @@ public class FtbQuestsTab extends ConfigurableItemTab {
         ScreenRegistry.builder()
             .withStandardDimensions()
             .inverted()
-            .atTop()
             .registerAllTabs(
                 vodmordia.modtabs.utils.ScreenClasses.FTB_LIBRARY_WRAPPER,
                 vodmordia.modtabs.utils.ScreenClasses.FTB_QUESTS_QUEST_SCREEN,
