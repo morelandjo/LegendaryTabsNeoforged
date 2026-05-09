@@ -1026,11 +1026,11 @@ public class TabsMenu {
         // Force a re-init of the current screen so its tab row picks up the new
         // enabled/order config — TabButton instances are added to screen.children
         // at Init.Post time and won't reflect later config writes otherwise.
+        // Routes through reinitCurrentScreen so Screen.initialized is cleared via
+        // reflection first, otherwise vanilla Screen.init short-circuits and only
+        // calls repositionElements (skipping Init.Post and our tab rebuild).
         if (configChanged) {
-            Screen current = Minecraft.getInstance().screen;
-            if (current != null) {
-                Minecraft.getInstance().setScreen(current);
-            }
+            reinitCurrentScreen();
         }
     }
 
@@ -1122,7 +1122,7 @@ public class TabsMenu {
         int[] cr = gsContentRect(screen);
         int areaW = cr[2] - GS_PAD * 2;
         int cellsPerRow = Math.max(1, areaW / GS_CELL);
-        int rows = rowsFor(gsDraftOrder.size(), cellsPerRow);
+        int rows = rowsFor(gsVisibleOrderKeys().size(), cellsPerRow);
         int viewportH = cr[3] - GS_HEADER_H;
         return Math.max(0, rows * GS_CELL - viewportH);
     }
@@ -1131,8 +1131,21 @@ public class TabsMenu {
         return count == 0 ? 0 : (count + cellsPerRow - 1) / cellsPerRow;
     }
 
+    /** Order tab only shows tabs flagged enabled in gsDraftEnabled — disabled tabs are hidden
+     *  there so the user only reorders what's actually visible in-game. The full gsDraftOrder
+     *  list is still the canonical source of truth (we mutate it on drag); this helper is just
+     *  the visible projection. */
+    private static java.util.List<String> gsVisibleOrderKeys() {
+        if (gsDraftOrder == null || gsDraftEnabled == null) return java.util.Collections.emptyList();
+        java.util.List<String> out = new java.util.ArrayList<>();
+        for (String k : gsDraftOrder) {
+            if (Boolean.TRUE.equals(gsDraftEnabled.get(k))) out.add(k);
+        }
+        return out;
+    }
+
     private static int gsOrderHitTest(Screen screen, double mx, double my) {
-        int n = gsDraftOrder == null ? 0 : gsDraftOrder.size();
+        int n = gsVisibleOrderKeys().size();
         for (int i = 0; i < n; i++) {
             int[] r = gsOrderSlotRect(screen, i);
             if (mx >= r[0] && mx < r[0] + r[2] && my >= r[1] && my < r[1] + r[3]) return i;
@@ -1223,13 +1236,14 @@ public class TabsMenu {
 
         gsScrollOrder = Math.max(0, Math.min(gsScrollOrder, gsMaxScrollOrder(screen)));
 
+        java.util.List<String> visible = gsVisibleOrderKeys();
         gui.enableScissor(cr[0], cr[1] + GS_HEADER_H, cr[0] + cr[2], cr[1] + cr[3]);
-        for (int i = 0; i < gsDraftOrder.size(); i++) {
+        for (int i = 0; i < visible.size(); i++) {
             if (i == gsDraggingIndex) continue;
             int[] slot = gsOrderSlotRect(screen, i);
-            renderTabIconAt(gui, gsDraftOrder.get(i), slot[0], slot[1]);
+            renderTabIconAt(gui, visible.get(i), slot[0], slot[1]);
         }
-        if (gsDraggingIndex >= 0 && gsDraggingIndex < gsDraftOrder.size()) {
+        if (gsDraggingIndex >= 0 && gsDraggingIndex < visible.size()) {
             int[] slot = gsOrderSlotRect(screen, gsDraggingIndex);
             int dragX = (int) (mouseX - GS_CELL / 2);
             int dragY = (int) (mouseY - GS_CELL / 2);
@@ -1237,7 +1251,7 @@ public class TabsMenu {
             gui.fill(slot[0], slot[1] + slot[3] - 1, slot[0] + slot[2], slot[1] + slot[3], 0xFFFFAA00);
             gui.fill(slot[0], slot[1], slot[0] + 1, slot[1] + slot[3], 0xFFFFAA00);
             gui.fill(slot[0] + slot[2] - 1, slot[1], slot[0] + slot[2], slot[1] + slot[3], 0xFFFFAA00);
-            renderTabIconAt(gui, gsDraftOrder.get(gsDraggingIndex), dragX, dragY);
+            renderTabIconAt(gui, visible.get(gsDraggingIndex), dragX, dragY);
         }
         gui.disableScissor();
     }
@@ -1412,10 +1426,23 @@ public class TabsMenu {
             gsDragMouseX = mx;
             gsDragMouseY = my;
             int targetIdx = gsOrderHitTest(screen, mx, my);
-            if (targetIdx >= 0 && targetIdx != gsDraggingIndex) {
-                String moving = gsDraftOrder.remove(gsDraggingIndex);
-                gsDraftOrder.add(targetIdx, moving);
-                gsDraggingIndex = targetIdx;
+            // gsDraggingIndex / targetIdx are positions in the *visible* (enabled-only) list;
+            // gsDraftOrder is the full list with disabled tabs interleaved. Translate by
+            // looking up the moving + target keys in the full list and reinserting around
+            // the target's position so disabled tabs stay where they were.
+            java.util.List<String> visible = gsVisibleOrderKeys();
+            if (targetIdx >= 0 && targetIdx != gsDraggingIndex
+                    && gsDraggingIndex < visible.size() && targetIdx < visible.size()) {
+                String moving = visible.get(gsDraggingIndex);
+                String target = visible.get(targetIdx);
+                int fromFull = gsDraftOrder.indexOf(moving);
+                int toFull = gsDraftOrder.indexOf(target);
+                if (fromFull >= 0 && toFull >= 0) {
+                    gsDraftOrder.remove(fromFull);
+                    if (fromFull < toFull) toFull--;
+                    gsDraftOrder.add(toFull, moving);
+                    gsDraggingIndex = targetIdx;
+                }
             }
         }
         return true;

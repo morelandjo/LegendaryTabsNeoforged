@@ -187,9 +187,15 @@ public class ClientNeoForgeEvents {
      * Returns true if a widget consumed the click.
      */
     private static boolean dispatchClickToEditorWidget(Screen screen, double mx, double my, int button) {
+        // Snapshot children: dispatching a click can swap focus on a MaxTabsPerPageEditBox,
+        // whose setFocused(false) override triggers reinitCurrentScreen() — that rebuilds
+        // screen.children mid-iteration and throws ConcurrentModificationException if we
+        // walked the live list directly.
+        java.util.List<net.minecraft.client.gui.components.events.GuiEventListener> snapshot =
+                new java.util.ArrayList<>(screen.children());
         net.minecraft.client.gui.components.events.GuiEventListener focused = null;
         boolean dispatched = false;
-        for (var child : screen.children()) {
+        for (var child : snapshot) {
             if (!isEditorWidget(child)) continue;
             if (child instanceof net.minecraft.client.gui.components.AbstractWidget w && w.isMouseOver(mx, my)) {
                 if (w.mouseClicked(mx, my, button)) {
@@ -201,8 +207,8 @@ public class ClientNeoForgeEvents {
         }
         // Defocus any other editor EditBox so only the clicked one (if any) keeps focus —
         // otherwise typing routes to whichever was focused last instead of what the user
-        // just clicked.
-        for (var child : screen.children()) {
+        // just clicked. Use the same snapshot for the same CME-avoidance reason.
+        for (var child : snapshot) {
             if (isEditorEditBox(child) && child != focused
                     && child instanceof net.minecraft.client.gui.components.EditBox eb) {
                 eb.setFocused(false);
@@ -215,7 +221,10 @@ public class ClientNeoForgeEvents {
     }
 
     private static void dispatchReleaseToEditorWidget(Screen screen, double mx, double my, int button) {
-        for (var child : screen.children()) {
+        // Snapshot for the same reason as dispatchClickToEditorWidget.
+        java.util.List<net.minecraft.client.gui.components.events.GuiEventListener> snapshot =
+                new java.util.ArrayList<>(screen.children());
+        for (var child : snapshot) {
             if (!isEditorWidget(child)) continue;
             if (child instanceof net.minecraft.client.gui.components.AbstractWidget w) {
                 w.mouseReleased(mx, my, button);
