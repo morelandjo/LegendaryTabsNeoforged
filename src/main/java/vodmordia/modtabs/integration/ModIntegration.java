@@ -19,6 +19,7 @@ public enum ModIntegration {
     XAEROS_MAP("xaeroworldmap", "Xaero's World Map"),
     JOURNEY_MAP("journeymap", "JourneyMap"),
     DIET("diet", "Diet"),
+    BULKING("bulking", "Bulking"),
     PASSIVE_SKILL_TREE("skilltree", "Passive Skill Tree"),
     PUFFERFISHS_SKILLS("puffish_skills", "Pufferfish's Skills"),
     L2_HOSTILITY("l2hostility", "L2 Hostility"),

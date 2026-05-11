@@ -145,14 +145,6 @@ public class ModTabs
             TabsMenu.register(new DraconicEvolutionTab());
             TabsMenu.register(new ModularGolemsTab());
 
-            // Run inspection for Ars Elixirum if needed
-            try {
-                Class<?> inspectorClass = Class.forName("vodmordia.modtabs.utils.ArsElixirumInspector");
-                Method inspectMethod = inspectorClass.getMethod("inspectModClasses");
-                inspectMethod.invoke(null);
-            } catch (Exception e) {
-                LOGGER.warn("Failed to run Ars Elixirum inspection: " + e.getMessage());
-            }
             TabsMenu.register(new ArsElixirumTab());
 
             TabsMenu.register(new ArsNouveauTab());

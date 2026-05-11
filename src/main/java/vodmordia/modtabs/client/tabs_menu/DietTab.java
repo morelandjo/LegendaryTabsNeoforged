@@ -3,78 +3,69 @@ package vodmordia.modtabs.client.tabs_menu;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
-import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 import vodmordia.modtabs.ModTabs;
-import vodmordia.modtabs.api.tabs_menu.ConfigurableIconTab;
+import vodmordia.modtabs.api.tabs_menu.IntegrationIconTab;
 import vodmordia.modtabs.api.tabs_menu.TabConfig;
-import vodmordia.modtabs.api.tabs_menu.ScreenRegistry;
+import vodmordia.modtabs.api.tabs_menu.TabSpec;
 import vodmordia.modtabs.config.Config;
 import vodmordia.modtabs.integration.ModIntegration;
 import vodmordia.modtabs.integration.ModIntegrationManager;
+import vodmordia.modtabs.utils.ClassCache;
+import vodmordia.modtabs.utils.ScreenClasses;
 
+/**
+ * Tab for Diet (illusivesoulworks, modid {@code diet}). When Bulking is also installed,
+ * we open Bulking's replacement {@code BulkingScreen} instead — Bulking's mixins only
+ * swap the screen at Diet's own internal call sites ({@code DietClientEvents.tick} and
+ * {@code DietClientEvents.getButton}); a direct {@code new DietScreen(...)} from us would
+ * bypass those redirects and show the vanilla Diet UI without Bulking's stomach data.
+ *
+ * <p>Both screen classes share the same {@code (boolean fromInventory)} constructor,
+ * so the swap is purely a class-name choice.
+ */
+@TabConfig(configKey = "dietTab", defaultEnabled = true, defaultOrder = 0)
+public class DietTab extends IntegrationIconTab {
 
-@TabConfig(configKey = "dietTab", defaultEnabled = false, defaultOrder = 0)
-public class DietTab extends ConfigurableIconTab {
-    private static final ResourceLocation DIET_ICON = new ResourceLocation(ModTabs.MOD_ID, "textures/gui/diet.png");
+    // Vanilla apple texture as the default icon — fits the food/diet theme and avoids
+    // shipping a bespoke PNG. Override via the dietTabCustomIcon config if you want.
+    private static final ResourceLocation DIET_ICON =
+            new ResourceLocation("minecraft", "textures/item/apple.png");
+
+    private static final TabSpec SPEC = new TabSpec(
+            "dietTab",
+            ModIntegration.DIET,
+            () -> Config.Baked.dietTabEnabled,
+            "diet",
+            "diet",
+            new TabSpec.Layout(false, TabSpec.Layout.Dimensions.DIET),
+            new String[] { ScreenClasses.DIET_SCREEN, ScreenClasses.BULKING_SCREEN },
+            new String[] { ScreenClasses.DIET_SCREEN, ScreenClasses.BULKING_SCREEN }
+    );
 
     public DietTab() {
-        super(DIET_ICON, Config.Baked.dietTabCustomIcon, "diet");
+        super(SPEC, DIET_ICON, Config.Baked.dietTabCustomIcon);
     }
 
     @Override
     public void openTargetScreen(Player player) {
-        // Commented out until Diet mod is updated to NeoForge 1.21.1
-        //if (Config.Baked.dietTabEnabled && player.level().isClientSide) {
-        //    try {
-        //        Class<?> dietScreenClass = Class.forName("com.illusivesoulworks.diet.client.screen.DietScreen");
-        //        Screen dietScreen = (Screen) dietScreenClass.getDeclaredConstructor(boolean.class)
-        //            .newInstance(Minecraft.getInstance().screen instanceof InventoryScreen);
-        //        Minecraft.getInstance().setScreen(dietScreen);
-        //    } catch (Exception e) {
-        //        // Diet mod not present or failed to open screen
-        //    }
-        //}
-    }
+        if (!Config.Baked.dietTabEnabled || !player.level().isClientSide) return;
 
-    @Override
-    public boolean isEnabled(Player player) {
-        // Commented out until Diet mod is updated to NeoForge 1.21.1
-        return false && Config.Baked.dietTabEnabled && ModIntegrationManager.isModLoaded(ModIntegration.DIET);
-    }
+        boolean fromInventory = Minecraft.getInstance().screen instanceof InventoryScreen;
+        String screenFqn = ModIntegrationManager.isModLoaded(ModIntegration.BULKING)
+                ? ScreenClasses.BULKING_SCREEN
+                : ScreenClasses.DIET_SCREEN;
 
-
-    @Override
-    public boolean isCurrentlyUsed(Screen currentScreen) {
-        // Commented out until Diet mod is updated to NeoForge 1.21.1
-        //try {
-        //    Class<?> dietScreenClass = Class.forName("com.illusivesoulworks.diet.client.screen.DietScreen");
-        //    return dietScreenClass.isInstance(currentScreen);
-        //} catch (ClassNotFoundException e) {
-        //    return false;
-        //}
-        return false;
-    }
-
-    @Override
-    public Component getTooltip() {
-        return Component.translatable("tooltip." + ModTabs.MOD_ID + ".tab.diet.description");
-    }
-
-    @Override
-    public void initTabOnScreens() {
-        // Diet mod is temporarily disabled - mod is not updated to NeoForge 1.21.1
-        // Once Diet mod is updated, we can register the DietScreen here:
-        //try {
-        //    Class<?> dietScreenClass = Class.forName("com.illusivesoulworks.diet.client.screen.DietScreen");
-        //    @SuppressWarnings("unchecked")
-        //    Class<? extends Screen> screenClass = (Class<? extends Screen>) dietScreenClass;
-        //    ScreenRegistry.builder()
-        //        .withDietDimensions()
-        //        .registerAllTabs(screenClass);
-        //} catch (ClassNotFoundException e) {
-        //    // Diet mod not present, skip registration
-        //}
+        try {
+            Class<?> screenClass = ClassCache.resolve(screenFqn);
+            if (screenClass == null) return;
+            Screen screen = (Screen) screenClass
+                    .getDeclaredConstructor(boolean.class)
+                    .newInstance(fromInventory);
+            Minecraft.getInstance().setScreen(screen);
+        } catch (Exception e) {
+            ModTabs.LOGGER.error("Error opening Diet/Bulking screen", e);
+        }
     }
 }

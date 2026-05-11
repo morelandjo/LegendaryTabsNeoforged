@@ -57,6 +57,21 @@ public class FtbQuestsTab extends ConfigurableItemTab {
     }
 
     @Override
+    public boolean isHomeTab(Screen currentScreen) {
+        // isCurrentlyUsed is forced to false to keep this tab clickable, so the default
+        // isHomeTab (=isCurrentlyUsed) never matches — the long-press-to-edit gesture
+        // would never arm on FTB Quests screens. Match the screen class directly here.
+        if (currentScreen == null) return false;
+        String name = currentScreen.getClass().getName();
+        if (name.startsWith("dev.ftb.mods.ftbquests.")) return true;
+        if (vodmordia.modtabs.utils.ScreenClasses.FTB_LIBRARY_WRAPPER.equals(name)) {
+            String wrapped = FtbScreenWrapperUtil.getWrappedGuiClassName(currentScreen);
+            return wrapped != null && wrapped.startsWith("dev.ftb.mods.ftbquests.");
+        }
+        return false;
+    }
+
+    @Override
     public Component getTooltip() {
         return Component.translatable("tooltip." + ModTabs.MOD_ID + ".tab.ftb_quests.description");
     }

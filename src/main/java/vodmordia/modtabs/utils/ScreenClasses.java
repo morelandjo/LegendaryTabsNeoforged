@@ -220,6 +220,20 @@ public final class ScreenClasses {
     public static final String VILLAGER_RECRUITS_FACTION_MAIN_SCREEN =
             "com.talhanation.recruits.client.gui.faction.FactionMainScreen";
 
+    // -- Diet / Bulking ---------------------------------------------------
+    /** Diet's main player UI screen. Constructor: {@code DietScreen(boolean fromInventory)}.
+     *  Note: extends {@code Screen} (NOT {@code AbstractContainerScreen}) and its ySize is
+     *  computed dynamically in init() as {@code groups.size() * 20 + 60}, so 248x166 is just
+     *  a sane default for tab-bar positioning. */
+    public static final String DIET_SCREEN =
+            "com.illusivesoulworks.diet.client.screen.DietScreen";
+    /** Bulking's replacement screen. Same {@code (boolean fromInventory)} constructor as Diet's.
+     *  Bulking ships mixins on {@code DietClientEvents.tick} / {@code .getButton} that swap
+     *  any {@code new DietScreen(...)} call for {@code new BulkingScreen(...)}; since we
+     *  bypass those call sites, we have to pick the class ourselves. */
+    public static final String BULKING_SCREEN =
+            "dev.neire.mc.bulking.client.gui.BulkingScreen";
+
     // -- Apothic Attributes (modid attributeslib on 1.20.1) ---------------
     /** Renderable overlay attached to {@code InventoryScreen} via the mod's own ScreenEvent.Init.Post listener.
      *  Holds the static {@code wasOpen} flag we flip before opening the inventory. */

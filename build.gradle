@@ -118,9 +118,21 @@ repositories {
 //   - Create: Brassworks Missions (1348982) — NeoForge 1.21.1 only
 //   - Biology Dictionary (1426515) — no 1.20.1 build
 //   - Sinytra Connector + Forgified Fabric API + RPG Crafting (Fabric)
+//
+// 1.20.1-only (no NeoForge 1.21.1 build):
+//   - Diet (443570) — illusivesoulworks
+//   - Bulking (1233813) — neirenoir; mandatory hard-dep on Diet, swaps DietScreen for BulkingScreen via mixins
 // =============================================================================
 dependencies {
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
+
+    // MixinGradle's `mixin { add ... }` block registers the source set with the plugin but does
+    // not add the Mixin annotation-processor jar to the `annotationProcessor` configuration. The
+    // AP is what writes the refmap (Mojang → SRG name translations) that production Forge needs
+    // to resolve @Inject targets. Without this dep, the jar ships with no refmap and every mixin
+    // fails on launch with "Critical injection failure: could not find any targets ... No refMap
+    // loaded." Mixin 0.8.5 is the version bundled with Forge 1.20.1.
+    annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
 
     // Required at compile time — drives the in-game config UI.
     // fg.deobf() so ForgeGradle remaps SRG → official for both bytecode and the embedded mixin
@@ -146,8 +158,11 @@ dependencies {
     // Curse Maven blocks direct download of the runic-skills artifact (403 Forbidden),
     // so we vendor the jar in libs/runicskills-1.0.0.jar and resolve it through the
     // flatDir repo above. The "blank" group is required by ForgeGradle's deobf cache key.
-    // Disabled — its bundled l2tabs 0.3.3 conflicts with the L2 stack's TabRegistry API.
-    // implementation fg.deobf("blank:runicskills:1.0.0")
+    // Kept as compileOnly so the Mixin annotation processor can resolve DrawTabsMixin's
+    // target (com.otectus.runicskills.client.gui.DrawTabs). Not on the runtime classpath
+    // because its bundled l2tabs 0.3.3 conflicts with the L2 stack's TabRegistry API; the
+    // mixin itself uses require=0 and is a no-op when Runic Skills isn't installed.
+    compileOnly fg.deobf("blank:runicskills:1.0.0")
     // Required by Runic Skills (yet_another_config_lib_v3 >= 3.4.2).
     // implementation fg.deobf("curse.maven:yacl-667299:6336646")
 
@@ -208,6 +223,12 @@ dependencies {
     // Misc.
     implementation fg.deobf("curse.maven:selene-499980:7945711")
     implementation fg.deobf("curse.maven:archivist-1513409:7979569")
+
+    // Diet (illusivesoulworks) + Bulking (neirenoir). Bulking is a hard dependency on Diet
+    // and swaps DietScreen for BulkingScreen via mixins targeting DietClientEvents — so when
+    // both are loaded, our tab opens BulkingScreen directly to keep the stomach UI active.
+    implementation fg.deobf("curse.maven:diet-443570:4813904")
+    implementation fg.deobf("curse.maven:bulking-1233813:6411901")
 
     // Villager Recruits — faction screen (U key by default).
     implementation fg.deobf("curse.maven:recruits-523860:7906232")

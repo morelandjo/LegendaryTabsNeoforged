@@ -72,7 +72,7 @@ public class TravelersBackpackTab extends IntegrationItemTab {
         if (ModIntegrationManager.isModLoaded(ModIntegration.CURIOS) && hasInCurios(player, backpackItemClass)) {
             return true;
         }
-        return isWearingBackpackViaAttachments(player);
+        return isWearingBackpackViaCapability(player);
     }
 
     private boolean hasInCurios(Player player, Class<?> backpackItemClass) {
@@ -98,11 +98,13 @@ public class TravelersBackpackTab extends IntegrationItemTab {
         }
     }
 
-    private boolean isWearingBackpackViaAttachments(Player player) {
+    // 1.20.1 Forge TB exposes CapabilityUtils.isWearingBackpack (the 1.21.1 NeoForge build
+    // renamed this to AttachmentUtils).
+    private boolean isWearingBackpackViaCapability(Player player) {
         try {
-            Class<?> attachmentUtilsClass = ClassCache.resolve("com.tiviacz.travelersbackpack.capability.AttachmentUtils");
-            if (attachmentUtilsClass == null) return false;
-            Method isWearingBackpack = attachmentUtilsClass.getMethod("isWearingBackpack", Player.class);
+            Class<?> capabilityUtilsClass = ClassCache.resolve("com.tiviacz.travelersbackpack.capability.CapabilityUtils");
+            if (capabilityUtilsClass == null) return false;
+            Method isWearingBackpack = capabilityUtilsClass.getMethod("isWearingBackpack", Player.class);
             return (Boolean) isWearingBackpack.invoke(null, player);
         } catch (Exception e) {
             return false;
@@ -127,8 +129,19 @@ public class TravelersBackpackTab extends IntegrationItemTab {
         try {
             Class<?> actionPacketClass = Class.forName("com.tiviacz.travelersbackpack.network.ServerboundActionTagPacket");
             Method createMethod = actionPacketClass.getDeclaredMethod("create", int.class, Object[].class);
-            // OPEN_SCREEN = 1
-            createMethod.invoke(null, 1, new Object[0]);
+            // OPEN_SCREEN (1) only opens a worn backpack — the server handler bails when
+            // isWearingBackpack is false. For inventory backpacks we send OPEN_BACKPACK (2)
+            // with (slotIndex, fromHotbar=false). The fromHotbar=false form skips the
+            // `allowOpeningFromSlot` config gate so the open happens regardless of where
+            // the backpack sits.
+            if (isWearingBackpackViaCapability(player)) {
+                createMethod.invoke(null, 1, new Object[0]);
+                return;
+            }
+            int slot = findBackpackInventorySlot(player);
+            if (slot >= 0) {
+                createMethod.invoke(null, 2, new Object[]{ slot, false });
+            }
         } catch (Exception e) {
             if (player instanceof ServerPlayer serverPlayer) {
                 openServerSide(serverPlayer);
@@ -136,13 +149,26 @@ public class TravelersBackpackTab extends IntegrationItemTab {
         }
     }
 
+    /** Returns the inventory slot of the first backpack found, or -1 if none. */
+    private int findBackpackInventorySlot(Player player) {
+        Class<?> backpackItemClass = ClassCache.resolve(BACKPACK_ITEM_FQN);
+        if (backpackItemClass == null) return -1;
+        for (int i = 0; i < player.getInventory().items.size(); i++) {
+            ItemStack stack = player.getInventory().items.get(i);
+            if (!stack.isEmpty() && backpackItemClass.isInstance(stack.getItem())) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
     private void openServerSide(ServerPlayer serverPlayer) {
         try {
             Class<?> backpackContainerClass = Class.forName("com.tiviacz.travelersbackpack.inventory.BackpackContainer");
-            Class<?> attachmentUtilsClass = Class.forName("com.tiviacz.travelersbackpack.capability.AttachmentUtils");
+            Class<?> capabilityUtilsClass = Class.forName("com.tiviacz.travelersbackpack.capability.CapabilityUtils");
             Class<?> referenceClass = Class.forName("com.tiviacz.travelersbackpack.util.Reference");
 
-            Object wearingBackpack = attachmentUtilsClass.getMethod("getWearingBackpack", Player.class)
+            Object wearingBackpack = capabilityUtilsClass.getMethod("getWearingBackpack", Player.class)
                     .invoke(null, serverPlayer);
             int wearableScreenId = referenceClass.getField("WEARABLE_SCREEN_ID").getInt(null);
             backpackContainerClass.getMethod("openBackpack", ServerPlayer.class, ItemStack.class, int.class)

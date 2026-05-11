@@ -17,69 +17,76 @@ import vodmordia.modtabs.utils.ArsElixirumInspector;
 import vodmordia.modtabs.integration.ModIntegration;
 import vodmordia.modtabs.integration.ModIntegrationManager;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 
 @TabConfig(configKey = "arsElixirumTab", defaultEnabled = true, defaultOrder = 0)
 public class ArsElixirumTab extends ConfigurableItemTab {
+
+    // Enum class names that have held the page-enum across Ars Elixirum versions, newest first.
+    // 0.12.0+ moved the enum to .alchemy.AlchemyPage; 0.10.2 had it at .widgets.pages.PageKind.
+    private static final String[] PAGE_ENUM_CLASSES = {
+        "dev.obscuria.elixirum.client.screen.alchemy.AlchemyPage",
+        "dev.obscuria.elixirum.client.screen.widgets.pages.PageKind"
+    };
+
+    // Direct CollectionScreen class names — used as a last resort if the page enum is missing.
+    private static final String[] COLLECTION_SCREEN_CLASSES = {
+        "dev.obscuria.elixirum.client.screen.alchemy.pages.collection.CollectionScreen",
+        "dev.obscuria.elixirum.client.screen.widgets.pages.collection.CollectionPage"
+    };
+
+    private static ItemStack cachedIcon;
 
     public ArsElixirumTab() {
         super(() -> getGlassCauldronItem(), Config.Baked.arsElixirumTabCustomIcon, "arsElixirum");
     }
 
     private static ItemStack getGlassCauldronItem() {
-        // Try to get Ars Elixirum glass cauldron item via reflection using inspector
+        if (cachedIcon != null) return cachedIcon;
         try {
             Item glassCauldronItem = ArsElixirumInspector.tryGetGlassCauldronItem();
             if (glassCauldronItem != null) {
-                return new ItemStack(glassCauldronItem);
+                cachedIcon = new ItemStack(glassCauldronItem);
+                return cachedIcon;
             }
-        } catch (Exception e) {
-            // Fall through to fallback
+        } catch (Throwable ignored) {
         }
-        // Fallback to brewing stand
-        return new ItemStack(Items.BREWING_STAND);
+        cachedIcon = new ItemStack(Items.BREWING_STAND);
+        return cachedIcon;
     }
 
     @Override
     public void openTargetScreen(Player player) {
-        // 1.20.1 Ars Elixirum: the keybind handler KeyMappings.collectionPressed() bails early
-        // when Minecraft.screen != null, so we can't go through it from inside the inventory tab.
-        // Call PageKind.COLLECTION.open() directly — that's what the keybind ultimately invokes.
-        try {
-            Class<?> pageKindClass = Class.forName("dev.obscuria.elixirum.client.screen.widgets.pages.PageKind");
-            Object collection = null;
-            for (Object constant : pageKindClass.getEnumConstants()) {
-                if ("COLLECTION".equals(((Enum<?>) constant).name())) {
-                    collection = constant;
-                    break;
-                }
-            }
-            if (collection != null) {
-                pageKindClass.getMethod("open").invoke(collection);
-                return;
-            }
-        } catch (Exception ignored) {
-        }
-        try {
-            Class<?> screenClass = Class.forName("dev.obscuria.elixirum.client.screen.ElixirumScreen");
-            java.lang.reflect.Constructor<?> constructor = screenClass.getDeclaredConstructor();
-            constructor.setAccessible(true);
-            Object screen = constructor.newInstance();
-
+        // Ars Elixirum's keybind handler bails when Minecraft.screen != null, so we replicate
+        // what the keybind ultimately does: invoke the COLLECTION page-enum's open() method.
+        // Class name moved between versions, so we try each known location.
+        for (String className : PAGE_ENUM_CLASSES) {
             try {
-                Class<?> sectionTypeClass = Class.forName("dev.obscuria.elixirum.client.screen.section.AbstractSection$Type");
-                Field collectionField = sectionTypeClass.getField("COLLECTION");
-                Object collectionSection = collectionField.get(null);
-
-                Field selectedSectionField = screenClass.getDeclaredField("selectedSection");
-                selectedSectionField.setAccessible(true);
-                selectedSectionField.set(null, collectionSection);
-            } catch (Exception ignored) {
+                Class<?> enumClass = Class.forName(className);
+                Object collection = null;
+                for (Object constant : enumClass.getEnumConstants()) {
+                    if ("COLLECTION".equals(((Enum<?>) constant).name())) {
+                        collection = constant;
+                        break;
+                    }
+                }
+                if (collection == null) continue;
+                enumClass.getMethod("open").invoke(collection);
+                return;
+            } catch (Throwable ignored) {
             }
+        }
 
-            Minecraft.getInstance().setScreen((Screen) screen);
-        } catch (Exception ignored) {
+        // Last resort: instantiate the CollectionScreen class directly via its no-arg constructor.
+        for (String className : COLLECTION_SCREEN_CLASSES) {
+            try {
+                Class<?> screenClass = Class.forName(className);
+                java.lang.reflect.Constructor<?> constructor = screenClass.getDeclaredConstructor();
+                constructor.setAccessible(true);
+                Object screen = constructor.newInstance();
+                Minecraft.getInstance().setScreen((Screen) screen);
+                return;
+            } catch (Throwable ignored) {
+            }
         }
     }
 
@@ -103,12 +110,18 @@ public class ArsElixirumTab extends ConfigurableItemTab {
 
     @Override
     public void initTabOnScreens() {
-        // Forge 1.20.1 build of Ars Elixirum has no single `ElixirumScreen` — each page is
-        // its own Screen subclass under .widgets.pages. Register all four concrete pages so
-        // tabs render on whichever page the user is viewing and Shift+Z opens the editor.
+        // Forge 1.20.1 Ars Elixirum has no single root screen — each page is its own Screen.
+        // 0.12.0 moved/renamed every page; we register both old and new class names so tabs
+        // render regardless of which version is installed.
         ScreenRegistry.builder()
             .withStandardDimensions()
             .registerAllTabs(
+                // 0.12.0+ class layout
+                "dev.obscuria.elixirum.client.screen.alchemy.pages.compendium.CompendiumScreen",
+                "dev.obscuria.elixirum.client.screen.alchemy.pages.collection.CollectionScreen",
+                "dev.obscuria.elixirum.client.screen.alchemy.pages.discoveries.DiscoveriesScreen",
+                "dev.obscuria.elixirum.client.screen.alchemy.pages.recent.RecentlyBrewedScreen",
+                // 0.10.x class layout
                 "dev.obscuria.elixirum.client.screen.widgets.pages.CompendiumPage",
                 "dev.obscuria.elixirum.client.screen.widgets.pages.collection.CollectionPage",
                 "dev.obscuria.elixirum.client.screen.widgets.pages.discoveries.DiscoveriesPage",
