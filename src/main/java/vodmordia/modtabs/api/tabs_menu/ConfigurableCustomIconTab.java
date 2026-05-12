@@ -2,6 +2,8 @@ package vodmordia.modtabs.api.tabs_menu;
 
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import org.jetbrains.annotations.NotNull;
 import vodmordia.modtabs.config.ModTabsConfig;
 import vodmordia.modtabs.utils.IconResolver;
@@ -16,6 +18,7 @@ import java.util.function.Consumer;
  * Custom icon string is read dynamically from {@link ModTabsConfig} via the subclass's
  * {@code @TabConfig} annotation, so layout-editor changes apply without tab re-registration.
  */
+@OnlyIn(Dist.CLIENT)
 public abstract class ConfigurableCustomIconTab extends CustomIconTab {
     private final String tabId;
     private final Consumer<TabRenderer.RenderContext> customRenderer;

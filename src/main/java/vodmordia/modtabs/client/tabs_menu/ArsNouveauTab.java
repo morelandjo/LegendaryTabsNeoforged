@@ -140,23 +140,6 @@ public class ArsNouveauTab extends ConfigurableItemTab {
         }
     }
 
-    private InteractionHand getSpellbookHand(Player player) {
-        // Check main hand first
-        ItemStack mainHandStack = player.getMainHandItem();
-        if (!mainHandStack.isEmpty() && isSpellbook(mainHandStack)) {
-            return InteractionHand.MAIN_HAND;
-        }
-
-        // Check offhand
-        ItemStack offhandStack = player.getOffhandItem();
-        if (!offhandStack.isEmpty() && isSpellbook(offhandStack)) {
-            return InteractionHand.OFF_HAND;
-        }
-
-        // No spellbook in hands
-        return null;
-    }
-
     private ItemStack findSpellbookInInventory(Player player) {
         // Check hands first
         if (isSpellbook(player.getMainHandItem())) {

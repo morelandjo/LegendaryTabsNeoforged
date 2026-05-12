@@ -2,6 +2,8 @@ package vodmordia.modtabs.api.tabs_menu;
 
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.world.item.ItemStack;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 
 import java.util.function.Supplier;
 
@@ -9,6 +11,7 @@ import java.util.function.Supplier;
  * A specialized version of SimpleItemTab that allows custom scaling for the item icon.
  * Use this for tabs that need their item icons rendered at a different scale than the default.
  */
+@OnlyIn(Dist.CLIENT)
 public abstract class ScaledItemTab extends TabBase {
     private final Supplier<ItemStack> iconItemSupplier;
     private final float scale;

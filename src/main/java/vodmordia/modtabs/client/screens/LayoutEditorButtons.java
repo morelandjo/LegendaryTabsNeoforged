@@ -8,6 +8,7 @@ import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
+import vodmordia.modtabs.api.tabs_menu.GlobalSettingsPanel;
 import vodmordia.modtabs.api.tabs_menu.TabsMenu;
 import vodmordia.modtabs.config.Config;
 import vodmordia.modtabs.config.ModTabsConfig;
@@ -612,14 +613,12 @@ public final class LayoutEditorButtons {
      */
     public static class IconScaleEditBox extends EditBox {
         private final Screen screen;
-        private final String configKey;
         private final int relX, relY;
         private boolean suppressResponder = false;
 
         public IconScaleEditBox(Screen screen, int relX, int relY, int w, int h, String configKey) {
             super(Minecraft.getInstance().font, 0, 0, w, h, Component.literal(""));
             this.screen = screen;
-            this.configKey = configKey;
             this.relX = relX;
             this.relY = relY;
             this.setMaxLength(3);
@@ -818,7 +817,7 @@ public final class LayoutEditorButtons {
     public static class CogwheelButton extends EditOnly {
         public CogwheelButton(Screen screen, int x, int y, int w, int h) {
             super(screen, x, y, w, h, Component.literal(""),
-                    btn -> TabsMenu.openGlobalSettings());
+                    btn -> GlobalSettingsPanel.open());
         }
 
         @Override
@@ -839,7 +838,7 @@ public final class LayoutEditorButtons {
             gui.pose().translate(iconX, iconY, 0);
             float s = iconSize / 25f;
             gui.pose().scale(s, s, 1f);
-            gui.blit(TabsMenu.cogwheelTexture(), 0, 0, 0, 0, 25, 25, 25, 25);
+            gui.blit(GlobalSettingsPanel.cogwheelTexture(), 0, 0, 0, 0, 25, 25, 25, 25);
             gui.pose().popPose();
         }
     }

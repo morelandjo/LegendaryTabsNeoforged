@@ -39,7 +39,8 @@ public enum ModIntegration {
     RUNIC_SKILLS("runicskills", "Runic Skills"),
     ADVANCED_TEAM("teams", "Advanced Team"),
     VILLAGER_RECRUITS("recruits", "Villager Recruits"),
-    APOTHIC_ATTRIBUTES("attributeslib", "Apothic Attributes");
+    APOTHIC_ATTRIBUTES("attributeslib", "Apothic Attributes"),
+    AETHER("aether", "The Aether");
 
     private final String modId;
     private final String displayName;

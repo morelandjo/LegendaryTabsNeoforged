@@ -558,6 +558,53 @@ public class ModTabsConfig extends MidnightConfig {
     @Entry(category = "tabs") @Hidden
     public static int apothicAttributesTabOrder = 0;
 
+    @Comment(category = "tabs") public static CommentText spacer_aether;
+
+    @Comment(category = "tabs") public static CommentText aether;
+
+    @Entry(category = "tabs") @Hidden
+    public static boolean aetherTabEnabled = true;
+
+    @Entry(category = "tabs") @Hidden
+    public static String aetherTabCustomIcon = "";
+    @Entry(category = "tabs") @Hidden
+    public static int aetherTabIconScale = 100;
+    @Entry(category = "tabs") @Hidden
+    public static int aetherTabIconNudgeUp = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int aetherTabIconNudgeDown = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int aetherTabIconNudgeLeft = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int aetherTabIconNudgeRight = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int aetherTabOrder = 0;
+
+    @Comment(category = "tabs") public static CommentText spacer_curios;
+
+    @Comment(category = "tabs") public static CommentText curios;
+
+    @Entry(category = "tabs") @Hidden
+    public static boolean curiosTabEnabled = true;
+
+    @Entry(category = "tabs") @Hidden
+    public static String curiosTabCustomIcon = "";
+    @Entry(category = "tabs") @Hidden
+    public static int curiosTabIconScale = 100;
+    @Entry(category = "tabs") @Hidden
+    public static int curiosTabIconNudgeUp = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int curiosTabIconNudgeDown = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int curiosTabIconNudgeLeft = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int curiosTabIconNudgeRight = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int curiosTabOrder = 0;
+
+    @Entry(category = "tabs") @Hidden
+    public static TabDisplayVisibility curiosTabDisplayVisibility = TabDisplayVisibility.YES;
+
     @Comment(category = "tabs") public static CommentText spacer10;
 
     @Comment(category = "tabs") public static CommentText journeyMap;

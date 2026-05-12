@@ -10,6 +10,7 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.fml.common.Mod;
 import vodmordia.modtabs.ModTabs;
+import vodmordia.modtabs.api.tabs_menu.GlobalSettingsPanel;
 import vodmordia.modtabs.api.tabs_menu.TabsMenu;
 import vodmordia.modtabs.client.screens.LayoutEditorButtons;
 import vodmordia.modtabs.client.screens.NextTabsButton;
@@ -75,9 +76,9 @@ public class ClientNeoForgeEvents {
         double mx = event.getMouseX();
         double my = event.getMouseY();
 
-        if (TabsMenu.isGlobalSettingsOpen()) {
+        if (GlobalSettingsPanel.isOpen()) {
             if (event.getButton() == 0) {
-                TabsMenu.handleGlobalSettingsMouseDown(screen, mx, my);
+                GlobalSettingsPanel.handleMouseDown(screen, mx, my);
             }
             event.setCanceled(true);
             return;
@@ -111,9 +112,9 @@ public class ClientNeoForgeEvents {
     public static void onMouseDragged(ScreenEvent.MouseDragged.Pre event) {
         Screen screen = event.getScreen();
         if (!TabsMenu.isEditing(screen)) return;
-        if (TabsMenu.isGlobalSettingsOpen()) {
+        if (GlobalSettingsPanel.isOpen()) {
             if (event.getMouseButton() == 0) {
-                TabsMenu.handleGlobalSettingsMouseDrag(screen, event.getMouseX(), event.getMouseY());
+                GlobalSettingsPanel.handleMouseDrag(screen, event.getMouseX(), event.getMouseY());
             }
             event.setCanceled(true);
             return;
@@ -128,8 +129,8 @@ public class ClientNeoForgeEvents {
     public static void onMouseReleasedEditor(ScreenEvent.MouseButtonReleased.Pre event) {
         Screen screen = event.getScreen();
         if (!TabsMenu.isEditing(screen)) return;
-        if (TabsMenu.isGlobalSettingsOpen()) {
-            TabsMenu.handleGlobalSettingsMouseUp(screen, event.getMouseX(), event.getMouseY());
+        if (GlobalSettingsPanel.isOpen()) {
+            GlobalSettingsPanel.handleMouseUp(screen, event.getMouseX(), event.getMouseY());
             event.setCanceled(true);
             return;
         }
@@ -142,8 +143,8 @@ public class ClientNeoForgeEvents {
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public static void onCharTyped(ScreenEvent.CharacterTyped.Pre event) {
         if (!TabsMenu.isEditing(event.getScreen())) return;
-        if (TabsMenu.isGlobalSettingsOpen()
-                && TabsMenu.handleGlobalSettingsCharTyped(event.getCodePoint())) {
+        if (GlobalSettingsPanel.isOpen()
+                && GlobalSettingsPanel.handleCharTyped(event.getCodePoint())) {
             event.setCanceled(true);
             return;
         }
@@ -162,8 +163,8 @@ public class ClientNeoForgeEvents {
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public static void onMouseScrolled(ScreenEvent.MouseScrolled.Pre event) {
         if (!TabsMenu.isEditing(event.getScreen())) return;
-        if (TabsMenu.isGlobalSettingsOpen()) {
-            TabsMenu.handleGlobalSettingsMouseScroll(event.getScreen(),
+        if (GlobalSettingsPanel.isOpen()) {
+            GlobalSettingsPanel.handleMouseScroll(event.getScreen(),
                     event.getMouseX(), event.getMouseY(), event.getScrollDelta());
         }
         event.setCanceled(true);
@@ -299,16 +300,16 @@ public class ClientNeoForgeEvents {
         // need to reach it for normal text-field editing.
         if (TabsMenu.isEditing(event.getScreen())) {
             if (event.getKeyCode() == org.lwjgl.glfw.GLFW.GLFW_KEY_ESCAPE) {
-                if (TabsMenu.isGlobalSettingsOpen()) {
-                    TabsMenu.closeGlobalSettings(false);
+                if (GlobalSettingsPanel.isOpen()) {
+                    GlobalSettingsPanel.close(false);
                 } else {
                     TabsMenu.exitEditMode();
                 }
                 event.setCanceled(true);
                 return;
             }
-            if (TabsMenu.isGlobalSettingsOpen()
-                    && TabsMenu.handleGlobalSettingsKey(event.getKeyCode())) {
+            if (GlobalSettingsPanel.isOpen()
+                    && GlobalSettingsPanel.handleKey(event.getKeyCode())) {
                 event.setCanceled(true);
                 return;
             }
@@ -470,19 +471,6 @@ public class ClientNeoForgeEvents {
                 }
             }
         }
-    }
-
-    /**
-     * Screens whose own {@code mouseClicked} doesn't call {@code super.mouseClicked} —
-     * the standard child-iteration path won't reach our TabButton, so the click /
-     * release handlers below forward events directly.
-     */
-    private static boolean isScreenWithCustomClickRouting(String screenClassName) {
-        return screenClassName.equals("net.puffish.skillsmod.client.gui.SkillsScreen")
-            || screenClassName.equals("dev.ftb.mods.ftblibrary.ui.ScreenWrapper")
-            || screenClassName.equals("xaero.map.gui.GuiMap")
-            || screenClassName.equals("pepjebs.mapatlases.client.screen.AtlasOverviewScreen")
-            || screenClassName.equals("betteradvancements.common.gui.BetterAdvancementsScreen");
     }
 
     /**

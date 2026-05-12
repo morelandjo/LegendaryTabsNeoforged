@@ -238,6 +238,12 @@ dependencies {
     // Sourced from Shadows_of_Fire's official maven; bump versions in gradle.properties.
     implementation fg.deobf("dev.shadowsoffire:Placebo:${minecraft_version}-${project.placebo_version}")
     implementation fg.deobf("dev.shadowsoffire:ApothicAttributes:${minecraft_version}-${project.apothic_attributes_version}")
+
+    // The Aether (Forge 1.20.1). Reflection-only integration: AetherTab reuses the
+    // mod's own packet path — sends an OpenAccessoriesPacket through Forge's
+    // SimpleChannel exposed at AetherPacketHandler.INSTANCE, same as the "I" keybind.
+    // Default file id is sourced from gradle.properties; override with -PaetherFileId=<id>.
+    compileOnly fg.deobf("curse.maven:aether-255308:${project.findProperty('aetherFileId') ?: '6134920'}")
 }
 
 tasks.named('processResources', ProcessResources).configure {

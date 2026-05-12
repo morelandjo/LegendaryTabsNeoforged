@@ -467,38 +467,6 @@ public class EccentricTomeTab extends ConfigurableItemTab {
             return -1; // Not found
         }
 
-        private void sendCustomConvertPacket(int tomeSlot, ItemStack selectedBook) {
-            try {
-                // For now, let's just log what we would send
-                // We'll need to create a custom packet handler in ModTabs
-                ModTabs.LOGGER.info("Would send custom convert packet: slot={}, book={}", tomeSlot, selectedBook);
-
-                // Try using Eccentric Tome's channel directly but with reflection to bypass hand check
-                Class<?> eccentricTomeClass = Class.forName("website.eccentric.tome.EccentricTome");
-                Field channelField = eccentricTomeClass.getDeclaredField("CHANNEL");
-                channelField.setAccessible(true);
-                Object channel = channelField.get(null);
-
-                Class<?> convertMessageClass = Class.forName("website.eccentric.tome.network.ConvertMessage");
-                Object convertMessage = convertMessageClass.getDeclaredConstructor(ItemStack.class).newInstance(selectedBook);
-
-                // Try to send to server
-                Method sendMethod = channel.getClass().getMethod("send", Object.class, Object.class);
-
-                // Get PacketDistributor.SERVER
-                Class<?> packetDistClass = Class.forName("net.minecraftforge.network.PacketDistributor");
-                Field serverField = packetDistClass.getDeclaredField("SERVER");
-                serverField.setAccessible(true);
-                Object serverDist = serverField.get(null);
-
-                sendMethod.invoke(channel, convertMessage, serverDist);
-                ModTabs.LOGGER.info("Sent convert message to server via reflection");
-
-            } catch (Exception e) {
-                ModTabs.LOGGER.error("Failed to send custom packet", e);
-            }
-        }
-
         private void replaceTomeInInventory(EccentricTomeTab tab, ItemStack convertedBook) {
             boolean replaced = false;
 
@@ -530,10 +498,6 @@ public class EccentricTomeTab extends ConfigurableItemTab {
             if (!replaced) {
                 ModTabs.LOGGER.warn("Could not find tome to replace in inventory");
             }
-        }
-
-        private boolean isTome(ItemStack stack) {
-            return vodmordia.modtabs.utils.ClassCache.isInstance(vodmordia.modtabs.utils.ScreenClasses.ECCENTRIC_TOME_ITEM, stack.getItem());
         }
 
         // Delegate all other methods to the original screen

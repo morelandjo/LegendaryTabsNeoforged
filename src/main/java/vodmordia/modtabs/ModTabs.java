@@ -152,6 +152,8 @@ public class ModTabs
             TabsMenu.register(new EccentricTomeTab());
             TabsMenu.register(new MotpTab());
             TabsMenu.register(new ApothicAttributesTab());
+            TabsMenu.register(new AetherTab());
+            TabsMenu.register(new CuriosTab());
 
             // Wait for Patchouli books to load, then load custom tabs
             waitForPatchouliAndLoadCustomTabs();

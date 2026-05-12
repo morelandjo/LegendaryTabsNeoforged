@@ -4,6 +4,8 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import vodmordia.modtabs.utils.ClassCache;
 
 import java.util.function.Supplier;
@@ -13,6 +15,7 @@ import java.util.function.Supplier;
  * tab renders an item stack rather than a texture. Subclasses only implement
  * {@link #openTargetScreen(Player)}.
  */
+@OnlyIn(Dist.CLIENT)
 public abstract class IntegrationItemTab extends ConfigurableItemTab {
 
     protected final TabSpec spec;

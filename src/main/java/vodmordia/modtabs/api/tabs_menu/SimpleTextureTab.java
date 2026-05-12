@@ -2,10 +2,13 @@ package vodmordia.modtabs.api.tabs_menu;
 
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 
 /**
  * Base class for tabs that simply render a texture icon
  */
+@OnlyIn(Dist.CLIENT)
 public abstract class SimpleTextureTab extends TabBase {
 
     private final ResourceLocation iconTexture;

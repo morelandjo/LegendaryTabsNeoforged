@@ -4,6 +4,8 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import vodmordia.modtabs.utils.ClassCache;
 
 /**
@@ -13,6 +15,7 @@ import vodmordia.modtabs.utils.ClassCache;
  * <p>Replaces the boilerplate that previously appeared verbatim in every tab class:
  * isEnabled / isCurrentlyUsed / getTooltip / initTabOnScreens.
  */
+@OnlyIn(Dist.CLIENT)
 public abstract class IntegrationIconTab extends ConfigurableIconTab {
 
     protected final TabSpec spec;

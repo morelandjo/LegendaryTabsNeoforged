@@ -234,6 +234,19 @@ public final class ScreenClasses {
     public static final String BULKING_SCREEN =
             "dev.neire.mc.bulking.client.gui.BulkingScreen";
 
+    // -- Curios -----------------------------------------------------------
+    /** {@code EffectRenderingInventoryScreen<CuriosContainer>} — the accessory inventory. */
+    public static final String CURIOS_SCREEN =
+            "top.theillusivec4.curios.client.gui.CuriosScreen";
+    /** Plain-message class for Forge SimpleChannel with a single {@code ItemStack carried} field;
+     *  the server's handler opens the curios menu for the player. */
+    public static final String CURIOS_OPEN_PACKET =
+            "top.theillusivec4.curios.common.network.client.CPacketOpenCurios";
+    /** Holds {@code INSTANCE} — the {@link net.minecraftforge.network.simple.SimpleChannel}
+     *  used to send packets to the server. */
+    public static final String CURIOS_NETWORK_HANDLER =
+            "top.theillusivec4.curios.common.network.NetworkHandler";
+
     // -- Apothic Attributes (modid attributeslib on 1.20.1) ---------------
     /** Renderable overlay attached to {@code InventoryScreen} via the mod's own ScreenEvent.Init.Post listener.
      *  Holds the static {@code wasOpen} flag we flip before opening the inventory. */
@@ -242,4 +255,19 @@ public final class ScreenClasses {
     /** Static {@code enableAttributesGui} field — server admins can disable the panel entirely. */
     public static final String APOTHIC_ATTRIBUTES_CONFIG =
             "dev.shadowsoffire.attributeslib.ALConfig";
+
+    // -- The Aether ------------------------------------------------------
+    /** {@code EffectRenderingInventoryScreen<AccessoriesMenu>} — the accessory inventory.
+     *  Note: on 1.20.1 the class is {@code AccessoriesScreen} (no "Aether" prefix). */
+    public static final String AETHER_ACCESSORIES_SCREEN =
+            "com.aetherteam.aether.client.gui.screen.inventory.AccessoriesScreen";
+    /** Serverbound packet with a single {@code ItemStack carryStack} field; the server's handler
+     *  opens an {@code AccessoriesMenu} on the player. Same path the mod's own "I" keybind
+     *  uses in {@code GuiHooks.openAccessoryMenu()}. */
+    public static final String AETHER_OPEN_ACCESSORIES_PACKET =
+            "com.aetherteam.aether.network.packet.serverbound.OpenAccessoriesPacket";
+    /** Holds {@code INSTANCE} — the {@link net.minecraftforge.network.simple.SimpleChannel}
+     *  the Aether uses for all of its serverbound traffic. */
+    public static final String AETHER_PACKET_HANDLER =
+            "com.aetherteam.aether.network.AetherPacketHandler";
 }

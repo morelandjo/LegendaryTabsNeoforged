@@ -2,6 +2,8 @@ package vodmordia.modtabs.api.tabs_menu;
 
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import org.jetbrains.annotations.NotNull;
 import vodmordia.modtabs.config.ModTabsConfig;
 import vodmordia.modtabs.utils.IconResolver;
@@ -16,6 +18,7 @@ import java.util.Objects;
  * runtime (e.g. through the layout-editor dropdown) immediately updates the rendered
  * icon without requiring tab re-registration.
  */
+@OnlyIn(Dist.CLIENT)
 public abstract class ConfigurableIconTab extends SimpleTextureTab {
 
     private final ResourceLocation defaultIcon;

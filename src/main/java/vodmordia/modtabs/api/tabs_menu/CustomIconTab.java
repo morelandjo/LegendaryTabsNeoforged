@@ -1,12 +1,15 @@
 package vodmordia.modtabs.api.tabs_menu;
 
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import java.util.function.Consumer;
 
 /**
  * Base class for tabs that need custom icon rendering beyond simple textures or items.
  * Provides the TabRenderer framework with custom icon rendering capability.
  */
+@OnlyIn(Dist.CLIENT)
 public abstract class CustomIconTab extends TabBase {
     private final Consumer<TabRenderer.RenderContext> iconRenderer;
     /** -1 = use tab geometric center as the icon-rotation pivot. */

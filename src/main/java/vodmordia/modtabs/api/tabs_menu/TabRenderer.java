@@ -22,10 +22,9 @@ public class TabRenderer {
     // Builder for fluent API
     private boolean hasBackground = false;
     private ResourceLocation iconTexture = null;
-    private int iconX, iconY, iconWidth, iconHeight;
+    private int iconWidth, iconHeight;
     private int iconU, iconV, iconTextureWidth, iconTextureHeight;
     private ItemStack iconItem = null;
-    private int itemX, itemY;
     private float itemScale = 1.0f;
     private Consumer<RenderContext> customIconRenderer = null;
     /** -1 means "use tab geometric center". Otherwise offsets from tab top-left. */
@@ -56,8 +55,6 @@ public class TabRenderer {
      */
     public TabRenderer withTextureIcon(ResourceLocation texture, int x, int y, int width, int height) {
         this.iconTexture = texture;
-        this.iconX = x;
-        this.iconY = y;
         this.iconWidth = width;
         this.iconHeight = height;
         this.iconU = 0;
@@ -72,8 +69,6 @@ public class TabRenderer {
      */
     public TabRenderer withTextureIcon(ResourceLocation texture, int x, int y, int u, int v, int width, int height, int textureWidth, int textureHeight) {
         this.iconTexture = texture;
-        this.iconX = x;
-        this.iconY = y;
         this.iconU = u;
         this.iconV = v;
         this.iconWidth = width;
@@ -88,8 +83,6 @@ public class TabRenderer {
      */
     public TabRenderer withItemIcon(ItemStack item, int x, int y) {
         this.iconItem = item;
-        this.itemX = x;
-        this.itemY = y;
         this.itemScale = 1.0f;
         return this;
     }
@@ -99,8 +92,6 @@ public class TabRenderer {
      */
     public TabRenderer withItemIcon(ItemStack item, int x, int y, float scale) {
         this.iconItem = item;
-        this.itemX = x;
-        this.itemY = y;
         this.itemScale = scale;
         return this;
     }

@@ -2,12 +2,15 @@ package vodmordia.modtabs.api.tabs_menu;
 
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.world.item.ItemStack;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 
 import java.util.function.Supplier;
 
 /**
  * Base class for tabs that simply render an item icon
  */
+@OnlyIn(Dist.CLIENT)
 public abstract class SimpleItemTab extends TabBase {
 
     private final Supplier<ItemStack> iconItemSupplier;
