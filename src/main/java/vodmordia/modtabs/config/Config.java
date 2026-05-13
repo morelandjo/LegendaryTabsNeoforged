@@ -54,6 +54,7 @@ public class Config
 		public static boolean curiosTabEnabled;
 		public static boolean epicFightTabEnabled;
 		public static boolean epicSkillsTabEnabled;
+		public static boolean mineAndSlashTabEnabled;
 		public static boolean stickyInventoryTab;
 
 		// Custom icon settings
@@ -291,6 +292,12 @@ public class Config
 		public static int epicSkillsTabIconNudgeDown;
 		public static int epicSkillsTabIconNudgeLeft;
 		public static int epicSkillsTabIconNudgeRight;
+		public static String mineAndSlashTabCustomIcon;
+		public static int mineAndSlashTabIconScale;
+		public static int mineAndSlashTabIconNudgeUp;
+		public static int mineAndSlashTabIconNudgeDown;
+		public static int mineAndSlashTabIconNudgeLeft;
+		public static int mineAndSlashTabIconNudgeRight;
 
 		// Custom tabs settings
 		public static boolean customTabsEnabled;
@@ -339,6 +346,7 @@ public class Config
 		public static TabDisplayVisibility curiosTabDisplayVisibility;
 		public static TabDisplayVisibility epicFightTabDisplayVisibility;
 		public static TabDisplayVisibility epicSkillsTabDisplayVisibility;
+		public static TabDisplayVisibility mineAndSlashTabDisplayVisibility;
 
 		// Tab order overrides
 		public static int inventoryTabOrder;
@@ -381,6 +389,7 @@ public class Config
 		public static int curiosTabOrder;
 		public static int epicFightTabOrder;
 		public static int epicSkillsTabOrder;
+		public static int mineAndSlashTabOrder;
 
 		public static void bakeClient()
 		{
@@ -434,6 +443,7 @@ public class Config
 				curiosTabEnabled = ModTabsConfig.curiosTabEnabled;
 				epicFightTabEnabled = ModTabsConfig.epicFightTabEnabled;
 				epicSkillsTabEnabled = ModTabsConfig.epicSkillsTabEnabled;
+				mineAndSlashTabEnabled = ModTabsConfig.mineAndSlashTabEnabled;
 				stickyInventoryTab = ModTabsConfig.stickyInventoryTab;
 
 				// Load custom tabs settings
@@ -486,6 +496,7 @@ public class Config
 				curiosTabOrder = ModTabsConfig.curiosTabOrder;
 				epicFightTabOrder = ModTabsConfig.epicFightTabOrder;
 				epicSkillsTabOrder = ModTabsConfig.epicSkillsTabOrder;
+				mineAndSlashTabOrder = ModTabsConfig.mineAndSlashTabOrder;
 
 				// Load tab display visibility settings
 				inventoryTabDisplayVisibility = ModTabsConfig.inventoryTabDisplayVisibility;
@@ -525,6 +536,7 @@ public class Config
 				curiosTabDisplayVisibility = ModTabsConfig.curiosTabDisplayVisibility;
 				epicFightTabDisplayVisibility = ModTabsConfig.epicFightTabDisplayVisibility;
 				epicSkillsTabDisplayVisibility = ModTabsConfig.epicSkillsTabDisplayVisibility;
+				mineAndSlashTabDisplayVisibility = ModTabsConfig.mineAndSlashTabDisplayVisibility;
 
 				// Load custom icon settings
 				inventoryTabCustomIcon = ModTabsConfig.inventoryTabCustomIcon;
@@ -761,6 +773,12 @@ public class Config
 				epicSkillsTabIconNudgeDown = ModTabsConfig.epicSkillsTabIconNudgeDown;
 				epicSkillsTabIconNudgeLeft = ModTabsConfig.epicSkillsTabIconNudgeLeft;
 				epicSkillsTabIconNudgeRight = ModTabsConfig.epicSkillsTabIconNudgeRight;
+				mineAndSlashTabCustomIcon = ModTabsConfig.mineAndSlashTabCustomIcon;
+				mineAndSlashTabIconScale = ModTabsConfig.mineAndSlashTabIconScale;
+				mineAndSlashTabIconNudgeUp = ModTabsConfig.mineAndSlashTabIconNudgeUp;
+				mineAndSlashTabIconNudgeDown = ModTabsConfig.mineAndSlashTabIconNudgeDown;
+				mineAndSlashTabIconNudgeLeft = ModTabsConfig.mineAndSlashTabIconNudgeLeft;
+				mineAndSlashTabIconNudgeRight = ModTabsConfig.mineAndSlashTabIconNudgeRight;
 			}
 			catch (Exception e)
 			{

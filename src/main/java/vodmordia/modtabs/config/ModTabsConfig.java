@@ -655,6 +655,31 @@ public class ModTabsConfig extends MidnightConfig {
     @Entry(category = "tabs") @Hidden
     public static TabDisplayVisibility epicSkillsTabDisplayVisibility = TabDisplayVisibility.YES;
 
+    @Comment(category = "tabs") public static CommentText spacer_mine_and_slash;
+
+    @Comment(category = "tabs") public static CommentText mineAndSlash;
+
+    @Entry(category = "tabs") @Hidden
+    public static boolean mineAndSlashTabEnabled = true;
+
+    @Entry(category = "tabs") @Hidden
+    public static String mineAndSlashTabCustomIcon = "";
+    @Entry(category = "tabs") @Hidden
+    public static int mineAndSlashTabIconScale = 100;
+    @Entry(category = "tabs") @Hidden
+    public static int mineAndSlashTabIconNudgeUp = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int mineAndSlashTabIconNudgeDown = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int mineAndSlashTabIconNudgeLeft = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int mineAndSlashTabIconNudgeRight = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int mineAndSlashTabOrder = 0;
+
+    @Entry(category = "tabs") @Hidden
+    public static TabDisplayVisibility mineAndSlashTabDisplayVisibility = TabDisplayVisibility.YES;
+
     @Comment(category = "tabs") public static CommentText spacer10;
 
     @Comment(category = "tabs") public static CommentText journeyMap;

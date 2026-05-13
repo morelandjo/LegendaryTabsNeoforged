@@ -299,4 +299,14 @@ public final class ScreenClasses {
      *  constructor argument type. Note the {@code capabilites} typo (sic) in the package. */
     public static final String EPIC_FIGHT_LOCAL_PLAYER_PATCH =
             "yesman.epicfight.client.world.capabilites.entitypatch.player.LocalPlayerPatch";
+
+    // -- Mine and Slash Rework (mmorpg) ----------------------------------
+    /** No-arg constructor — extends {@code SkillTreeScreen} with {@code SchoolType.TALENTS}.
+     *  Same path the mod uses internally in {@code MainHubScreen}'s right-button list.
+     *  Plain {@code Screen} subclass (not a container screen); render() applies a zoom
+     *  pose transform that wraps {@code super.render()}, so tabs added as children render
+     *  scaled. Add this FQN to the manual-renderables list in
+     *  {@code ClientNeoForgeEvents.onScreenRenderPost} so tabs draw at the correct scale. */
+    public static final String MINE_AND_SLASH_TALENTS_SCREEN =
+            "com.robertx22.mine_and_slash.gui.screens.skill_tree.TalentsScreen";
 }

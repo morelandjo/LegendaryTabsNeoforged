@@ -275,6 +275,22 @@ dependencies {
     // runtime; the SkillTreeScreen constructor takes a LocalPlayerPatch from Epic Fight.
     // Reflection-only on our side — same as EpicFightTab.
     implementation fg.deobf("curse.maven:epic-fight-skill-tree-1295882:${project.findProperty('epicSkillsFileId') ?: '7916852'}")
+
+    // Mine and Slash Rework (Forge 1.20.1). Reflection-only integration — MineAndSlashTab
+    // mirrors the mod's hub-button path and constructs TalentsScreen() directly.
+    // Override file id via -PmineAndSlashFileId=<id>.
+    //
+    // Mine and Slash hard-requires this set of sibling mods (RobertSkalko's mod stack); all
+    // are mandatory at runtime per mmorpg's mods.toml. Version ranges from the failing
+    // ModSorter check on file 7190361:
+    //   library_of_exile [2.1.5,) · the_harvest [1.1.3,) · dungeon_realm [1.1.6,)
+    //   ancient_obelisks [1.2.3,) · playeranimator [0,)
+    implementation fg.deobf("curse.maven:mine-and-slash-reloaded-306575:${project.findProperty('mineAndSlashFileId') ?: '7190361'}")
+    implementation fg.deobf("curse.maven:library-of-exile-398780:7167023")        // v2.1.5
+    implementation fg.deobf("curse.maven:dungeon-realm-1200770:7190357")          // v1.1.7
+    implementation fg.deobf("curse.maven:the-harvest-1201731:7186998")            // v1.1.3
+    implementation fg.deobf("curse.maven:ancient-obelisks-1186288:7186996")       // v1.2.3
+    implementation fg.deobf("curse.maven:playeranimator-658587:4587214")          // v1.0.2-rc1
 }
 
 tasks.named('processResources', ProcessResources).configure {

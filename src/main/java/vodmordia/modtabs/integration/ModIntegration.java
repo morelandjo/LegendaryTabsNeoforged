@@ -42,7 +42,8 @@ public enum ModIntegration {
     APOTHIC_ATTRIBUTES("attributeslib", "Apothic Attributes"),
     AETHER("aether", "The Aether"),
     EPIC_FIGHT("epicfight", "Epic Fight"),
-    EPIC_SKILLS("epicskills", "Epic Fight Skill Tree");
+    EPIC_SKILLS("epicskills", "Epic Fight Skill Tree"),
+    MINE_AND_SLASH("mmorpg", "Mine and Slash");
 
     private final String modId;
     private final String displayName;
