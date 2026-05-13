@@ -519,11 +519,15 @@ public class ClientNeoForgeEvents {
         // for any left release regardless of state — that breaks slot drag-drop in the vanilla
         // inventory. NextTabsButton doesn't track press state (it fires onPress synchronously
         // from mouseClicked) so it never needs forwarding here.
+        // Iterate a snapshot: tabButton.mouseReleased -> openTargetScreen -> Minecraft.setScreen,
+        // which can synchronously mutate the live children list (mod mixins on Screen lifecycle)
+        // and trigger ConcurrentModificationException on the next iterator step.
         boolean dispatched = false;
-        for (var child : screen.children()) {
+        for (var child : new java.util.ArrayList<>(screen.children())) {
             if (child instanceof TabButton tabButton && tabButton.hasPendingPress()) {
                 tabButton.mouseReleased(event.getMouseX(), event.getMouseY(), event.getButton());
                 dispatched = true;
+                break;
             }
         }
         if (dispatched) event.setCanceled(true);
