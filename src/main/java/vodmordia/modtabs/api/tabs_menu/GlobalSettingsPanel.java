@@ -33,6 +33,8 @@ public final class GlobalSettingsPanel {
     private static String gsDraftOffsetRight = "0";
     private static String gsDraftOffsetBottom = "0";
     private static String gsDraftOffsetLeft = "0";
+    /** Draft toggle for the nearby-container tabs feature. Committed on Save. */
+    private static boolean gsDraftNearbyContainersEnabled = true;
     private static boolean globalSettingsOpen = false;
     private static GlobalSettingsTab gsActiveTab = GlobalSettingsTab.VISIBILITY;
     /** Draft state — applied to {@link ModTabsConfig} only on Save. */
@@ -167,6 +169,7 @@ public final class GlobalSettingsPanel {
         gsDraftOffsetRight = String.valueOf(Config.Baked.iconOffsetRight);
         gsDraftOffsetBottom = String.valueOf(Config.Baked.iconOffsetBottom);
         gsDraftOffsetLeft = String.valueOf(Config.Baked.iconOffsetLeft);
+        gsDraftNearbyContainersEnabled = Config.Baked.nearbyContainersTabEnabled;
         globalSettingsOpen = true;
     }
 
@@ -186,6 +189,7 @@ public final class GlobalSettingsPanel {
             ModTabsConfig.iconOffsetRight = parseSafeInt(gsDraftOffsetRight, 0);
             ModTabsConfig.iconOffsetBottom = parseSafeInt(gsDraftOffsetBottom, 0);
             ModTabsConfig.iconOffsetLeft = parseSafeInt(gsDraftOffsetLeft, 0);
+            ModTabsConfig.nearbyContainersTabEnabled = gsDraftNearbyContainersEnabled;
             ModTabsConfig.write("modtabs");
             Config.Baked.bakeClient();
             configChanged = true;
@@ -461,6 +465,17 @@ public final class GlobalSettingsPanel {
         return new int[]{rowX + index * (GS_INPUT_W + gap), rowY, GS_INPUT_W, GS_INPUT_H};
     }
 
+    private static int[] gsNearbyToggleRect(Screen screen) {
+        int[] cr = gsContentRect(screen);
+        int btnW = 72;
+        int btnH = 14;
+        // Sits below the 4 offset inputs (rowY = cr[1] + GS_HEADER_H + 18, h = GS_INPUT_H),
+        // with a gap large enough to fit the section label.
+        int rowY = cr[1] + GS_HEADER_H + 18 + GS_INPUT_H + 22;
+        int x = cr[0] + (cr[2] - btnW) / 2;
+        return new int[]{x, rowY, btnW, btnH};
+    }
+
     private static GsField gsHitGeneralInput(Screen screen, double mx, double my) {
         GsField[] offsetFields = { GsField.OFFSET_TOP, GsField.OFFSET_RIGHT, GsField.OFFSET_BOTTOM, GsField.OFFSET_LEFT };
         for (int i = 0; i < 4; i++) {
@@ -505,6 +520,17 @@ public final class GlobalSettingsPanel {
                     r[0] + (r[2] - lw) / 2, r[1] - 10, 0xFFCCCCCC, false);
             gsRenderInput(gui, r, gsDraftValue(fields[i]), gsFocusedField == fields[i]);
         }
+
+        // Section: nearby-container tabs toggle. The button colour mirrors the Save / Cancel
+        // footer buttons (green = enabled, red = disabled) so the state is obvious at a glance.
+        int[] toggleRect = gsNearbyToggleRect(screen);
+        String sectionLabel = "Nearby inventory tabs";
+        int slw = Minecraft.getInstance().font.width(sectionLabel);
+        gui.drawString(Minecraft.getInstance().font, sectionLabel,
+                cr[0] + (cr[2] - slw) / 2, toggleRect[1] - 12, 0xFFCCCCCC, false);
+        String btnLabel = gsDraftNearbyContainersEnabled ? "Enabled" : "Disabled";
+        int btnBg = gsDraftNearbyContainersEnabled ? 0xFF1F3322 : 0xFF331F1F;
+        drawFooterButton(gui, toggleRect, btnLabel, btnBg);
     }
 
     private static void gsRenderInput(GuiGraphics gui, int[] r, String value, boolean focused) {
@@ -597,6 +623,13 @@ public final class GlobalSettingsPanel {
         }
         // Content-area interactions
         if (gsActiveTab == GlobalSettingsTab.GENERAL) {
+            int[] toggleRect = gsNearbyToggleRect(screen);
+            if (mx >= toggleRect[0] && mx < toggleRect[0] + toggleRect[2]
+                    && my >= toggleRect[1] && my < toggleRect[1] + toggleRect[3]) {
+                gsDraftNearbyContainersEnabled = !gsDraftNearbyContainersEnabled;
+                gsFocusedField = GsField.NONE;
+                return true;
+            }
             GsField hit = gsHitGeneralInput(screen, mx, my);
             gsFocusedField = (hit != null) ? hit : GsField.NONE;
             return true;

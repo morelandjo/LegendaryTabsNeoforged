@@ -282,6 +282,11 @@ public class Config
 		public static boolean customTabsEnabled;
 		public static boolean customTabsDebugLogging;
 
+		// Nearby-container tabs (chests / barrels / etc. discovered around the player)
+		public static boolean nearbyContainersTabEnabled;
+		public static int nearbyContainersTabRange;
+		public static boolean nearbyContainersTabRequireLineOfSight;
+
 		// Tab display visibility settings
 		public static TabDisplayVisibility inventoryTabDisplayVisibility;
 		public static TabDisplayVisibility advancementsTabDisplayVisibility;
@@ -414,6 +419,11 @@ public class Config
 				// Load custom tabs settings
 				customTabsEnabled = ModTabsConfig.customTabsEnabled;
 				customTabsDebugLogging = ModTabsConfig.customTabsDebugLogging;
+
+				// Nearby-container tabs
+				nearbyContainersTabEnabled = ModTabsConfig.nearbyContainersTabEnabled;
+				nearbyContainersTabRange = ModTabsConfig.nearbyContainersTabRange;
+				nearbyContainersTabRequireLineOfSight = ModTabsConfig.nearbyContainersTabRequireLineOfSight;
 
 				// Load tab order overrides
 				inventoryTabOrder = ModTabsConfig.inventoryTabOrder;

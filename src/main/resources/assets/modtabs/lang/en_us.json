@@ -314,6 +314,14 @@
   "modtabs.midnightconfig.enum.TabDisplayVisibility.NO": "No",
   "modtabs.midnightconfig.enum.TabDisplayVisibility.TUCK": "Tuck",
 
+  "modtabs.midnightconfig.nearbyContainersHeader": "Nearby Container Tabs",
+  "modtabs.midnightconfig.nearbyContainersTabEnabled": "Enable Nearby Container Tabs",
+  "modtabs.midnightconfig.nearbyContainersTabEnabled.tooltip": "Show one tab per nearby chest / barrel / shulker box / modded container so you can open them without leaving your inventory.",
+  "modtabs.midnightconfig.nearbyContainersTabRange": "Nearby Container Range",
+  "modtabs.midnightconfig.nearbyContainersTabRange.tooltip": "Radius in blocks to scan around the player for openable containers. Default 5.",
+  "modtabs.midnightconfig.nearbyContainersTabRequireLineOfSight": "Require Line of Sight",
+  "modtabs.midnightconfig.nearbyContainersTabRequireLineOfSight.tooltip": "If on, containers blocked behind walls won't show a tab. Off by default — the vanilla reach check is enough.",
+
   "modtabs.midnightconfig.customTabs": "Custom Tabs",
   "modtabs.midnightconfig.customTabsEnabled": "Enable Custom Tabs",
   "modtabs.midnightconfig.customTabsEnabled.tooltip": "Enable loading custom tabs from JSON configuration files in config/modtabs/custom_tabs/",

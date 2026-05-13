@@ -27,6 +27,7 @@ public class TabsMenu {
     private static final Map<Class<? extends Screen>, ScreenInfo> tabsScreens = new HashMap<>();
     private static final List<TabBase> allRegisteredTabs = new ArrayList<>();
     private static final List<ScreenRegistration> pendingScreenRegistrations = new ArrayList<>();
+    private static final List<DynamicTabProvider> dynamicTabProviders = new ArrayList<>();
     private static int leftScreenPos;
     private static int topScreenPos;
     private static int startTabIndex;
@@ -1518,6 +1519,28 @@ public class TabsMenu {
                 return Integer.compare(order1, order2);
             });
 
+            // Dynamic providers contribute transient tabs (e.g. nearby chests). We collect
+            // them into a side list rather than appending straight to enabledTabs because
+            // the pagination logic further down may need to slot them into the end of page 1
+            // (displacing static tabs to page 2) rather than the very tail of the bar.
+            List<TabBase> dynamicTabs = new ArrayList<>();
+            if (!dynamicTabProviders.isEmpty()) {
+                Player dynPlayer = Minecraft.getInstance().player;
+                Screen dynScreen = event.getScreen();
+                for (DynamicTabProvider provider : dynamicTabProviders) {
+                    try {
+                        provider.contribute(dynPlayer, dynScreen, dynamicTabs);
+                    } catch (Exception ex) {
+                        vodmordia.modtabs.ModTabs.LOGGER.warn(
+                                "DynamicTabProvider {} threw during contribute(): {}",
+                                provider.getClass().getName(), ex.toString());
+                    }
+                }
+            }
+            // Default placement: at the tail, after all static tabs. Pagination overflow
+            // is handled below by re-inserting dynamics into the page-1 tail.
+            enabledTabs.addAll(dynamicTabs);
+
             // Handle sticky inventory tab - separate inventory tab from other tabs
             TabBase inventoryTab = null;
             List<TabBase> nonInventoryTabs = new ArrayList<>();
@@ -1545,6 +1568,34 @@ public class TabsMenu {
             currentTabsCount = (perPageCap > 0)
                     ? Math.min(totalEnabledIncludingSticky, perPageCap)
                     : totalEnabledIncludingSticky;
+
+            // When pagination overflows AND we have dynamic tabs, pull them out of the bar's
+            // tail and re-insert at the page-1 tail so they're visible on first open rather
+            // than buried on a later page. Static tabs that would have occupied those slots
+            // are bumped to page 2+. No-op when there's no overflow (everything fits anyway).
+            if (!dynamicTabs.isEmpty() && perPageCap > 0
+                    && nonInventoryTabs.size() > perPageCap - ((Config.Baked.stickyInventoryTab && inventoryTab != null) ? 1 : 0)) {
+                int reservedForSticky = (Config.Baked.stickyInventoryTab && inventoryTab != null) ? 1 : 0;
+                int nonStickyPage1Slots = Math.max(0, perPageCap - reservedForSticky);
+                int targetPos = Math.max(0, nonStickyPage1Slots - dynamicTabs.size());
+                // Dynamics are currently at the tail of nonInventoryTabs (and of enabledTabs).
+                // Pull them out and re-insert at the page-1 boundary.
+                nonInventoryTabs.removeAll(dynamicTabs);
+                targetPos = Math.min(targetPos, nonInventoryTabs.size());
+                nonInventoryTabs.addAll(targetPos, dynamicTabs);
+                // Keep enabledTabs in sync with the displayed order so cycleToNextTab and
+                // any other consumer of enabledTabs see the same sequence. In sticky mode
+                // nonInventoryTabs is a separate list, so we rebuild enabledTabs around
+                // inventoryTab; in non-sticky mode nonInventoryTabs IS enabledTabs (aliased
+                // above) and is already in sync after the mutations.
+                if (Config.Baked.stickyInventoryTab && inventoryTab != null) {
+                    int invIdx = enabledTabs.indexOf(inventoryTab);
+                    if (invIdx < 0) invIdx = 0;
+                    enabledTabs.clear();
+                    enabledTabs.addAll(nonInventoryTabs);
+                    enabledTabs.add(Math.min(invIdx, enabledTabs.size()), inventoryTab);
+                }
+            }
 
 
             // Sweep both children AND renderables for any leftover TabButton or
@@ -1671,6 +1722,15 @@ public class TabsMenu {
                 currentTabIndex++;
             }
         }
+    }
+
+    /**
+     * Register a source of transient tabs (e.g. nearby chests). Providers run during
+     * {@link #initScreenButtons} after the static-tab list is built and append directly to it,
+     * so dynamic tabs share the same sort / pagination / visibility / tuck pipeline.
+     */
+    public static void registerDynamicProvider(DynamicTabProvider provider) {
+        dynamicTabProviders.add(provider);
     }
 
     public static void register(TabBase tabBase) {

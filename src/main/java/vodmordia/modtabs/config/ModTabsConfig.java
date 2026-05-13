@@ -972,6 +972,19 @@ public class ModTabsConfig extends MidnightConfig {
     @Entry(category = "tabs") @Hidden
     public static TabDisplayVisibility xaerosMapTabDisplayVisibility = TabDisplayVisibility.YES;
 
+    @Comment(category = "tabs") public static CommentText spacerNearbyContainers;
+
+    @Comment(category = "tabs") public static CommentText nearbyContainersHeader;
+
+    @Entry(category = "tabs")
+    public static boolean nearbyContainersTabEnabled = true;
+
+    @Entry(category = "tabs", min = 1, max = 16)
+    public static int nearbyContainersTabRange = 5;
+
+    @Entry(category = "tabs")
+    public static boolean nearbyContainersTabRequireLineOfSight = false;
+
     @Comment(category = "customTabs") public static CommentText spacer22;
 
     @Comment(category = "customTabs") public static CommentText customTabs;

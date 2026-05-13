@@ -155,6 +155,23 @@ public class ModTabs
             TabsMenu.register(new AetherTab());
             TabsMenu.register(new CuriosTab());
 
+            // One transient tab per nearby container block (chests, barrels, modded
+            // inventories, …). Discovered fresh on every screen-init.
+            TabsMenu.registerDynamicProvider(new vodmordia.modtabs.client.tabs_menu.NearbyContainersProvider());
+
+            // Mount the tab row on the vanilla container screens too so the bar follows the
+            // player when they click a nearby-chest tab. Without this, ContainerScreen has no
+            // tabs registered and the bar disappears once a chest is open — defeating the
+            // point of being able to hop between nearby chests via tab clicks.
+            // ContainerScreen covers chests / barrels / ender chests / trapped chests (they
+            // all share ChestMenu); the others are separate vanilla screen classes.
+            vodmordia.modtabs.api.tabs_menu.ScreenRegistry.registerStandardScreens(
+                    net.minecraft.client.gui.screens.inventory.ContainerScreen.class,
+                    net.minecraft.client.gui.screens.inventory.ShulkerBoxScreen.class,
+                    net.minecraft.client.gui.screens.inventory.DispenserScreen.class,
+                    net.minecraft.client.gui.screens.inventory.HopperScreen.class
+            );
+
             // Wait for Patchouli books to load, then load custom tabs
             waitForPatchouliAndLoadCustomTabs();
 

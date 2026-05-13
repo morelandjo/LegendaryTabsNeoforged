@@ -63,3 +63,13 @@ with credit to it's authors.
 Forge Mod Loader downloads components from the Minecraft Coder Pack
 (http://mcp.ocean-labs.de/index.php/Main_Page) with kind permission from the MCP team.
 
+=========================================================================
+
+The nearby-container tab feature (one tab per chest/barrel/shulker/modded
+inventory in a radius around the player, with double-chest dedup and the
+synthetic right-click open path) is a clean-room implementation inspired by
+the design of "InventoryTabs" by dhyces / Kavin Phan and earlier authors —
+https://github.com/dhyces/InventoryTabs — licensed under the MIT License.
+No source code was copied; the underlying ideas (radius scan, useItemOn
+right-click forwarding, double-chest half merging) are credited here.
+
