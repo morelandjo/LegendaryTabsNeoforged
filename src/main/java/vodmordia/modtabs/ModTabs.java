@@ -154,6 +154,8 @@ public class ModTabs
             TabsMenu.register(new ApothicAttributesTab());
             TabsMenu.register(new AetherTab());
             TabsMenu.register(new CuriosTab());
+            TabsMenu.register(new EpicFightTab());
+            TabsMenu.register(new EpicSkillsTab());
 
             // One transient tab per nearby container block (chests, barrels, modded
             // inventories, …). Discovered fresh on every screen-init.

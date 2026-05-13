@@ -605,6 +605,56 @@ public class ModTabsConfig extends MidnightConfig {
     @Entry(category = "tabs") @Hidden
     public static TabDisplayVisibility curiosTabDisplayVisibility = TabDisplayVisibility.YES;
 
+    @Comment(category = "tabs") public static CommentText spacer_epic_fight;
+
+    @Comment(category = "tabs") public static CommentText epicFight;
+
+    @Entry(category = "tabs") @Hidden
+    public static boolean epicFightTabEnabled = true;
+
+    @Entry(category = "tabs") @Hidden
+    public static String epicFightTabCustomIcon = "";
+    @Entry(category = "tabs") @Hidden
+    public static int epicFightTabIconScale = 100;
+    @Entry(category = "tabs") @Hidden
+    public static int epicFightTabIconNudgeUp = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int epicFightTabIconNudgeDown = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int epicFightTabIconNudgeLeft = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int epicFightTabIconNudgeRight = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int epicFightTabOrder = 0;
+
+    @Entry(category = "tabs") @Hidden
+    public static TabDisplayVisibility epicFightTabDisplayVisibility = TabDisplayVisibility.YES;
+
+    @Comment(category = "tabs") public static CommentText spacer_epic_skills;
+
+    @Comment(category = "tabs") public static CommentText epicSkills;
+
+    @Entry(category = "tabs") @Hidden
+    public static boolean epicSkillsTabEnabled = true;
+
+    @Entry(category = "tabs") @Hidden
+    public static String epicSkillsTabCustomIcon = "";
+    @Entry(category = "tabs") @Hidden
+    public static int epicSkillsTabIconScale = 100;
+    @Entry(category = "tabs") @Hidden
+    public static int epicSkillsTabIconNudgeUp = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int epicSkillsTabIconNudgeDown = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int epicSkillsTabIconNudgeLeft = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int epicSkillsTabIconNudgeRight = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int epicSkillsTabOrder = 0;
+
+    @Entry(category = "tabs") @Hidden
+    public static TabDisplayVisibility epicSkillsTabDisplayVisibility = TabDisplayVisibility.YES;
+
     @Comment(category = "tabs") public static CommentText spacer10;
 
     @Comment(category = "tabs") public static CommentText journeyMap;

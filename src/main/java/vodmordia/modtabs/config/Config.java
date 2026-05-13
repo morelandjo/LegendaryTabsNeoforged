@@ -52,6 +52,8 @@ public class Config
 		public static boolean apothicAttributesTabEnabled;
 		public static boolean aetherTabEnabled;
 		public static boolean curiosTabEnabled;
+		public static boolean epicFightTabEnabled;
+		public static boolean epicSkillsTabEnabled;
 		public static boolean stickyInventoryTab;
 
 		// Custom icon settings
@@ -277,6 +279,18 @@ public class Config
 		public static int curiosTabIconNudgeDown;
 		public static int curiosTabIconNudgeLeft;
 		public static int curiosTabIconNudgeRight;
+		public static String epicFightTabCustomIcon;
+		public static int epicFightTabIconScale;
+		public static int epicFightTabIconNudgeUp;
+		public static int epicFightTabIconNudgeDown;
+		public static int epicFightTabIconNudgeLeft;
+		public static int epicFightTabIconNudgeRight;
+		public static String epicSkillsTabCustomIcon;
+		public static int epicSkillsTabIconScale;
+		public static int epicSkillsTabIconNudgeUp;
+		public static int epicSkillsTabIconNudgeDown;
+		public static int epicSkillsTabIconNudgeLeft;
+		public static int epicSkillsTabIconNudgeRight;
 
 		// Custom tabs settings
 		public static boolean customTabsEnabled;
@@ -323,6 +337,8 @@ public class Config
 		public static TabDisplayVisibility advancedTeamTabDisplayVisibility;
 		public static TabDisplayVisibility villagerRecruitsTabDisplayVisibility;
 		public static TabDisplayVisibility curiosTabDisplayVisibility;
+		public static TabDisplayVisibility epicFightTabDisplayVisibility;
+		public static TabDisplayVisibility epicSkillsTabDisplayVisibility;
 
 		// Tab order overrides
 		public static int inventoryTabOrder;
@@ -363,6 +379,8 @@ public class Config
 		public static int apothicAttributesTabOrder;
 		public static int aetherTabOrder;
 		public static int curiosTabOrder;
+		public static int epicFightTabOrder;
+		public static int epicSkillsTabOrder;
 
 		public static void bakeClient()
 		{
@@ -414,6 +432,8 @@ public class Config
 				apothicAttributesTabEnabled = ModTabsConfig.apothicAttributesTabEnabled;
 				aetherTabEnabled = ModTabsConfig.aetherTabEnabled;
 				curiosTabEnabled = ModTabsConfig.curiosTabEnabled;
+				epicFightTabEnabled = ModTabsConfig.epicFightTabEnabled;
+				epicSkillsTabEnabled = ModTabsConfig.epicSkillsTabEnabled;
 				stickyInventoryTab = ModTabsConfig.stickyInventoryTab;
 
 				// Load custom tabs settings
@@ -464,6 +484,8 @@ public class Config
 				apothicAttributesTabOrder = ModTabsConfig.apothicAttributesTabOrder;
 				aetherTabOrder = ModTabsConfig.aetherTabOrder;
 				curiosTabOrder = ModTabsConfig.curiosTabOrder;
+				epicFightTabOrder = ModTabsConfig.epicFightTabOrder;
+				epicSkillsTabOrder = ModTabsConfig.epicSkillsTabOrder;
 
 				// Load tab display visibility settings
 				inventoryTabDisplayVisibility = ModTabsConfig.inventoryTabDisplayVisibility;
@@ -501,6 +523,8 @@ public class Config
 				advancedTeamTabDisplayVisibility = ModTabsConfig.advancedTeamTabDisplayVisibility;
 				villagerRecruitsTabDisplayVisibility = ModTabsConfig.villagerRecruitsTabDisplayVisibility;
 				curiosTabDisplayVisibility = ModTabsConfig.curiosTabDisplayVisibility;
+				epicFightTabDisplayVisibility = ModTabsConfig.epicFightTabDisplayVisibility;
+				epicSkillsTabDisplayVisibility = ModTabsConfig.epicSkillsTabDisplayVisibility;
 
 				// Load custom icon settings
 				inventoryTabCustomIcon = ModTabsConfig.inventoryTabCustomIcon;
@@ -725,6 +749,18 @@ public class Config
 				curiosTabIconNudgeDown = ModTabsConfig.curiosTabIconNudgeDown;
 				curiosTabIconNudgeLeft = ModTabsConfig.curiosTabIconNudgeLeft;
 				curiosTabIconNudgeRight = ModTabsConfig.curiosTabIconNudgeRight;
+				epicFightTabCustomIcon = ModTabsConfig.epicFightTabCustomIcon;
+				epicFightTabIconScale = ModTabsConfig.epicFightTabIconScale;
+				epicFightTabIconNudgeUp = ModTabsConfig.epicFightTabIconNudgeUp;
+				epicFightTabIconNudgeDown = ModTabsConfig.epicFightTabIconNudgeDown;
+				epicFightTabIconNudgeLeft = ModTabsConfig.epicFightTabIconNudgeLeft;
+				epicFightTabIconNudgeRight = ModTabsConfig.epicFightTabIconNudgeRight;
+				epicSkillsTabCustomIcon = ModTabsConfig.epicSkillsTabCustomIcon;
+				epicSkillsTabIconScale = ModTabsConfig.epicSkillsTabIconScale;
+				epicSkillsTabIconNudgeUp = ModTabsConfig.epicSkillsTabIconNudgeUp;
+				epicSkillsTabIconNudgeDown = ModTabsConfig.epicSkillsTabIconNudgeDown;
+				epicSkillsTabIconNudgeLeft = ModTabsConfig.epicSkillsTabIconNudgeLeft;
+				epicSkillsTabIconNudgeRight = ModTabsConfig.epicSkillsTabIconNudgeRight;
 			}
 			catch (Exception e)
 			{

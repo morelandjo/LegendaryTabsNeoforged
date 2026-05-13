@@ -40,7 +40,9 @@ public enum ModIntegration {
     ADVANCED_TEAM("teams", "Advanced Team"),
     VILLAGER_RECRUITS("recruits", "Villager Recruits"),
     APOTHIC_ATTRIBUTES("attributeslib", "Apothic Attributes"),
-    AETHER("aether", "The Aether");
+    AETHER("aether", "The Aether"),
+    EPIC_FIGHT("epicfight", "Epic Fight"),
+    EPIC_SKILLS("epicskills", "Epic Fight Skill Tree");
 
     private final String modId;
     private final String displayName;

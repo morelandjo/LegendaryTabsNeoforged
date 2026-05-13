@@ -153,7 +153,14 @@ dependencies {
     implementation fg.deobf("curse.maven:curios-309927:6418456")
     implementation fg.deobf("curse.maven:sophisticated-core-618298:8014107")
     implementation fg.deobf("curse.maven:sophisticated-backpacks-422301:8007547")
-    implementation fg.deobf("curse.maven:travelers-backpack-321117:7816782")
+    // Travelers Backpack: demoted to compileOnly while Epic Fight is loaded at runtime.
+    // Epic Fight's ClientConfig.onLoad walks every registered item and calls
+    // EpicFightCapabilities.getItemStackCapability, which triggers the backpack item's
+    // capability provider → TravelersBackpack.enableCurios() → ForgeConfigSpec.get(), but
+    // Travelers Backpack's own ConfigSpec hasn't loaded yet at that point, so the dev client
+    // crashes on the title-screen resource reload ("Cannot get config value before config is
+    // loaded"). Switch back to implementation when not testing Epic Fight.
+    compileOnly fg.deobf("curse.maven:travelers-backpack-321117:7816782")
     implementation fg.deobf("curse.maven:map-atlases-forge-519759:7660146")
 
     // Core libs / equipment / books.
@@ -257,6 +264,17 @@ dependencies {
     // SimpleChannel exposed at AetherPacketHandler.INSTANCE, same as the "I" keybind.
     // Default file id is sourced from gradle.properties; override with -PaetherFileId=<id>.
     compileOnly fg.deobf("curse.maven:aether-255308:${project.findProperty('aetherFileId') ?: '6134920'}")
+
+    // Epic Fight (Forge 1.20.1). Reflection-only integration — EpicFightTab mirrors
+    // ControlEngine.openSkillEditor() via getLocalPlayerPatch / getSkillCapability,
+    // then constructs SkillEditScreen directly. Loaded at runtime so the tab can be
+    // tested in dev. Override file id via -PepicFightFileId=<id>.
+    implementation fg.deobf("curse.maven:epic-fight-mod-405076:${project.findProperty('epicFightFileId') ?: '8049910'}")
+
+    // Epic Fight Skill Tree (epicskills, Antikythera-Studios). Hard-deps Epic Fight at
+    // runtime; the SkillTreeScreen constructor takes a LocalPlayerPatch from Epic Fight.
+    // Reflection-only on our side — same as EpicFightTab.
+    implementation fg.deobf("curse.maven:epic-fight-skill-tree-1295882:${project.findProperty('epicSkillsFileId') ?: '7916852'}")
 }
 
 tasks.named('processResources', ProcessResources).configure {
