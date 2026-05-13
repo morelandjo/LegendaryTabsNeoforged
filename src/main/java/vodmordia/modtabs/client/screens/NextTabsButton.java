@@ -71,9 +71,10 @@ public class NextTabsButton extends Button {
         Screen current = net.minecraft.client.Minecraft.getInstance().screen;
         boolean editing = current != null && TabsMenu.isEditing(current);
         boolean isContainer = current instanceof net.minecraft.client.gui.screens.inventory.AbstractContainerScreen<?>;
+        boolean rendersOnTop = isContainer && TabsMenu.rendersTabsOnTop(current);
         if (editing) {
             if (TabsMenu.renderingBehindPanel) return;
-        } else if (isContainer) {
+        } else if (isContainer && !rendersOnTop) {
             if (!TabsMenu.renderingBehindPanel) return;
         } else {
             if (TabsMenu.renderingBehindPanel) return;

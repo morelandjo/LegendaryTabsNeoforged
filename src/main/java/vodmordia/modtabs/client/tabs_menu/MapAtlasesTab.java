@@ -1,5 +1,6 @@
 package vodmordia.modtabs.client.tabs_menu;
 
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -34,6 +35,15 @@ public class MapAtlasesTab extends IntegrationIconTab {
     public boolean isEnabled(Player player) {
         // Tab only shows when an atlas is actually present in the player's inventory.
         return super.isEnabled(player) && hasAtlas(player);
+    }
+
+    @Override
+    public boolean isHomeTab(Screen currentScreen) {
+        // Spec uses withoutCurrentScreen so the tab stays clickable on the atlas screen
+        // (acts as a refresh). The long-press-to-edit gesture keys off isHomeTab, so we
+        // match the atlas screen directly here — otherwise holding the tab on its own
+        // screen never enters the layout editor.
+        return ClassCache.isInstance(ScreenClasses.MAP_ATLASES_OVERVIEW, currentScreen);
     }
 
     private static boolean hasAtlas(Player player) {

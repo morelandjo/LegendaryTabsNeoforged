@@ -29,6 +29,14 @@ import java.lang.reflect.Field;
 @TabConfig(configKey = "curiosTab", defaultEnabled = true, defaultOrder = 0)
 public class CuriosTab extends IntegrationItemTab {
 
+    // Both V1 (CuriosScreen, legacy) and V2 (CuriosScreenV2, default) need tabs — the
+    // server picks V2 by default; V1 only opens when CuriosConfig.SERVER.enableLegacyMenu
+    // is set. Listing both here keeps tabs working regardless of the player's config.
+    private static final String[] SCREENS = {
+            ScreenClasses.CURIOS_SCREEN,
+            ScreenClasses.CURIOS_SCREEN_V2
+    };
+
     private static final TabSpec SPEC = new TabSpec(
             "curiosTab",
             ModIntegration.CURIOS,
@@ -36,8 +44,8 @@ public class CuriosTab extends IntegrationItemTab {
             "curios",
             "curios",
             TabSpec.Layout.guiRelative(),
-            new String[] { ScreenClasses.CURIOS_SCREEN },
-            new String[] { ScreenClasses.CURIOS_SCREEN }
+            SCREENS,
+            SCREENS
     );
 
     public CuriosTab() {

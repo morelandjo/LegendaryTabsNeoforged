@@ -46,6 +46,22 @@ public class TabsMenu {
     public static boolean renderingBehindPanel = false;
 
     /**
+     * Container screens that completely override {@code render} and never call
+     * {@code super.render} (e.g. Sophisticated Backpacks' {@code StorageScreenBase}
+     * replays its own version manually). Our {@code AbstractContainerScreen.render}
+     * mixin never fires for these, so {@code renderingBehindPanel} stays false and
+     * the behind-panel pass is lost. For screens in this set, tabs render in the
+     * normal renderables iteration (on top of the GUI panel) instead.
+     */
+    private static final java.util.Set<String> RENDER_TABS_ON_TOP_FQNS = java.util.Set.of(
+            "net.p3pp3rf1y.sophisticatedbackpacks.client.gui.BackpackScreen"
+    );
+
+    public static boolean rendersTabsOnTop(Screen screen) {
+        return screen != null && RENDER_TABS_ON_TOP_FQNS.contains(screen.getClass().getName());
+    }
+
+    /**
      * Renders the screen's TabButtons / NextTabsButton manually, before the GUI panel
      * draws. Called from {@link vodmordia.modtabs.mixin.AbstractContainerScreenMixin}.
      * Skipped while editing — edit mode wants tabs on top so the user can grab handles.

@@ -141,20 +141,34 @@ dependencies {
     // the title-screen resource reload.
     implementation fg.deobf("maven.modrinth:midnightlib:${project.midnightlib_version}")
 
-    // Core libs / equipment / books.
+    // -------------------------------------------------------------------------
+    // TEST SET (May 2026): minimal mod set focused on the MapAtlas long-press +
+    // Sophisticated Backpacks Curios/inventory bugfix. Everything else is left
+    // as compileOnly so the codebase still compiles, but isn't loaded at runtime.
+    // To restore the full set, switch the `compileOnly` lines below back to
+    // `implementation`.
+    // -------------------------------------------------------------------------
+
+    // ENABLED at runtime — direct testing targets.
     implementation fg.deobf("curse.maven:curios-309927:6418456")
-    implementation fg.deobf("curse.maven:patchouli-306770:7731017")
-    implementation fg.deobf("curse.maven:architectury-api-419699:5137938")
-    implementation fg.deobf("curse.maven:better-advancements-272515:5454907")
-    implementation fg.deobf("curse.maven:eccentric-tome-597522:7285203")
-    implementation fg.deobf("curse.maven:cloth-config-348521:5729105")
+    implementation fg.deobf("curse.maven:sophisticated-core-618298:8014107")
+    implementation fg.deobf("curse.maven:sophisticated-backpacks-422301:8007547")
+    implementation fg.deobf("curse.maven:travelers-backpack-321117:7816782")
+    implementation fg.deobf("curse.maven:map-atlases-forge-519759:7660146")
+
+    // Core libs / equipment / books.
+    compileOnly fg.deobf("curse.maven:patchouli-306770:7731017")
+    compileOnly fg.deobf("curse.maven:architectury-api-419699:5137938")
+    compileOnly fg.deobf("curse.maven:better-advancements-272515:5454907")
+    compileOnly fg.deobf("curse.maven:eccentric-tome-597522:7285203")
+    compileOnly fg.deobf("curse.maven:cloth-config-348521:5729105")
 
     // Skills / progression.
-    implementation fg.deobf("curse.maven:puffish-skills-835091:7672794")
-    implementation fg.deobf("curse.maven:reskillable-reimagined-1170464:7958820")
+    compileOnly fg.deobf("curse.maven:puffish-skills-835091:7672794")
+    compileOnly fg.deobf("curse.maven:reskillable-reimagined-1170464:7958820")
     // Project 1079687 was renamed from "memories-of-the-past" → "rpg-attribute-system" on CurseForge.
-    implementation fg.deobf("curse.maven:rpg-attribute-system-1079687:8008921")
-    implementation fg.deobf("curse.maven:jauml-1281310:7835241")
+    compileOnly fg.deobf("curse.maven:rpg-attribute-system-1079687:8008921")
+    compileOnly fg.deobf("curse.maven:jauml-1281310:7835241")
     // Curse Maven blocks direct download of the runic-skills artifact (403 Forbidden),
     // so we vendor the jar in libs/runicskills-1.0.0.jar and resolve it through the
     // flatDir repo above. The "blank" group is required by ForgeGradle's deobf cache key.
@@ -166,78 +180,77 @@ dependencies {
     // Required by Runic Skills (yet_another_config_lib_v3 >= 3.4.2).
     // implementation fg.deobf("curse.maven:yacl-667299:6336646")
 
-    // Backpacks.
-    implementation fg.deobf("curse.maven:sophisticated-core-618298:8014107")
-    implementation fg.deobf("curse.maven:sophisticated-backpacks-422301:8007547")
-    implementation fg.deobf("curse.maven:travelers-backpack-321117:7816782")
-    implementation fg.deobf("curse.maven:backpacked-352835:7866682")
-    implementation fg.deobf("curse.maven:cosmetic-armor-reworked-237307:4600191")
+    // Other backpack mods (compile-only — not part of this test pass).
+    compileOnly fg.deobf("curse.maven:backpacked-352835:7866682")
+    compileOnly fg.deobf("curse.maven:cosmetic-armor-reworked-237307:4600191")
 
     // FTB suite.
-    implementation fg.deobf("curse.maven:ftb-quests-forge-289412:7909594")
-    implementation fg.deobf("curse.maven:ftb-teams-forge-404468:7499810")
-    implementation fg.deobf("curse.maven:ftb-chunks-forge-314906:7880858")
-    implementation fg.deobf("curse.maven:ftb-library-forge-404465:7296748")
-    implementation fg.deobf("curse.maven:framework-549225:7573740")
+    compileOnly fg.deobf("curse.maven:ftb-quests-forge-289412:7909594")
+    compileOnly fg.deobf("curse.maven:ftb-teams-forge-404468:7499810")
+    compileOnly fg.deobf("curse.maven:ftb-chunks-forge-314906:7880858")
+    compileOnly fg.deobf("curse.maven:ftb-library-forge-404465:7296748")
+    compileOnly fg.deobf("curse.maven:framework-549225:7573740")
 
     // Advanced Team (clefal) — separate teams mod with its own HasTeam/NoTeam screens.
     // Curse Maven blocks direct download of this artifact (403 Forbidden), same as Runic Skills,
     // so we vendor the jar in libs/advanced-team-1.4.6.jar and resolve it through the flatDir
     // repo above. The "blank" group is required by ForgeGradle's deobf cache key.
-    implementation fg.deobf("blank:advanced-team:1.4.6")
+    compileOnly fg.deobf("blank:advanced-team:1.4.6")
     // Nirvana Library — required by Advanced Team (com.clefal.nirvana_lib.* packages).
-    implementation fg.deobf("curse.maven:nirvana-library-1164411:7986008")
+    compileOnly fg.deobf("curse.maven:nirvana-library-1164411:7986008")
     // Required transitive deps of Nirvana Library.
-    implementation fg.deobf("curse.maven:common-network-806044:5486134")
-    implementation fg.deobf("curse.maven:fzzy-config-1005914:7568893")
+    compileOnly fg.deobf("curse.maven:common-network-806044:5486134")
+    compileOnly fg.deobf("curse.maven:fzzy-config-1005914:7568893")
 
-    // Map mods.
-    implementation fg.deobf("curse.maven:journeymap-32274:5789363")
-    implementation fg.deobf("curse.maven:xaeros-world-map-317780:7598469")
-    implementation fg.deobf("curse.maven:map-atlases-forge-519759:7660146")
+    // Other map mods (Map Atlases is enabled above as a direct test target).
+    compileOnly fg.deobf("curse.maven:journeymap-32274:5789363")
+    compileOnly fg.deobf("curse.maven:xaeros-world-map-317780:7598469")
 
     // L2 stack (xkmc) + Modular Golems.
-    implementation fg.deobf("curse.maven:l2library-620203:6806000")
-    implementation fg.deobf("curse.maven:l2hostility-909207:7815389")
-    implementation fg.deobf("curse.maven:l2-complements-758349:7606338")
-    implementation fg.deobf("curse.maven:l2-artifacts-659547:6801939")
-    implementation fg.deobf("curse.maven:modulargolems-690937:7948763")
+    compileOnly fg.deobf("curse.maven:l2library-620203:6806000")
+    compileOnly fg.deobf("curse.maven:l2hostility-909207:7815389")
+    compileOnly fg.deobf("curse.maven:l2-complements-758349:7606338")
+    compileOnly fg.deobf("curse.maven:l2-artifacts-659547:6801939")
+    compileOnly fg.deobf("curse.maven:modulargolems-690937:7948763")
 
     // Cobblemon (+ Kotlin for Forge runtime requirement).
-    implementation fg.deobf("curse.maven:kotlin-for-forge-351264:7291067")
-    implementation fg.deobf("curse.maven:cobblemon-687131:5375390")
+    compileOnly fg.deobf("curse.maven:kotlin-for-forge-351264:7291067")
+    compileOnly fg.deobf("curse.maven:cobblemon-687131:5375390")
 
     // Magic / spellcasting.
-    implementation fg.deobf("curse.maven:geckolib-388172:7553267")
-    implementation fg.deobf("curse.maven:ars-nouveau-401955:6688854")
+    compileOnly fg.deobf("curse.maven:geckolib-388172:7553267")
+    compileOnly fg.deobf("curse.maven:ars-nouveau-401955:6688854")
     // Ars Elixirum on 1.20.1 lives at ars-elixirum-forge (project 620870), not the NeoForge slug.
-    implementation fg.deobf("curse.maven:ars-elixirum-forge-620870:7985649")
-    implementation fg.deobf("curse.maven:fragmentum-1123970:7983969")
+    compileOnly fg.deobf("curse.maven:ars-elixirum-forge-620870:7985649")
+    compileOnly fg.deobf("curse.maven:fragmentum-1123970:7983969")
 
     // Tech / automation.
-    implementation fg.deobf("curse.maven:create-328085:7178761")
-    implementation fg.deobf("curse.maven:brandons-core-231382:5422013")
-    implementation fg.deobf("curse.maven:codechicken-lib-1-8-242818:5753868")
-    implementation fg.deobf("curse.maven:draconic-evolution-223565:6793843")
+    compileOnly fg.deobf("curse.maven:create-328085:7178761")
+    compileOnly fg.deobf("curse.maven:brandons-core-231382:5422013")
+    compileOnly fg.deobf("curse.maven:codechicken-lib-1-8-242818:5753868")
+    compileOnly fg.deobf("curse.maven:draconic-evolution-223565:6793843")
 
     // Misc.
+    // Selene (Moonlight) — required at RUNTIME by Map Atlases. Its mods.toml marks moonlight
+    // optional, but MapAtlasesMod.<clinit> references moonlight's RegHelper directly, so
+    // dropping it from the runtime classpath crashes mod loading with NoClassDefFoundError.
     implementation fg.deobf("curse.maven:selene-499980:7945711")
-    implementation fg.deobf("curse.maven:archivist-1513409:7979569")
+    compileOnly fg.deobf("curse.maven:archivist-1513409:7979569")
 
     // Diet (illusivesoulworks) + Bulking (neirenoir). Bulking is a hard dependency on Diet
     // and swaps DietScreen for BulkingScreen via mixins targeting DietClientEvents — so when
     // both are loaded, our tab opens BulkingScreen directly to keep the stomach UI active.
-    implementation fg.deobf("curse.maven:diet-443570:4813904")
-    implementation fg.deobf("curse.maven:bulking-1233813:6411901")
+    compileOnly fg.deobf("curse.maven:diet-443570:4813904")
+    compileOnly fg.deobf("curse.maven:bulking-1233813:6411901")
 
     // Villager Recruits — faction screen (U key by default).
-    implementation fg.deobf("curse.maven:recruits-523860:7906232")
+    compileOnly fg.deobf("curse.maven:recruits-523860:7906232")
 
     // Apothic Attributes (+ Placebo, its hard runtime dep). Reflection-only integration on
     // our side; both jars need to be on the runtime classpath for AttributesGui to load.
     // Sourced from Shadows_of_Fire's official maven; bump versions in gradle.properties.
-    implementation fg.deobf("dev.shadowsoffire:Placebo:${minecraft_version}-${project.placebo_version}")
-    implementation fg.deobf("dev.shadowsoffire:ApothicAttributes:${minecraft_version}-${project.apothic_attributes_version}")
+    compileOnly fg.deobf("dev.shadowsoffire:Placebo:${minecraft_version}-${project.placebo_version}")
+    compileOnly fg.deobf("dev.shadowsoffire:ApothicAttributes:${minecraft_version}-${project.apothic_attributes_version}")
 
     // The Aether (Forge 1.20.1). Reflection-only integration: AetherTab reuses the
     // mod's own packet path — sends an OpenAccessoriesPacket through Forge's

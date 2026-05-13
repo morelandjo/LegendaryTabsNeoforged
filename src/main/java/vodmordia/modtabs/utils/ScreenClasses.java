@@ -235,9 +235,13 @@ public final class ScreenClasses {
             "dev.neire.mc.bulking.client.gui.BulkingScreen";
 
     // -- Curios -----------------------------------------------------------
-    /** {@code EffectRenderingInventoryScreen<CuriosContainer>} — the accessory inventory. */
+    /** Legacy curios inventory (V1). Used when {@code CuriosConfig.SERVER.enableLegacyMenu = true}. */
     public static final String CURIOS_SCREEN =
             "top.theillusivec4.curios.client.gui.CuriosScreen";
+    /** Revamped curios inventory (V2). Default on modern Curios — {@code CuriosContainerProvider}
+     *  picks V2 unless the legacy-menu config flag is on, so this is what most players see. */
+    public static final String CURIOS_SCREEN_V2 =
+            "top.theillusivec4.curios.client.gui.CuriosScreenV2";
     /** Plain-message class for Forge SimpleChannel with a single {@code ItemStack carried} field;
      *  the server's handler opens the curios menu for the player. */
     public static final String CURIOS_OPEN_PACKET =

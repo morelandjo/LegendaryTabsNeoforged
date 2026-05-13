@@ -126,9 +126,13 @@ public class TabButton extends Button {
         //    mixin and no panel to go behind, so render in the normal widget pass.
         boolean editing = TabsMenu.isEditing(this.screen);
         boolean isContainer = this.screen instanceof net.minecraft.client.gui.screens.inventory.AbstractContainerScreen<?>;
+        // Container screens that fully override render (no super.render call) miss our
+        // behind-panel mixin and would never draw. Treat them like non-container screens —
+        // render on top in the normal pass.
+        boolean rendersOnTop = isContainer && TabsMenu.rendersTabsOnTop(this.screen);
         if (editing) {
             if (TabsMenu.renderingBehindPanel) return;
-        } else if (isContainer) {
+        } else if (isContainer && !rendersOnTop) {
             if (!TabsMenu.renderingBehindPanel) return;
         } else {
             if (TabsMenu.renderingBehindPanel) return;
