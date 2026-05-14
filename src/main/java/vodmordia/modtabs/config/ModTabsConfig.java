@@ -730,6 +730,31 @@ public class ModTabsConfig extends MidnightConfig {
     @Entry(category = "tabs") @Hidden
     public static TabDisplayVisibility blueSkiesJournalTabDisplayVisibility = TabDisplayVisibility.YES;
 
+    @Comment(category = "tabs") public static CommentText spacer_completionists_index;
+
+    @Comment(category = "tabs") public static CommentText completionistsIndex;
+
+    @Entry(category = "tabs") @Hidden
+    public static boolean completionistsIndexTabEnabled = true;
+
+    @Entry(category = "tabs") @Hidden
+    public static String completionistsIndexTabCustomIcon = "";
+    @Entry(category = "tabs") @Hidden
+    public static int completionistsIndexTabIconScale = 100;
+    @Entry(category = "tabs") @Hidden
+    public static int completionistsIndexTabIconNudgeUp = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int completionistsIndexTabIconNudgeDown = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int completionistsIndexTabIconNudgeLeft = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int completionistsIndexTabIconNudgeRight = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int completionistsIndexTabOrder = 0;
+
+    @Entry(category = "tabs") @Hidden
+    public static TabDisplayVisibility completionistsIndexTabDisplayVisibility = TabDisplayVisibility.YES;
+
     @Comment(category = "tabs") public static CommentText spacer10;
 
     @Comment(category = "tabs") public static CommentText journeyMap;

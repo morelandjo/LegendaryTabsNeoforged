@@ -302,6 +302,14 @@ dependencies {
     // Structure Gel API — hard runtime dep of Blue Skies (mandatory, [2.13.0,]).
     // 5278429 = v2.16.2 for 1.20.1 Forge, the latest at the time the 1.20.1 branch was cut.
     implementation fg.deobf("curse.maven:structure-gel-api-378802:5278429")
+
+    // Completionist's Index (Fuzs, Forge 1.20.1). Reflection-only integration —
+    // CompletionistsIndexTab opens ModsIndexViewScreen(Screen) directly, same path as
+    // the mod's inventory button in IndexButtonHandler. The mod's own inventory
+    // button is suppressed via IndexButtonHandlerMixin so the tab is the only entry
+    // point. Hard-deps puzzleslib at runtime — kept compileOnly here so swapping to
+    // `implementation` also requires pinning a puzzleslib file id.
+    compileOnly fg.deobf("curse.maven:completionists-index-852667:4613443")
 }
 
 tasks.named('processResources', ProcessResources).configure {

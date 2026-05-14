@@ -57,6 +57,7 @@ public class Config
 		public static boolean mineAndSlashTabEnabled;
 		public static boolean blueSkiesArcsTabEnabled;
 		public static boolean blueSkiesJournalTabEnabled;
+		public static boolean completionistsIndexTabEnabled;
 		public static boolean stickyInventoryTab;
 
 		// Custom icon settings
@@ -312,6 +313,12 @@ public class Config
 		public static int blueSkiesJournalTabIconNudgeDown;
 		public static int blueSkiesJournalTabIconNudgeLeft;
 		public static int blueSkiesJournalTabIconNudgeRight;
+		public static String completionistsIndexTabCustomIcon;
+		public static int completionistsIndexTabIconScale;
+		public static int completionistsIndexTabIconNudgeUp;
+		public static int completionistsIndexTabIconNudgeDown;
+		public static int completionistsIndexTabIconNudgeLeft;
+		public static int completionistsIndexTabIconNudgeRight;
 
 		// Custom tabs settings
 		public static boolean customTabsEnabled;
@@ -363,6 +370,7 @@ public class Config
 		public static TabDisplayVisibility mineAndSlashTabDisplayVisibility;
 		public static TabDisplayVisibility blueSkiesArcsTabDisplayVisibility;
 		public static TabDisplayVisibility blueSkiesJournalTabDisplayVisibility;
+		public static TabDisplayVisibility completionistsIndexTabDisplayVisibility;
 
 		// Tab order overrides
 		public static int inventoryTabOrder;
@@ -408,6 +416,7 @@ public class Config
 		public static int mineAndSlashTabOrder;
 		public static int blueSkiesArcsTabOrder;
 		public static int blueSkiesJournalTabOrder;
+		public static int completionistsIndexTabOrder;
 
 		public static void bakeClient()
 		{
@@ -464,6 +473,7 @@ public class Config
 				mineAndSlashTabEnabled = ModTabsConfig.mineAndSlashTabEnabled;
 				blueSkiesArcsTabEnabled = ModTabsConfig.blueSkiesArcsTabEnabled;
 				blueSkiesJournalTabEnabled = ModTabsConfig.blueSkiesJournalTabEnabled;
+				completionistsIndexTabEnabled = ModTabsConfig.completionistsIndexTabEnabled;
 				stickyInventoryTab = ModTabsConfig.stickyInventoryTab;
 
 				// Load custom tabs settings
@@ -519,6 +529,7 @@ public class Config
 				mineAndSlashTabOrder = ModTabsConfig.mineAndSlashTabOrder;
 				blueSkiesArcsTabOrder = ModTabsConfig.blueSkiesArcsTabOrder;
 				blueSkiesJournalTabOrder = ModTabsConfig.blueSkiesJournalTabOrder;
+				completionistsIndexTabOrder = ModTabsConfig.completionistsIndexTabOrder;
 
 				// Load tab display visibility settings
 				inventoryTabDisplayVisibility = ModTabsConfig.inventoryTabDisplayVisibility;
@@ -561,6 +572,7 @@ public class Config
 				mineAndSlashTabDisplayVisibility = ModTabsConfig.mineAndSlashTabDisplayVisibility;
 				blueSkiesArcsTabDisplayVisibility = ModTabsConfig.blueSkiesArcsTabDisplayVisibility;
 				blueSkiesJournalTabDisplayVisibility = ModTabsConfig.blueSkiesJournalTabDisplayVisibility;
+				completionistsIndexTabDisplayVisibility = ModTabsConfig.completionistsIndexTabDisplayVisibility;
 
 				// Load custom icon settings
 				inventoryTabCustomIcon = ModTabsConfig.inventoryTabCustomIcon;
@@ -815,6 +827,12 @@ public class Config
 				blueSkiesJournalTabIconNudgeDown = ModTabsConfig.blueSkiesJournalTabIconNudgeDown;
 				blueSkiesJournalTabIconNudgeLeft = ModTabsConfig.blueSkiesJournalTabIconNudgeLeft;
 				blueSkiesJournalTabIconNudgeRight = ModTabsConfig.blueSkiesJournalTabIconNudgeRight;
+				completionistsIndexTabCustomIcon = ModTabsConfig.completionistsIndexTabCustomIcon;
+				completionistsIndexTabIconScale = ModTabsConfig.completionistsIndexTabIconScale;
+				completionistsIndexTabIconNudgeUp = ModTabsConfig.completionistsIndexTabIconNudgeUp;
+				completionistsIndexTabIconNudgeDown = ModTabsConfig.completionistsIndexTabIconNudgeDown;
+				completionistsIndexTabIconNudgeLeft = ModTabsConfig.completionistsIndexTabIconNudgeLeft;
+				completionistsIndexTabIconNudgeRight = ModTabsConfig.completionistsIndexTabIconNudgeRight;
 			}
 			catch (Exception e)
 			{

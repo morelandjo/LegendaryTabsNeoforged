@@ -339,4 +339,26 @@ public final class ScreenClasses {
      *  used for all serverbound traffic. {@code sendToServer(Object)} is the static helper. */
     public static final String BLUE_SKIES_PACKET_HANDLER =
             "com.legacy.blue_skies.network.PacketHandler";
+
+    // -- Completionist's Index (Fuzs) ------------------------------------
+    /** Abstract parent of {@code ModsIndexViewScreen} / {@code ItemsIndexViewScreen}.
+     *  Plain {@code Screen} subclass (not a container screen); its {@code render()}
+     *  draws the book background then calls {@code super.render()} so tabs added as
+     *  children DO draw without needing the manual-renderables list in
+     *  {@code ClientNeoForgeEvents.onScreenRenderPost}. */
+    public static final String COMPLETIONISTS_INDEX_VIEW_SCREEN =
+            "fuzs.completionistsindex.client.gui.screens.inventory.IndexViewScreen";
+    /** Top-level index screen — same constructor the mod uses from the inventory button:
+     *  {@code new ModsIndexViewScreen(Screen lastScreen)}. */
+    public static final String COMPLETIONISTS_INDEX_MODS_SCREEN =
+            "fuzs.completionistsindex.client.gui.screens.inventory.ModsIndexViewScreen";
+    /** Drill-down screen (per-mod item list). {@code (Screen, List<ItemStack>)} constructor;
+     *  we never open it directly but track it for the "currently used" check so cycling skips
+     *  the tab when the player is browsing a mod's items. */
+    public static final String COMPLETIONISTS_INDEX_ITEMS_SCREEN =
+            "fuzs.completionistsindex.client.gui.screens.inventory.ItemsIndexViewScreen";
+    /** Static handler that adds the inventory + pause-menu buttons. {@code onScreenInit$Post$1}
+     *  is the inventory variant we suppress via {@code IndexButtonHandlerMixin}. */
+    public static final String COMPLETIONISTS_INDEX_BUTTON_HANDLER =
+            "fuzs.completionistsindex.client.handler.IndexButtonHandler";
 }
