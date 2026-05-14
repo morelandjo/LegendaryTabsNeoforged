@@ -157,6 +157,8 @@ public class ModTabs
             TabsMenu.register(new EpicFightTab());
             TabsMenu.register(new EpicSkillsTab());
             TabsMenu.register(new MineAndSlashTab());
+            TabsMenu.register(new BlueSkiesArcsTab());
+            TabsMenu.register(new BlueSkiesJournalTab());
 
             // One transient tab per nearby container block (chests, barrels, modded
             // inventories, …). Discovered fresh on every screen-init.

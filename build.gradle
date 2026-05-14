@@ -291,6 +291,17 @@ dependencies {
     implementation fg.deobf("curse.maven:the-harvest-1201731:7186998")            // v1.1.3
     implementation fg.deobf("curse.maven:ancient-obelisks-1186288:7186996")       // v1.2.3
     implementation fg.deobf("curse.maven:playeranimator-658587:4587214")          // v1.0.2-rc1
+
+    // Blue Skies (Forge 1.20.1). Reflection-only integration — BlueSkiesArcsTab sends
+    // the mod's own OpenInventoryPacket$Arcs through PacketHandler.INSTANCE (same path
+    // as the mod's Arcs inventory button). BlueSkiesJournalTab calls the static
+    // BlueJournalScreen.open(boolean) (same path as the journal button). The mod's
+    // built-in inventory tabs are suppressed via SkiesClientEventsMixin.
+    // Override file id via -PblueSkiesFileId=<id>.
+    implementation fg.deobf("curse.maven:blue-skies-312918:${project.findProperty('blueSkiesFileId') ?: '5010316'}")
+    // Structure Gel API — hard runtime dep of Blue Skies (mandatory, [2.13.0,]).
+    // 5278429 = v2.16.2 for 1.20.1 Forge, the latest at the time the 1.20.1 branch was cut.
+    implementation fg.deobf("curse.maven:structure-gel-api-378802:5278429")
 }
 
 tasks.named('processResources', ProcessResources).configure {

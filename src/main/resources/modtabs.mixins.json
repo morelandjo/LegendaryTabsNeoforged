@@ -6,7 +6,8 @@
   "refmap": "modtabs.refmap.json",
   "client": [
     "AbstractContainerScreenMixin",
-    "DrawTabsMixin"
+    "DrawTabsMixin",
+    "SkiesClientEventsMixin"
   ],
   "injectors": {
     "defaultRequire": 1

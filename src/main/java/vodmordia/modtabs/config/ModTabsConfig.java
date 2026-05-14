@@ -680,6 +680,56 @@ public class ModTabsConfig extends MidnightConfig {
     @Entry(category = "tabs") @Hidden
     public static TabDisplayVisibility mineAndSlashTabDisplayVisibility = TabDisplayVisibility.YES;
 
+    @Comment(category = "tabs") public static CommentText spacer_blue_skies_arcs;
+
+    @Comment(category = "tabs") public static CommentText blueSkiesArcs;
+
+    @Entry(category = "tabs") @Hidden
+    public static boolean blueSkiesArcsTabEnabled = true;
+
+    @Entry(category = "tabs") @Hidden
+    public static String blueSkiesArcsTabCustomIcon = "";
+    @Entry(category = "tabs") @Hidden
+    public static int blueSkiesArcsTabIconScale = 100;
+    @Entry(category = "tabs") @Hidden
+    public static int blueSkiesArcsTabIconNudgeUp = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int blueSkiesArcsTabIconNudgeDown = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int blueSkiesArcsTabIconNudgeLeft = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int blueSkiesArcsTabIconNudgeRight = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int blueSkiesArcsTabOrder = 0;
+
+    @Entry(category = "tabs") @Hidden
+    public static TabDisplayVisibility blueSkiesArcsTabDisplayVisibility = TabDisplayVisibility.YES;
+
+    @Comment(category = "tabs") public static CommentText spacer_blue_skies_journal;
+
+    @Comment(category = "tabs") public static CommentText blueSkiesJournal;
+
+    @Entry(category = "tabs") @Hidden
+    public static boolean blueSkiesJournalTabEnabled = true;
+
+    @Entry(category = "tabs") @Hidden
+    public static String blueSkiesJournalTabCustomIcon = "";
+    @Entry(category = "tabs") @Hidden
+    public static int blueSkiesJournalTabIconScale = 100;
+    @Entry(category = "tabs") @Hidden
+    public static int blueSkiesJournalTabIconNudgeUp = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int blueSkiesJournalTabIconNudgeDown = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int blueSkiesJournalTabIconNudgeLeft = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int blueSkiesJournalTabIconNudgeRight = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int blueSkiesJournalTabOrder = 0;
+
+    @Entry(category = "tabs") @Hidden
+    public static TabDisplayVisibility blueSkiesJournalTabDisplayVisibility = TabDisplayVisibility.YES;
+
     @Comment(category = "tabs") public static CommentText spacer10;
 
     @Comment(category = "tabs") public static CommentText journeyMap;

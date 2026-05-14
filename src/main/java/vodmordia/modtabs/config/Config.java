@@ -55,6 +55,8 @@ public class Config
 		public static boolean epicFightTabEnabled;
 		public static boolean epicSkillsTabEnabled;
 		public static boolean mineAndSlashTabEnabled;
+		public static boolean blueSkiesArcsTabEnabled;
+		public static boolean blueSkiesJournalTabEnabled;
 		public static boolean stickyInventoryTab;
 
 		// Custom icon settings
@@ -298,6 +300,18 @@ public class Config
 		public static int mineAndSlashTabIconNudgeDown;
 		public static int mineAndSlashTabIconNudgeLeft;
 		public static int mineAndSlashTabIconNudgeRight;
+		public static String blueSkiesArcsTabCustomIcon;
+		public static int blueSkiesArcsTabIconScale;
+		public static int blueSkiesArcsTabIconNudgeUp;
+		public static int blueSkiesArcsTabIconNudgeDown;
+		public static int blueSkiesArcsTabIconNudgeLeft;
+		public static int blueSkiesArcsTabIconNudgeRight;
+		public static String blueSkiesJournalTabCustomIcon;
+		public static int blueSkiesJournalTabIconScale;
+		public static int blueSkiesJournalTabIconNudgeUp;
+		public static int blueSkiesJournalTabIconNudgeDown;
+		public static int blueSkiesJournalTabIconNudgeLeft;
+		public static int blueSkiesJournalTabIconNudgeRight;
 
 		// Custom tabs settings
 		public static boolean customTabsEnabled;
@@ -347,6 +361,8 @@ public class Config
 		public static TabDisplayVisibility epicFightTabDisplayVisibility;
 		public static TabDisplayVisibility epicSkillsTabDisplayVisibility;
 		public static TabDisplayVisibility mineAndSlashTabDisplayVisibility;
+		public static TabDisplayVisibility blueSkiesArcsTabDisplayVisibility;
+		public static TabDisplayVisibility blueSkiesJournalTabDisplayVisibility;
 
 		// Tab order overrides
 		public static int inventoryTabOrder;
@@ -390,6 +406,8 @@ public class Config
 		public static int epicFightTabOrder;
 		public static int epicSkillsTabOrder;
 		public static int mineAndSlashTabOrder;
+		public static int blueSkiesArcsTabOrder;
+		public static int blueSkiesJournalTabOrder;
 
 		public static void bakeClient()
 		{
@@ -444,6 +462,8 @@ public class Config
 				epicFightTabEnabled = ModTabsConfig.epicFightTabEnabled;
 				epicSkillsTabEnabled = ModTabsConfig.epicSkillsTabEnabled;
 				mineAndSlashTabEnabled = ModTabsConfig.mineAndSlashTabEnabled;
+				blueSkiesArcsTabEnabled = ModTabsConfig.blueSkiesArcsTabEnabled;
+				blueSkiesJournalTabEnabled = ModTabsConfig.blueSkiesJournalTabEnabled;
 				stickyInventoryTab = ModTabsConfig.stickyInventoryTab;
 
 				// Load custom tabs settings
@@ -497,6 +517,8 @@ public class Config
 				epicFightTabOrder = ModTabsConfig.epicFightTabOrder;
 				epicSkillsTabOrder = ModTabsConfig.epicSkillsTabOrder;
 				mineAndSlashTabOrder = ModTabsConfig.mineAndSlashTabOrder;
+				blueSkiesArcsTabOrder = ModTabsConfig.blueSkiesArcsTabOrder;
+				blueSkiesJournalTabOrder = ModTabsConfig.blueSkiesJournalTabOrder;
 
 				// Load tab display visibility settings
 				inventoryTabDisplayVisibility = ModTabsConfig.inventoryTabDisplayVisibility;
@@ -537,6 +559,8 @@ public class Config
 				epicFightTabDisplayVisibility = ModTabsConfig.epicFightTabDisplayVisibility;
 				epicSkillsTabDisplayVisibility = ModTabsConfig.epicSkillsTabDisplayVisibility;
 				mineAndSlashTabDisplayVisibility = ModTabsConfig.mineAndSlashTabDisplayVisibility;
+				blueSkiesArcsTabDisplayVisibility = ModTabsConfig.blueSkiesArcsTabDisplayVisibility;
+				blueSkiesJournalTabDisplayVisibility = ModTabsConfig.blueSkiesJournalTabDisplayVisibility;
 
 				// Load custom icon settings
 				inventoryTabCustomIcon = ModTabsConfig.inventoryTabCustomIcon;
@@ -779,6 +803,18 @@ public class Config
 				mineAndSlashTabIconNudgeDown = ModTabsConfig.mineAndSlashTabIconNudgeDown;
 				mineAndSlashTabIconNudgeLeft = ModTabsConfig.mineAndSlashTabIconNudgeLeft;
 				mineAndSlashTabIconNudgeRight = ModTabsConfig.mineAndSlashTabIconNudgeRight;
+				blueSkiesArcsTabCustomIcon = ModTabsConfig.blueSkiesArcsTabCustomIcon;
+				blueSkiesArcsTabIconScale = ModTabsConfig.blueSkiesArcsTabIconScale;
+				blueSkiesArcsTabIconNudgeUp = ModTabsConfig.blueSkiesArcsTabIconNudgeUp;
+				blueSkiesArcsTabIconNudgeDown = ModTabsConfig.blueSkiesArcsTabIconNudgeDown;
+				blueSkiesArcsTabIconNudgeLeft = ModTabsConfig.blueSkiesArcsTabIconNudgeLeft;
+				blueSkiesArcsTabIconNudgeRight = ModTabsConfig.blueSkiesArcsTabIconNudgeRight;
+				blueSkiesJournalTabCustomIcon = ModTabsConfig.blueSkiesJournalTabCustomIcon;
+				blueSkiesJournalTabIconScale = ModTabsConfig.blueSkiesJournalTabIconScale;
+				blueSkiesJournalTabIconNudgeUp = ModTabsConfig.blueSkiesJournalTabIconNudgeUp;
+				blueSkiesJournalTabIconNudgeDown = ModTabsConfig.blueSkiesJournalTabIconNudgeDown;
+				blueSkiesJournalTabIconNudgeLeft = ModTabsConfig.blueSkiesJournalTabIconNudgeLeft;
+				blueSkiesJournalTabIconNudgeRight = ModTabsConfig.blueSkiesJournalTabIconNudgeRight;
 			}
 			catch (Exception e)
 			{

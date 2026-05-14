@@ -43,7 +43,8 @@ public enum ModIntegration {
     AETHER("aether", "The Aether"),
     EPIC_FIGHT("epicfight", "Epic Fight"),
     EPIC_SKILLS("epicskills", "Epic Fight Skill Tree"),
-    MINE_AND_SLASH("mmorpg", "Mine and Slash");
+    MINE_AND_SLASH("mmorpg", "Mine and Slash"),
+    BLUE_SKIES("blue_skies", "Blue Skies");
 
     private final String modId;
     private final String displayName;

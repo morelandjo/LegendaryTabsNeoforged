@@ -309,4 +309,34 @@ public final class ScreenClasses {
      *  {@code ClientNeoForgeEvents.onScreenRenderPost} so tabs draw at the correct scale. */
     public static final String MINE_AND_SLASH_TALENTS_SCREEN =
             "com.robertx22.mine_and_slash.gui.screens.skill_tree.TalentsScreen";
+
+    // -- Blue Skies ------------------------------------------------------
+    /** {@code EffectRenderingInventoryScreen<ArcsMenu>} — opened server-side after the
+     *  client sends {@link #BLUE_SKIES_OPEN_ARCS_PACKET}. Normal container screen, so the
+     *  shared {@code AbstractContainerScreenMixin} handles tab rendering. */
+    public static final String BLUE_SKIES_ARCS_SCREEN =
+            "com.legacy.blue_skies.client.gui.screen.ArcsScreen";
+    /** Abstract parent of {@code BlueJournalStartScreen} / section / entry screens.
+     *  Plain {@code Screen} subclass; {@code render()} iterates {@code f_169369_} manually
+     *  (so tabs added as children DO draw), but does not call {@code super.render()}. The
+     *  static {@link #BLUE_SKIES_JOURNAL_SCREEN}{@code .open(boolean)} method picks
+     *  {@code BlueJournalStartScreen} when no previous page is saved. */
+    public static final String BLUE_SKIES_JOURNAL_SCREEN =
+            "com.legacy.blue_skies.client.gui.screen.journal.BlueJournalScreen";
+    public static final String BLUE_SKIES_JOURNAL_START_SCREEN =
+            "com.legacy.blue_skies.client.gui.screen.journal.BlueJournalStartScreen";
+    public static final String BLUE_SKIES_JOURNAL_SECTION_SCREEN =
+            "com.legacy.blue_skies.client.gui.screen.journal.BlueJournalSectionScreen";
+    public static final String BLUE_SKIES_JOURNAL_ENTRY_SCREEN =
+            "com.legacy.blue_skies.client.gui.screen.journal.BlueJournalEntryScreen";
+    public static final String BLUE_SKIES_JOURNAL_SEARCH_SCREEN =
+            "com.legacy.blue_skies.client.gui.screen.journal.BlueJournalSearchScreen";
+    /** Serverbound no-arg packet; server's handler opens the {@code ArcsMenu} on the player.
+     *  Same path as Blue Skies' own Arcs inventory button in {@code SkiesClientEvents}. */
+    public static final String BLUE_SKIES_OPEN_ARCS_PACKET =
+            "com.legacy.blue_skies.network.c_to_s.OpenInventoryPacket$Arcs";
+    /** Holds {@code INSTANCE} — Blue Skies' {@link net.minecraftforge.network.simple.SimpleChannel}
+     *  used for all serverbound traffic. {@code sendToServer(Object)} is the static helper. */
+    public static final String BLUE_SKIES_PACKET_HANDLER =
+            "com.legacy.blue_skies.network.PacketHandler";
 }
