@@ -6,6 +6,7 @@ import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.ScreenEvent;
+import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.fml.common.Mod;
@@ -15,6 +16,7 @@ import vodmordia.modtabs.api.tabs_menu.TabsMenu;
 import vodmordia.modtabs.client.screens.LayoutEditorButtons;
 import vodmordia.modtabs.client.screens.NextTabsButton;
 import vodmordia.modtabs.client.screens.TabButton;
+import vodmordia.modtabs.client.tabs_menu.NearbyContainersProvider;
 import vodmordia.modtabs.client.keybinds.ModKeybinds;
 import vodmordia.modtabs.integration.ModIntegration;
 import vodmordia.modtabs.integration.ModIntegrationManager;
@@ -258,6 +260,33 @@ public class ClientNeoForgeEvents {
     public static void renderEditModeOverlay(ScreenEvent.Render.Post event) {
         if (TabsMenu.isEditing(event.getScreen())) {
             TabsMenu.renderEditModeOverlay(event.getGuiGraphics(), event.getScreen(), event.getMouseX(), event.getMouseY());
+        }
+    }
+
+    // Throttle counter for the nearby-container live refresh: only checks every
+    // NEARBY_REFRESH_TICKS ticks so the cube scan cost is amortized to ~twice per second.
+    private static int nearbyRefreshTickCounter = 0;
+    private static final int NEARBY_REFRESH_TICKS = 10;
+
+    @SubscribeEvent
+    public static void onClientTickPost(TickEvent.ClientTickEvent event) {
+        if (event.phase != TickEvent.Phase.END) return;
+        // Without this, a chest broken (or placed) while the player has an inventory /
+        // container screen open leaves a stale tab in the bar until they close + reopen.
+        // We poll the provider's change-detection helper and trigger a screen re-init when
+        // the world's container set has drifted from what's currently rendered.
+        if (++nearbyRefreshTickCounter < NEARBY_REFRESH_TICKS) return;
+        nearbyRefreshTickCounter = 0;
+
+        Minecraft mc = Minecraft.getInstance();
+        Screen screen = mc.screen;
+        if (screen == null || mc.player == null) return;
+        // Re-init would clobber drag-in-progress state in the layout editor.
+        if (TabsMenu.isEditing(screen)) return;
+        // Only refresh on screens that actually host the tab bar.
+        if (!TabsMenu.hasTabsForScreen(screen.getClass())) return;
+        if (NearbyContainersProvider.hasContainerSetChanged(mc.player)) {
+            TabsMenu.reinitCurrentScreen();
         }
     }
 

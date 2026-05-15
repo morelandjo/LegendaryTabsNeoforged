@@ -69,6 +69,15 @@ public class NearbyContainerTab extends ScaledItemTab {
             return;
         }
 
+        // Bail if the tracked block is no longer a container — the tick-driven refresh
+        // will catch up and drop this tab on the next pass, but if the click lands in
+        // the meantime we must not close the player's current menu just to send a
+        // useItemOn against air.
+        BlockState currentState = mc.level.getBlockState(blockPos);
+        if (currentState.isAir() || currentState.getMenuProvider(mc.level, blockPos) == null) {
+            return;
+        }
+
         // Close whatever menu the player has open (player inventory, or a previously-opened
         // chest) before triggering the new use-on. Without this, the server can briefly hold
         // two menus and the next click desyncs slot ids.

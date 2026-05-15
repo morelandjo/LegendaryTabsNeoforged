@@ -18,6 +18,7 @@ import vodmordia.modtabs.api.tabs_menu.TabBase;
 import vodmordia.modtabs.config.Config;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
@@ -28,16 +29,66 @@ import java.util.Set;
  * {@link NearbyContainerTab} per pos. Detection is driven by
  * {@link BlockState#getMenuProvider}, so any block that opens a menu on right-click —
  * vanilla or modded — is picked up without a hardcoded list.
+ *
+ * <p>Also exposes {@link #hasContainerSetChanged(Player)} so a tick handler can detect
+ * mid-screen world changes (chest broken/placed) and trigger a re-init, rather than the
+ * bar going stale until the user closes and reopens the screen.
  */
 public class NearbyContainersProvider implements DynamicTabProvider {
 
+    // Snapshot of positions emitted in the most recent contribute() call. Used by the
+    // tick-driven change detector to decide if a re-init is needed.
+    private static volatile Set<BlockPos> lastEmittedPositions = Collections.emptySet();
+
     @Override
     public void contribute(Player player, Screen screen, List<TabBase> out) {
-        if (!Config.Baked.nearbyContainersTabEnabled) return;
+        if (!Config.Baked.nearbyContainersTabEnabled) {
+            lastEmittedPositions = Collections.emptySet();
+            return;
+        }
         if (player == null || !player.isAlive()) return;
         Level level = player.level();
         if (level == null) return;
 
+        List<BlockPos> positions = scanPositions(player, level);
+        // Stable order: by encoded position. Without this, tabs would dance around as iter
+        // order changes (it doesn't right now, but pre-sorting makes the contract explicit).
+        positions.sort(Comparator.comparingLong(BlockPos::asLong));
+        for (BlockPos pos : positions) {
+            out.add(new NearbyContainerTab(pos));
+        }
+        lastEmittedPositions = new HashSet<>(positions);
+    }
+
+    /**
+     * Re-scan and report whether the current valid-container set differs from the
+     * positions emitted at the last {@link #contribute} call. Cheap enough to call from
+     * a throttled tick handler (one cube scan, no tab allocations).
+     */
+    public static boolean hasContainerSetChanged(Player player) {
+        if (!Config.Baked.nearbyContainersTabEnabled) {
+            // If we'd previously emitted tabs and the feature was just disabled, the
+            // current bar is stale — report changed so the screen re-inits and drops them.
+            return !lastEmittedPositions.isEmpty();
+        }
+        if (player == null || !player.isAlive()) return false;
+        Level level = player.level();
+        if (level == null) return false;
+
+        List<BlockPos> positions = scanPositions(player, level);
+        if (positions.size() != lastEmittedPositions.size()) return true;
+        for (BlockPos pos : positions) {
+            if (!lastEmittedPositions.contains(pos)) return true;
+        }
+        return false;
+    }
+
+    /**
+     * Single-source-of-truth cube scan used by both {@link #contribute} (emit tabs) and
+     * {@link #hasContainerSetChanged} (change detection). Returns immutable {@link BlockPos}
+     * instances ready to be stored.
+     */
+    private static List<BlockPos> scanPositions(Player player, Level level) {
         int range = Math.max(1, Config.Baked.nearbyContainersTabRange);
         boolean sightCheck = Config.Baked.nearbyContainersTabRequireLineOfSight;
 
@@ -48,7 +99,7 @@ public class NearbyContainersProvider implements DynamicTabProvider {
         // Dedup set tracks the second half of double-chests once we accept the first half,
         // so we never emit two tabs for one logical chest.
         Set<BlockPos> claimedDoubleHalves = new HashSet<>();
-        List<NearbyContainerTab> found = new ArrayList<>();
+        List<BlockPos> found = new ArrayList<>();
         BlockPos.MutableBlockPos cursor = new BlockPos.MutableBlockPos();
 
         for (int dx = -range; dx <= range; dx++) {
@@ -92,15 +143,11 @@ public class NearbyContainersProvider implements DynamicTabProvider {
                         continue;
                     }
 
-                    found.add(new NearbyContainerTab(cursor.immutable()));
+                    found.add(cursor.immutable());
                 }
             }
         }
-
-        // Stable order: by encoded position. Without this, tabs would dance around as iter
-        // order changes (it doesn't right now, but pre-sorting makes the contract explicit).
-        found.sort(Comparator.comparingLong(t -> t.pos().asLong()));
-        out.addAll(found);
+        return found;
     }
 
     private static BlockPos otherChestHalf(BlockPos pos, BlockState state, ChestType type) {
