@@ -806,6 +806,56 @@ public class ModTabsConfig extends MidnightConfig {
     @Entry(category = "tabs") @Hidden
     public static TabDisplayVisibility sdmShopTabDisplayVisibility = TabDisplayVisibility.YES;
 
+    @Comment(category = "tabs") public static CommentText spacer_jobs_plus;
+
+    @Comment(category = "tabs") public static CommentText jobsPlus;
+
+    @Entry(category = "tabs") @Hidden
+    public static boolean jobsPlusTabEnabled = true;
+
+    @Entry(category = "tabs") @Hidden
+    public static String jobsPlusTabCustomIcon = "";
+    @Entry(category = "tabs") @Hidden
+    public static int jobsPlusTabIconScale = 100;
+    @Entry(category = "tabs") @Hidden
+    public static int jobsPlusTabIconNudgeUp = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int jobsPlusTabIconNudgeDown = 1;
+    @Entry(category = "tabs") @Hidden
+    public static int jobsPlusTabIconNudgeLeft = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int jobsPlusTabIconNudgeRight = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int jobsPlusTabOrder = 0;
+
+    @Entry(category = "tabs") @Hidden
+    public static TabDisplayVisibility jobsPlusTabDisplayVisibility = TabDisplayVisibility.TUCK;
+
+    @Comment(category = "tabs") public static CommentText spacer_quest_log;
+
+    @Comment(category = "tabs") public static CommentText questLog;
+
+    @Entry(category = "tabs") @Hidden
+    public static boolean questLogTabEnabled = true;
+
+    @Entry(category = "tabs") @Hidden
+    public static String questLogTabCustomIcon = "";
+    @Entry(category = "tabs") @Hidden
+    public static int questLogTabIconScale = 80;
+    @Entry(category = "tabs") @Hidden
+    public static int questLogTabIconNudgeUp = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int questLogTabIconNudgeDown = 1;
+    @Entry(category = "tabs") @Hidden
+    public static int questLogTabIconNudgeLeft = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int questLogTabIconNudgeRight = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int questLogTabOrder = 0;
+
+    @Entry(category = "tabs") @Hidden
+    public static TabDisplayVisibility questLogTabDisplayVisibility = TabDisplayVisibility.YES;
+
     @Comment(category = "tabs") public static CommentText spacer10;
 
     @Comment(category = "tabs") public static CommentText journeyMap;

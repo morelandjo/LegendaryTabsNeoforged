@@ -8,6 +8,7 @@
     "AbstractContainerScreenMixin",
     "DrawTabsMixin",
     "IndexButtonHandlerMixin",
+    "QuestlogInventoryScreenMixin",
     "SkiesClientEventsMixin"
   ],
   "injectors": {

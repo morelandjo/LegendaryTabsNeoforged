@@ -331,6 +331,23 @@ dependencies {
     //   sdm_ui_lib  [1.20.1-1.8.3,) → 6086204 = sdm_ui_lib 1.8.3
     implementation fg.deobf("curse.maven:sdm-economy-1102542:6689080")
     implementation fg.deobf("curse.maven:sdm-ui-lib-1095061:6086204")
+
+    // Jobs+ (DAQEM, Forge 1.20.1). Reflection-only integration — JobsPlusTab sends an
+    // empty PacketOpenMenuC2S (the mod's own keybind path); the server replies with
+    // PacketOpenMenuS2C that constructs and opens JobsScreen with proper data. The
+    // packet extends architectury's BaseC2SMessage which exposes an instance
+    // sendToServer() — same dispatch path the mod's keybind uses. Hard-deps
+    // architectury + uilib + arc at runtime; kept compileOnly here so swapping to
+    // `implementation` also requires pinning those file ids.
+    compileOnly fg.deobf("curse.maven:jobsplus-916985:7239650")
+
+    // Questlog (Infernal Studios, Forge 1.20.1). Reflection-only integration — QuestLogTab
+    // opens QuestlogScreen(Screen) directly, the same path the mod's own keybind and its
+    // inventory button take. The native button is suppressed via QuestlogInventoryScreenMixin
+    // (targeting the mod's own InventoryScreenMixin.injectQuestlogButton). The dep MUST be
+    // resolvable at compile time on this branch — Forge's Mixin AP (0.8.5) errors if a
+    // string-targeted mixin can't load its target class (newer NeoForge versions only warn).
+    compileOnly fg.deobf("curse.maven:questlog-1202066:8034389")
 }
 
 tasks.named('processResources', ProcessResources).configure {
