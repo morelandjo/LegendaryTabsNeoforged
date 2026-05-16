@@ -536,6 +536,32 @@ public class ModTabsConfig extends MidnightConfig {
     @Entry(category = "tabs") @Hidden
     public static TabDisplayVisibility villagerRecruitsTabDisplayVisibility = TabDisplayVisibility.YES;
 
+    @Comment(category = "tabs") public static CommentText spacer_villager_recruits_claim_map;
+
+    @Comment(category = "tabs") public static CommentText villagerRecruitsClaimMap;
+
+    @Entry(category = "tabs") @Hidden
+    public static boolean villagerRecruitsClaimMapTabEnabled = true;
+
+
+    @Entry(category = "tabs") @Hidden
+    public static String villagerRecruitsClaimMapTabCustomIcon = "";
+    @Entry(category = "tabs") @Hidden
+    public static int villagerRecruitsClaimMapTabIconScale = 100;
+    @Entry(category = "tabs") @Hidden
+    public static int villagerRecruitsClaimMapTabIconNudgeUp = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int villagerRecruitsClaimMapTabIconNudgeDown = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int villagerRecruitsClaimMapTabIconNudgeLeft = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int villagerRecruitsClaimMapTabIconNudgeRight = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int villagerRecruitsClaimMapTabOrder = 0;
+
+    @Entry(category = "tabs") @Hidden
+    public static TabDisplayVisibility villagerRecruitsClaimMapTabDisplayVisibility = TabDisplayVisibility.TUCK;
+
     @Comment(category = "tabs") public static CommentText spacer_apothic_attributes;
 
     @Comment(category = "tabs") public static CommentText apothicAttributes;

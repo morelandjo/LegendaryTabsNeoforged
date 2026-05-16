@@ -219,6 +219,11 @@ public final class ScreenClasses {
     /** Faction landing screen opened by the U keybind. Constructor takes a {@link net.minecraft.world.entity.player.Player}. */
     public static final String VILLAGER_RECRUITS_FACTION_MAIN_SCREEN =
             "com.talhanation.recruits.client.gui.faction.FactionMainScreen";
+    /** Claim / world-map screen opened by the M keybind. No-arg constructor; the keybind
+     *  handler in {@code KeyEvents.onKeyInput} additionally gates on
+     *  {@code level.dimension() == Level.OVERWORLD}, so the tab replicates that check. */
+    public static final String VILLAGER_RECRUITS_WORLD_MAP_SCREEN =
+            "com.talhanation.recruits.client.gui.worldmap.WorldMapScreen";
 
     // -- Diet / Bulking ---------------------------------------------------
     /** Diet's main player UI screen. Constructor: {@code DietScreen(boolean fromInventory)}.

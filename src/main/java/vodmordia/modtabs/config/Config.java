@@ -49,6 +49,7 @@ public class Config
 		public static boolean runicSkillsTabEnabled;
 		public static boolean advancedTeamTabEnabled;
 		public static boolean villagerRecruitsTabEnabled;
+		public static boolean villagerRecruitsClaimMapTabEnabled;
 		public static boolean apothicAttributesTabEnabled;
 		public static boolean aetherTabEnabled;
 		public static boolean curiosTabEnabled;
@@ -265,6 +266,12 @@ public class Config
 		public static int villagerRecruitsTabIconNudgeDown;
 		public static int villagerRecruitsTabIconNudgeLeft;
 		public static int villagerRecruitsTabIconNudgeRight;
+		public static String villagerRecruitsClaimMapTabCustomIcon;
+		public static int villagerRecruitsClaimMapTabIconScale;
+		public static int villagerRecruitsClaimMapTabIconNudgeUp;
+		public static int villagerRecruitsClaimMapTabIconNudgeDown;
+		public static int villagerRecruitsClaimMapTabIconNudgeLeft;
+		public static int villagerRecruitsClaimMapTabIconNudgeRight;
 		public static String apothicAttributesTabCustomIcon;
 		public static int apothicAttributesTabIconScale;
 		public static int apothicAttributesTabIconNudgeUp;
@@ -364,6 +371,7 @@ public class Config
 		public static TabDisplayVisibility runicSkillsTabDisplayVisibility;
 		public static TabDisplayVisibility advancedTeamTabDisplayVisibility;
 		public static TabDisplayVisibility villagerRecruitsTabDisplayVisibility;
+		public static TabDisplayVisibility villagerRecruitsClaimMapTabDisplayVisibility;
 		public static TabDisplayVisibility curiosTabDisplayVisibility;
 		public static TabDisplayVisibility epicFightTabDisplayVisibility;
 		public static TabDisplayVisibility epicSkillsTabDisplayVisibility;
@@ -408,6 +416,7 @@ public class Config
 		public static int runicSkillsTabOrder;
 		public static int advancedTeamTabOrder;
 		public static int villagerRecruitsTabOrder;
+		public static int villagerRecruitsClaimMapTabOrder;
 		public static int apothicAttributesTabOrder;
 		public static int aetherTabOrder;
 		public static int curiosTabOrder;
@@ -465,6 +474,7 @@ public class Config
 				runicSkillsTabEnabled = ModTabsConfig.runicSkillsTabEnabled;
 				advancedTeamTabEnabled = ModTabsConfig.advancedTeamTabEnabled;
 				villagerRecruitsTabEnabled = ModTabsConfig.villagerRecruitsTabEnabled;
+				villagerRecruitsClaimMapTabEnabled = ModTabsConfig.villagerRecruitsClaimMapTabEnabled;
 				apothicAttributesTabEnabled = ModTabsConfig.apothicAttributesTabEnabled;
 				aetherTabEnabled = ModTabsConfig.aetherTabEnabled;
 				curiosTabEnabled = ModTabsConfig.curiosTabEnabled;
@@ -521,6 +531,7 @@ public class Config
 				runicSkillsTabOrder = ModTabsConfig.runicSkillsTabOrder;
 				advancedTeamTabOrder = ModTabsConfig.advancedTeamTabOrder;
 				villagerRecruitsTabOrder = ModTabsConfig.villagerRecruitsTabOrder;
+				villagerRecruitsClaimMapTabOrder = ModTabsConfig.villagerRecruitsClaimMapTabOrder;
 				apothicAttributesTabOrder = ModTabsConfig.apothicAttributesTabOrder;
 				aetherTabOrder = ModTabsConfig.aetherTabOrder;
 				curiosTabOrder = ModTabsConfig.curiosTabOrder;
@@ -566,6 +577,7 @@ public class Config
 				runicSkillsTabDisplayVisibility = ModTabsConfig.runicSkillsTabDisplayVisibility;
 				advancedTeamTabDisplayVisibility = ModTabsConfig.advancedTeamTabDisplayVisibility;
 				villagerRecruitsTabDisplayVisibility = ModTabsConfig.villagerRecruitsTabDisplayVisibility;
+				villagerRecruitsClaimMapTabDisplayVisibility = ModTabsConfig.villagerRecruitsClaimMapTabDisplayVisibility;
 				curiosTabDisplayVisibility = ModTabsConfig.curiosTabDisplayVisibility;
 				epicFightTabDisplayVisibility = ModTabsConfig.epicFightTabDisplayVisibility;
 				epicSkillsTabDisplayVisibility = ModTabsConfig.epicSkillsTabDisplayVisibility;
@@ -779,6 +791,12 @@ public class Config
 				villagerRecruitsTabIconNudgeDown = ModTabsConfig.villagerRecruitsTabIconNudgeDown;
 				villagerRecruitsTabIconNudgeLeft = ModTabsConfig.villagerRecruitsTabIconNudgeLeft;
 				villagerRecruitsTabIconNudgeRight = ModTabsConfig.villagerRecruitsTabIconNudgeRight;
+				villagerRecruitsClaimMapTabCustomIcon = ModTabsConfig.villagerRecruitsClaimMapTabCustomIcon;
+				villagerRecruitsClaimMapTabIconScale = ModTabsConfig.villagerRecruitsClaimMapTabIconScale;
+				villagerRecruitsClaimMapTabIconNudgeUp = ModTabsConfig.villagerRecruitsClaimMapTabIconNudgeUp;
+				villagerRecruitsClaimMapTabIconNudgeDown = ModTabsConfig.villagerRecruitsClaimMapTabIconNudgeDown;
+				villagerRecruitsClaimMapTabIconNudgeLeft = ModTabsConfig.villagerRecruitsClaimMapTabIconNudgeLeft;
+				villagerRecruitsClaimMapTabIconNudgeRight = ModTabsConfig.villagerRecruitsClaimMapTabIconNudgeRight;
 				apothicAttributesTabCustomIcon = ModTabsConfig.apothicAttributesTabCustomIcon;
 				apothicAttributesTabIconScale = ModTabsConfig.apothicAttributesTabIconScale;
 				apothicAttributesTabIconNudgeUp = ModTabsConfig.apothicAttributesTabIconNudgeUp;

@@ -28,7 +28,10 @@ public class VillagerRecruitsTab extends IntegrationIconTab {
             "villager_recruits",
             TabSpec.Layout.invertedTop(),
             new String[] { ScreenClasses.VILLAGER_RECRUITS_FACTION_MAIN_SCREEN },
-            new String[] { ScreenClasses.VILLAGER_RECRUITS_FACTION_MAIN_SCREEN }
+            new String[] {
+                    ScreenClasses.VILLAGER_RECRUITS_FACTION_MAIN_SCREEN,
+                    ScreenClasses.VILLAGER_RECRUITS_WORLD_MAP_SCREEN
+            }
     );
 
     public VillagerRecruitsTab() {

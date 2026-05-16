@@ -251,7 +251,7 @@ dependencies {
     compileOnly fg.deobf("curse.maven:bulking-1233813:6411901")
 
     // Villager Recruits — faction screen (U key by default).
-    compileOnly fg.deobf("curse.maven:recruits-523860:7906232")
+    implementation fg.deobf("curse.maven:recruits-523860:7906232")
 
     // Apothic Attributes (+ Placebo, its hard runtime dep). Reflection-only integration on
     // our side; both jars need to be on the runtime classpath for AttributesGui to load.
