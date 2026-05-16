@@ -781,6 +781,31 @@ public class ModTabsConfig extends MidnightConfig {
     @Entry(category = "tabs") @Hidden
     public static TabDisplayVisibility completionistsIndexTabDisplayVisibility = TabDisplayVisibility.YES;
 
+    @Comment(category = "tabs") public static CommentText spacer_sdm_shop;
+
+    @Comment(category = "tabs") public static CommentText sdmShop;
+
+    @Entry(category = "tabs") @Hidden
+    public static boolean sdmShopTabEnabled = true;
+
+    @Entry(category = "tabs") @Hidden
+    public static String sdmShopTabCustomIcon = "";
+    @Entry(category = "tabs") @Hidden
+    public static int sdmShopTabIconScale = 100;
+    @Entry(category = "tabs") @Hidden
+    public static int sdmShopTabIconNudgeUp = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int sdmShopTabIconNudgeDown = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int sdmShopTabIconNudgeLeft = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int sdmShopTabIconNudgeRight = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int sdmShopTabOrder = 0;
+
+    @Entry(category = "tabs") @Hidden
+    public static TabDisplayVisibility sdmShopTabDisplayVisibility = TabDisplayVisibility.YES;
+
     @Comment(category = "tabs") public static CommentText spacer10;
 
     @Comment(category = "tabs") public static CommentText journeyMap;

@@ -165,7 +165,9 @@ dependencies {
 
     // Core libs / equipment / books.
     compileOnly fg.deobf("curse.maven:patchouli-306770:7731017")
-    compileOnly fg.deobf("curse.maven:architectury-api-419699:5137938")
+    // Promoted to implementation so SDM Shop's runtime architectury hard-dep resolves in
+    // dev — revert to compileOnly when SDM Shop is also reverted (see comment below).
+    implementation fg.deobf("curse.maven:architectury-api-419699:5137938")
     compileOnly fg.deobf("curse.maven:better-advancements-272515:5454907")
     compileOnly fg.deobf("curse.maven:eccentric-tome-597522:7285203")
     compileOnly fg.deobf("curse.maven:cloth-config-348521:5729105")
@@ -195,7 +197,9 @@ dependencies {
     compileOnly fg.deobf("curse.maven:ftb-quests-forge-289412:7909594")
     compileOnly fg.deobf("curse.maven:ftb-teams-forge-404468:7499810")
     compileOnly fg.deobf("curse.maven:ftb-chunks-forge-314906:7880858")
-    compileOnly fg.deobf("curse.maven:ftb-library-forge-404465:7296748")
+    // Promoted to implementation so SDM Shop's runtime ftblibrary hard-dep resolves in
+    // dev — revert to compileOnly when SDM Shop is also reverted.
+    implementation fg.deobf("curse.maven:ftb-library-forge-404465:7296748")
     compileOnly fg.deobf("curse.maven:framework-549225:7573740")
 
     // Advanced Team (clefal) — separate teams mod with its own HasTeam/NoTeam screens.
@@ -310,6 +314,23 @@ dependencies {
     // point. Hard-deps puzzleslib at runtime — kept compileOnly here so swapping to
     // `implementation` also requires pinning a puzzleslib file id.
     compileOnly fg.deobf("curse.maven:completionists-index-852667:4613443")
+
+    // SDM Shop (sdmshoprework, DeusSixik / Architectury, Forge 1.20.1). Reflection-only —
+    // SdmShopTab invokes SDMShopClient.openGui(boolean) via Class.forName, same path the
+    // mod's own SendOpenShopScreenS2C packet uses. Promoted from compileOnly to load in
+    // dev for live tab testing; revert to compileOnly (and re-revert architectury, ftb-
+    // library, sdm-economy, sdm-ui-lib above) once testing is done. Hard-deps on
+    // ftblibrary, architectury, sdm_economy, sdm_ui_lib — all listed alongside.
+    implementation fg.deobf("curse.maven:sdm-shop-948942:7935087")
+    // SDM Shop's mandatory companion mods (both author DeusSixik / Sixik). Versions
+    // picked to match what SDM Shop 7.2.x for 1.20.1 Forge declares in its mods.toml:
+    //   ftblibrary  [2001.2.9,)   → 7296748 = 2001.2.12 above
+    //   architectury[9.2.14,)     → 5137938 = 9.2.14    above
+    //   sdmeconomy  [2.2.0,)      → 6689080 = SDMEconomy 2.2.0 (rebranded modid + jar
+    //                                          name; pre-2.x is `sdm_economy`)
+    //   sdm_ui_lib  [1.20.1-1.8.3,) → 6086204 = sdm_ui_lib 1.8.3
+    implementation fg.deobf("curse.maven:sdm-economy-1102542:6689080")
+    implementation fg.deobf("curse.maven:sdm-ui-lib-1095061:6086204")
 }
 
 tasks.named('processResources', ProcessResources).configure {

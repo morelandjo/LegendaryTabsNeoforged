@@ -45,7 +45,8 @@ public enum ModIntegration {
     EPIC_SKILLS("epicskills", "Epic Fight Skill Tree"),
     MINE_AND_SLASH("mmorpg", "Mine and Slash"),
     BLUE_SKIES("blue_skies", "Blue Skies"),
-    COMPLETIONISTS_INDEX("completionistsindex", "Completionist's Index");
+    COMPLETIONISTS_INDEX("completionistsindex", "Completionist's Index"),
+    SDM_SHOP("sdmshop", "SDM Shop");
 
     private final String modId;
     private final String displayName;

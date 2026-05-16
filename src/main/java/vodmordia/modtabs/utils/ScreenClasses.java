@@ -366,4 +366,32 @@ public final class ScreenClasses {
      *  is the inventory variant we suppress via {@code IndexButtonHandlerMixin}. */
     public static final String COMPLETIONISTS_INDEX_BUTTON_HANDLER =
             "fuzs.completionistsindex.client.handler.IndexButtonHandler";
+
+    // -- SDM Shop (sdmshop, DeusSixik / Architectury, 7.x rebrand) ---------
+    // The mod was rebranded around v7.0 — old modid `sdmshoprework` and package
+    // `net.sixik.sdmshoprework.*` are gone; everything is now `sdmshop` /
+    // `net.sixik.sdmshop.*` and the open-screen API changed shape entirely.
+    /** Client entry point. The relevant overload is {@code openGui(ResourceLocation shopId)};
+     *  passing {@link #SDM_SHOP_AUTO_OPEN} matches what the in-game keybind does. The
+     *  call goes through an async server round-trip ({@code AsyncClientTasks.openShop})
+     *  which then dispatches to the configured style screen. */
+    public static final String SDM_SHOP_CLIENT =
+            "net.sixik.sdmshop.client.SDMShopClient";
+    /** Constants holder. {@code AUTO_SHOP_OPEN = new ResourceLocation("server", "auto_shop_open")}
+     *  is the sentinel the server treats as "open the default shop for this player". */
+    public static final String SDM_SHOP_CONSTANTS =
+            "net.sixik.sdmshop.SDMShopConstants";
+    /** Resource location namespace/path of the sentinel above — used to construct the
+     *  argument reflectively when the constants class isn't on the classpath. */
+    public static final String SDM_SHOP_AUTO_OPEN_NAMESPACE = "server";
+    public static final String SDM_SHOP_AUTO_OPEN_PATH = "auto_shop_open";
+    /** "Modern" style shop. Backed by FTB Library's {@code BaseScreen} → the actual
+     *  {@link net.minecraft.client.gui.screens.Screen} the player sees is
+     *  {@link #FTB_LIBRARY_WRAPPER} with this as the {@code wrappedGui} field. */
+    public static final String SDM_SHOP_MODERN_SCREEN =
+            "net.sixik.sdmshop.client.screen.modern.ModernShopScreen";
+    /** "Blocky modern" style — the rewritten screen tree under {@code screen_new}.
+     *  Same wrapping (BaseScreen → ScreenWrapper) as ModernShopScreen. */
+    public static final String SDM_SHOP_MAIN_SCREEN =
+            "net.sixik.sdmshop.client.screen_new.MainShopScreen";
 }
