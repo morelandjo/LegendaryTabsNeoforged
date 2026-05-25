@@ -48,7 +48,9 @@ public enum ModIntegration {
     COMPLETIONISTS_INDEX("completionistsindex", "Completionist's Index"),
     SDM_SHOP("sdmshop", "SDM Shop"),
     JOBS_PLUS("jobsplus", "Jobs+"),
-    QUEST_LOG("questlog", "Quest Log");
+    QUEST_LOG("questlog", "Quest Log"),
+    FIELD_GUIDE("fieldguide", "Field Guide"),
+    MODONOMICON("modonomicon", "Modonomicon");
 
     private final String modId;
     private final String displayName;

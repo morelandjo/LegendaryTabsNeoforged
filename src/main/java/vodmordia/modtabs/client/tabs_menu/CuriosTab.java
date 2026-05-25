@@ -22,7 +22,7 @@ import java.lang.reflect.Field;
  * opens the curios menu — same flow as clicking the mod's own CuriosButton on
  * the inventory screen.
  *
- * <p>Both the packet class and the SimpleChannel are resolved through
+ * Both the packet class and the SimpleChannel are resolved through
  * {@link ClassCache} so this class compiles and loads without a hard runtime
  * dependency on Curios.
  */

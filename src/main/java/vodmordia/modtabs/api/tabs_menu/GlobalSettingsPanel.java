@@ -3,6 +3,7 @@ package vodmordia.modtabs.api.tabs_menu;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.api.distmarker.Dist;
@@ -17,7 +18,7 @@ import java.util.List;
  * Modal "global settings" panel — per-tab visibility, order, and global icon-offset config.
  * Triggered from the cogwheel button in the layout-editor overlay.
  *
- * <p>Extracted from {@link TabsMenu} so the tab-menu surface stays focused on the
+ * Extracted from {@link TabsMenu} so the tab-menu surface stays focused on the
  * tab-row registry and edit-mode interaction. The panel reads the registry via
  * {@link TabsMenu#screenInfos()} and signals the host via {@link TabsMenu#previewRendering}
  * and {@link TabsMenu#reinitCurrentScreen()} only.
@@ -336,6 +337,65 @@ public final class GlobalSettingsPanel {
         return -1;
     }
 
+    /**
+     * Hover hit-test for tab icons on the Visibility and Order panels — returns the configKey
+     * of the icon under the cursor, or null if none. Used to drive the mod-name tooltip.
+     * Skips while a drag is in progress: the dragged icon follows the cursor, so a tooltip
+     * for whatever slot happens to be underneath would name a different tab than the one
+     * being held.
+     */
+    private static String gsHoveredIconKey(Screen screen, double mx, double my) {
+        if (gsDraftOrder == null || gsDraftEnabled == null) return null;
+        if (gsActiveTab == GlobalSettingsTab.ORDER && gsDraggingIndex >= 0) return null;
+        int[] cr = gsContentRect(screen);
+        if (mx < cr[0] || mx >= cr[0] + cr[2] || my < cr[1] + GS_HEADER_H || my >= cr[1] + cr[3]) return null;
+
+        if (gsActiveTab == GlobalSettingsTab.VISIBILITY) {
+            int visIdx = 0, hidIdx = 0;
+            for (String key : gsDraftOrder) {
+                boolean enabled = Boolean.TRUE.equals(gsDraftEnabled.get(key));
+                int[] slot = gsVisibilitySlotRect(screen, enabled ? 0 : 1, enabled ? visIdx++ : hidIdx++);
+                if (mx >= slot[0] && mx < slot[0] + slot[2] && my >= slot[1] && my < slot[1] + slot[3]) {
+                    return key;
+                }
+            }
+        } else if (gsActiveTab == GlobalSettingsTab.ORDER) {
+            int idx = gsOrderHitTest(screen, mx, my);
+            if (idx >= 0) {
+                java.util.List<String> visible = gsVisibleOrderKeys();
+                if (idx < visible.size()) return visible.get(idx);
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Tooltip text for a tab icon — prefers the integration mod's display name (matches what
+     * the user asked for: "the mod name") when the tab carries a TabSpec, falls back to the
+     * tab's own getTooltip() text otherwise. {@code spec} is package-protected on
+     * {@link IntegrationIconTab} / {@link IntegrationItemTab}, so the cast-and-read works
+     * here without a public getter.
+     */
+    private static String gsTabLabelFor(String key) {
+        if (gsTabsCache == null) return null;
+        TabBase tab = gsTabsCache.get(key);
+        if (tab == null) return null;
+        if (tab instanceof IntegrationIconTab && ((IntegrationIconTab) tab).spec != null
+                && ((IntegrationIconTab) tab).spec.mod() != null) {
+            return ((IntegrationIconTab) tab).spec.mod().getDisplayName();
+        }
+        if (tab instanceof IntegrationItemTab && ((IntegrationItemTab) tab).spec != null
+                && ((IntegrationItemTab) tab).spec.mod() != null) {
+            return ((IntegrationItemTab) tab).spec.mod().getDisplayName();
+        }
+        try {
+            Component tip = tab.getTooltip();
+            return tip == null ? null : tip.getString();
+        } catch (Exception ignored) {
+            return null;
+        }
+    }
+
     public static void render(GuiGraphics gui, Screen screen, int mouseX, int mouseY) {
         if (!globalSettingsOpen || gsDraftEnabled == null) return;
         int[] win = gsWindowRect(screen);
@@ -386,6 +446,43 @@ public final class GlobalSettingsPanel {
         int[] cbr = gsCancelButtonRect(screen);
         drawFooterButton(gui, sbr, "save", 0xFF1F3322);
         drawFooterButton(gui, cbr, "cancel", 0xFF331F1F);
+
+        // Mod-name tooltip for icons on the Visibility / Order panels. Drawn last so it
+        // floats above the panel chrome and footer buttons.
+        String hoverKey = gsHoveredIconKey(screen, mouseX, mouseY);
+        if (hoverKey != null) {
+            String label = gsTabLabelFor(hoverKey);
+            if (label != null && !label.isEmpty()) {
+                drawIconTooltip(gui, screen, label, mouseX, mouseY);
+            }
+        }
+    }
+
+    /**
+     * Manual tooltip render — we can't use {@code gui.renderTooltip} here because that path
+     * queues into the active screen's tooltip renderer, which silently drops the tooltip
+     * when called from inside our nested pose stack (Z=900) inside the host screen's render
+     * event. Drawing a styled box ourselves matches the rest of the panel's chrome (dark fill
+     * + green border) and guarantees the tooltip appears at the cursor immediately.
+     */
+    private static void drawIconTooltip(GuiGraphics gui, Screen screen, String label, int mouseX, int mouseY) {
+        net.minecraft.client.gui.Font font = Minecraft.getInstance().font;
+        int textW = font.width(label);
+        int padX = 4, padY = 3;
+        int boxW = textW + padX * 2;
+        int boxH = font.lineHeight + padY * 2;
+        int x = mouseX + 10;
+        int y = mouseY - boxH - 2;
+        if (x + boxW > screen.width - 2) x = screen.width - boxW - 2;
+        if (y < 2) y = mouseY + 10;
+        int bg = 0xF0101418;
+        int border = 0xFF44FF66;
+        gui.fill(x, y, x + boxW, y + boxH, bg);
+        gui.fill(x, y, x + boxW, y + 1, border);
+        gui.fill(x, y + boxH - 1, x + boxW, y + boxH, border);
+        gui.fill(x, y, x + 1, y + boxH, border);
+        gui.fill(x + boxW - 1, y, x + boxW, y + boxH, border);
+        gui.drawString(font, label, x + padX, y + padY, 0xFFCCFFCC, false);
     }
 
     private static void drawFooterButton(GuiGraphics gui, int[] r, String label, int bg) {

@@ -27,7 +27,7 @@ import java.lang.reflect.Method;
  * {@code Minecraft.setScreen(new SkillEditScreen(player, patch.getSkillCapability()))}
  * with no networking, so the tab does the same via reflection.
  *
- * <p>The patch is fetched through {@code EpicFightCapabilities.getLocalPlayerPatch(LocalPlayer)},
+ * The patch is fetched through {@code EpicFightCapabilities.getLocalPlayerPatch(LocalPlayer)},
  * which reads Epic Fight's Forge capability. If the patch or its skill capability isn't
  * ready yet (e.g. player just logged in), the click is a no-op.
  */

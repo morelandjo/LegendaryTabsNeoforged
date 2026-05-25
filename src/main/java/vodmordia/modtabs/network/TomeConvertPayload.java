@@ -7,7 +7,7 @@ import net.minecraft.world.item.ItemStack;
  * Client → server request to convert an Eccentric Tome in the player's inventory
  * back into the book the player selected from the tome screen.
  *
- * <p>Plain message class for Forge 1.20.1 SimpleChannel. The 1.21.1 NeoForge
+ * Plain message class for Forge 1.20.1 SimpleChannel. The 1.21.1 NeoForge
  * variant of this code used {@code CustomPacketPayload} + {@code StreamCodec};
  * neither exists on 1.20.1.
  */

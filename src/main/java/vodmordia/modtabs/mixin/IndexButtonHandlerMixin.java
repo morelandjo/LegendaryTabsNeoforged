@@ -19,11 +19,11 @@ import java.util.function.Consumer;
  * Forcing the method to return at HEAD skips both the {@code recipeBookButton} lookup
  * and the consumer.accept call, so no button gets attached to the inventory.
  *
- * <p>Only {@code $Post$1} (the InventoryScreen variant) is suppressed —
+ * Only {@code $Post$1} (the InventoryScreen variant) is suppressed —
  * {@code $Post$2} (PauseScreen) is left alone since the pause-menu placement isn't
  * what the tab replaces.
  *
- * <p>Target is referenced by FQN string so this mixin is a no-op when the mod is
+ * Target is referenced by FQN string so this mixin is a no-op when the mod is
  * absent ({@code require = 0}).
  */
 @Mixin(targets = "fuzs.completionistsindex.client.handler.IndexButtonHandler", remap = false)

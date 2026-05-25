@@ -27,7 +27,7 @@ import java.util.Objects;
  * path the vanilla "look at chest and right-click" produces — the server handles
  * permissions, menu construction, and the open packet uniformly.
  *
- * <p>Tabs are rebuilt each screen-init by {@link NearbyContainersProvider}; we don't hold
+ * Tabs are rebuilt each screen-init by {@link NearbyContainersProvider}; we don't hold
  * a chunk reference beyond the {@link BlockPos} so a tab going stale (player walks away,
  * block is broken) just means the next init produces a different set.
  */

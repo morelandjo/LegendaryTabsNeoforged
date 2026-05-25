@@ -164,6 +164,8 @@ public class ModTabs
             TabsMenu.register(new SdmShopTab());
             TabsMenu.register(new JobsPlusTab());
             TabsMenu.register(new QuestLogTab());
+            TabsMenu.register(new FieldGuideTab());
+            TabsMenu.register(new ModonomiconTab());
 
             // One transient tab per nearby container block (chests, barrels, modded
             // inventories, …). Discovered fresh on every screen-init.

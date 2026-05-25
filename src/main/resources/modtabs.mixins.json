@@ -7,6 +7,7 @@
   "client": [
     "AbstractContainerScreenMixin",
     "DrawTabsMixin",
+    "FieldGuideInventoryScreenMixin",
     "IndexButtonHandlerMixin",
     "QuestlogInventoryScreenMixin",
     "SkiesClientEventsMixin"

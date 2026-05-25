@@ -14,11 +14,11 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
  * at HEAD skips all four button registrations in one shot, without us having to mixin
  * each addListener call site.
  *
- * <p>The Arcs and Journal tabs are replaced by {@code BlueSkiesArcsTab} /
+ * The Arcs and Journal tabs are replaced by {@code BlueSkiesArcsTab} /
  * {@code BlueSkiesJournalTab}; the vanilla-toggle and perks tabs are dropped (the
  * tab strip already has an Inventory tab, and Perks is supporter-only cosmetic).
  *
- * <p>Target is referenced by FQN string so this mixin is a no-op when Blue Skies is
+ * Target is referenced by FQN string so this mixin is a no-op when Blue Skies is
  * absent ({@code require = 0}).
  */
 @Mixin(targets = "com.legacy.blue_skies.client.events.SkiesClientEvents", remap = false)

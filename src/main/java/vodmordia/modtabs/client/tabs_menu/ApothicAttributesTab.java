@@ -20,11 +20,11 @@ import vodmordia.modtabs.utils.ScreenClasses;
  * the panel is auto-shown whenever the static {@code AttributesGui.wasOpen} flag is
  * true at the moment the inventory initializes.
  *
- * <p>So clicking this tab flips that flag via reflection and opens the inventory; the
+ * So clicking this tab flips that flag via reflection and opens the inventory; the
  * mod's own listener does the rest. Same trick the mod uses internally for its
  * Curios-swap path ({@code swappedFromCurios}).
  *
- * <p>The tab is hidden when the server has {@code ALConfig.enableAttributesGui = false},
+ * The tab is hidden when the server has {@code ALConfig.enableAttributesGui = false},
  * matching the mod's own gating: if the panel itself can't open, neither should the tab.
  */
 @TabConfig(configKey = "apothicAttributesTab", defaultEnabled = true, defaultOrder = 0)

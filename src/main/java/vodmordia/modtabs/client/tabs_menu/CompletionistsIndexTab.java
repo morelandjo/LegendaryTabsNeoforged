@@ -22,12 +22,12 @@ import java.lang.reflect.Constructor;
  * The mod's native inventory button is suppressed via {@code IndexButtonHandlerMixin}
  * so the tab is the only entry point into the index from the inventory.
  *
- * <p>{@code IndexViewScreen} is a plain {@link Screen} subclass (not a container screen)
+ * {@code IndexViewScreen} is a plain {@link Screen} subclass (not a container screen)
  * whose {@code render()} draws the book background then calls {@code super.render()} —
  * so tabs added as children DO render naturally, and this FQN does not need to be added
  * to the manual-renderables list in {@code ClientNeoForgeEvents.onScreenRenderPost}.
  *
- * <p>Both {@code ModsIndexViewScreen} (top-level mod list) and {@code ItemsIndexViewScreen}
+ * Both {@code ModsIndexViewScreen} (top-level mod list) and {@code ItemsIndexViewScreen}
  * (per-mod drill-down) are in the current-screen FQN list so cycling skips this tab when
  * the player is anywhere inside the index.
  */

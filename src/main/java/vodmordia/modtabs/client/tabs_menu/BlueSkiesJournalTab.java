@@ -24,15 +24,15 @@ import java.lang.reflect.Method;
  * {@code BlueJournalStartScreen} (or restores the player's last-viewed page) and pushes
  * it onto {@link net.minecraft.client.Minecraft#setScreen}.
  *
- * <p>Passing {@code false} for the back-button arg means closing the journal returns to
+ * Passing {@code false} for the back-button arg means closing the journal returns to
  * the previous screen rather than always opening InventoryScreen — that fits this mod's
  * tab-based navigation better than the native button's {@code true}.
  *
- * <p>Blue Skies' native button is gated on {@code ISkiesPlayer.hasUsedBlueLore()}; this
+ * Blue Skies' native button is gated on {@code ISkiesPlayer.hasUsedBlueLore()}; this
  * tab is not, so the journal is always reachable from the tab strip when Blue Skies
  * is loaded.
  *
- * <p>{@code BlueJournalScreen} is a plain {@link net.minecraft.client.gui.screens.Screen}
+ * {@code BlueJournalScreen} is a plain {@link net.minecraft.client.gui.screens.Screen}
  * whose {@code render()} iterates {@code renderables} manually (so tabs added as
  * children do draw), but does not invoke {@code super.render()}.
  */

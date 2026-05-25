@@ -124,6 +124,10 @@ public class TabsMenu {
     }
 
     public static void enterEditMode(Screen screen) {
+        // Modpack lock: when the modpack maker sets allowEditing=false in the config file,
+        // every entry point into the layout editor (Shift+Z, tab long-press, the Edit button
+        // in LayoutEditorButtons) becomes a no-op. Gating here once covers all three.
+        if (!Config.Baked.allowEditing) return;
         editingScreenClass = screen.getClass();
         dragOffsetX = 0;
         dragOffsetY = 0;

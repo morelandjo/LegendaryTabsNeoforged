@@ -9,7 +9,7 @@ import java.util.List;
 
 /**
  * Source of transient tabs that don't fit the "register once at boot" model — e.g. one tab
- * per nearby chest. Providers run on every screen re-init <em>after</em> the static-tab list
+ * per nearby chest. Providers run on every screen re-init after the static-tab list
  * has been assembled, and append directly to the same list, so dynamic tabs participate in
  * the existing sort, pagination, visibility, and tuck plumbing unchanged.
  */

@@ -25,11 +25,11 @@ import java.lang.reflect.Method;
  * button (added by {@code InventoryScreenMixin}) is suppressed via {@code QuestlogInventoryScreenMixin}
  * so the tab is the only inventory entry point.
  *
- * <p>{@code QuestlogScreen} is a plain {@link Screen} subclass whose {@code render()} calls
+ * {@code QuestlogScreen} is a plain {@link Screen} subclass whose {@code render()} calls
  * {@code super.render()}, so tabs added as children render naturally — no entry in
  * {@code ClientNeoForgeEvents.onScreenRenderPost} needed.
  *
- * <p><b>Notification badge.</b> The native button overlays an exclamation-style badge whenever
+ * Notification badge. The native button overlays an exclamation-style badge whenever
  * {@code QuestlogClientEvents.mostRecentNotificationQuest} is non-null OR any quest is
  * {@code isCompleted() && !isRewarded()}. This tab replicates that exact check reflectively
  * (so we don't compile-link the mod), and overlays the same {@code DEFAULT_BADGE} sprite from
@@ -37,7 +37,7 @@ import java.lang.reflect.Method;
  * with the same sine-wave bob the native button uses when
  * {@code config.button.bobbingBadge == true}.
  *
- * <p>Per-quest custom badges ({@code quest.getDisplay().getBadge()}) are intentionally not
+ * Per-quest custom badges ({@code quest.getDisplay().getBadge()}) are intentionally not
  * mirrored — they require invoking the mod's {@code Blittable} interface reflectively across
  * an unstable API surface. The default badge is what 99% of quests render anyway, and missing
  * a per-quest icon is preferable to crashing if the mod renames {@code Blittable.blit}.

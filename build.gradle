@@ -348,6 +348,25 @@ dependencies {
     // resolvable at compile time on this branch — Forge's Mixin AP (0.8.5) errors if a
     // string-targeted mixin can't load its target class (newer NeoForge versions only warn).
     compileOnly fg.deobf("curse.maven:questlog-1202066:8034389")
+
+    // Modonomicon (klikli-dev, Forge 1.20.1). Reflection-only — ModonomiconTab finds the
+    // first ModonomiconItem in the player's inventory and opens its book via
+    // BookGuiManager.openBook(book.getId()) — same path the item's right-click use() takes
+    // on the client side. (1.20.1 API takes ResourceLocation; 1.21.1's BookAddress wrapper
+    // doesn't exist on this branch yet.) The mod adds no inventory button so no
+    // suppression mixin is needed. compileOnly because we never reference Modonomicon
+    // types at compile time.
+    compileOnly fg.deobf("curse.maven:modonomicon-538392:7446143")
+
+    // Field Guide (evanbones, Forge 1.20.1). Reflection-only integration — FieldGuideTab
+    // mirrors the mod's inventory-button path in InventoryScreenMixin: open
+    // FieldGuideCategoryScreen with the no-arg constructor (or BookScreen.lastOpenedScreen
+    // when the player's ClientConfig.defaultScreen == "last_opened_screen"). The native
+    // ImageButton is suppressed via FieldGuideInventoryScreenMixin, which identifies the
+    // button by its texture ResourceLocation namespace ("fieldguide") so we never touch
+    // the recipe-book button. compileOnly because we never reference Field Guide types
+    // at compile time.
+    compileOnly fg.deobf("curse.maven:field-guide-1470590:8046081")
 }
 
 tasks.named('processResources', ProcessResources).configure {

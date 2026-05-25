@@ -8,7 +8,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * absent classes are remembered via a sentinel so repeated misses don't keep throwing
  * ClassNotFoundException.
  *
- * <p>Used by hot paths (per-screen-init isEnabled/isCurrentlyUsed checks, per-inventory-item
+ * Used by hot paths (per-screen-init isEnabled/isCurrentlyUsed checks, per-inventory-item
  * isInstance scans) where the original Class.forName-on-every-call cost is measurable.
  */
 public final class ClassCache {

@@ -19,7 +19,7 @@ import vodmordia.modtabs.utils.ScreenClasses;
  * {@code new TalentsScreen()} and calls {@code Minecraft.setScreen(...)}. We skip the
  * hub and jump straight to the talents view by mirroring that constructor reflectively.
  *
- * <p>{@code TalentsScreen} is a plain {@link Screen} subclass (not a container screen)
+ * {@code TalentsScreen} is a plain {@link Screen} subclass (not a container screen)
  * whose {@code render()} wraps {@code super.render()} inside a zoom pose transform —
  * so any tab buttons added as children would render scaled. The screen FQN is in the
  * manual-renderables list in {@code ClientNeoForgeEvents.onScreenRenderPost} so the

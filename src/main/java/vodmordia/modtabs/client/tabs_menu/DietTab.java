@@ -22,7 +22,7 @@ import vodmordia.modtabs.utils.ScreenClasses;
  * {@code DietClientEvents.getButton}); a direct {@code new DietScreen(...)} from us would
  * bypass those redirects and show the vanilla Diet UI without Bulking's stomach data.
  *
- * <p>Both screen classes share the same {@code (boolean fromInventory)} constructor,
+ * Both screen classes share the same {@code (boolean fromInventory)} constructor,
  * so the swap is purely a class-name choice.
  */
 @TabConfig(configKey = "dietTab", defaultEnabled = true, defaultOrder = 0)

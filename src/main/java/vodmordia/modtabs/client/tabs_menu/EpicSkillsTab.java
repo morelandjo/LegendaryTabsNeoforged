@@ -27,7 +27,7 @@ import java.lang.reflect.Method;
  * Same constructor on both 1.20.1 and 1.21.1, so this differs from the 1.21.1 version only
  * in {@code ResourceLocation} construction.
  *
- * <p>{@code SkillTreeScreen.discarded()} returns true when the player has no unlocked
+ * {@code SkillTreeScreen.discarded()} returns true when the player has no unlocked
  * skill trees — calling it before {@code setScreen} matches the mod's own keybind guard.
  */
 @TabConfig(configKey = "epicSkillsTab", defaultEnabled = true, defaultOrder = 0)

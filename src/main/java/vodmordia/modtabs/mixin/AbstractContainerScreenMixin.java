@@ -14,14 +14,12 @@ import vodmordia.modtabs.api.tabs_menu.TabsMenu;
 /**
  * Two unrelated tweaks for container screens:
  *
- * <ol>
- *   <li>While the layout editor is active, force {@code isHovering(Slot, ...)} to return
- *   false so vanilla doesn't draw slot-hover highlights or set {@code hoveredSlot} (which
- *   would render item tooltips on top of our overlay).</li>
- *   <li>Inject right before the GUI panel image draws in {@code render} so our tabs land
- *   <em>under</em> it. Edit mode skips this pass and renders tabs on top via the normal
- *   widget loop, since handles need to be reachable.</li>
- * </ol>
+ * 1. While the layout editor is active, force {@code isHovering(Slot, ...)} to return
+ *    false so vanilla doesn't draw slot-hover highlights or set {@code hoveredSlot} (which
+ *    would render item tooltips on top of our overlay).
+ * 2. Inject right before the GUI panel image draws in {@code render} so our tabs land
+ *    under it. Edit mode skips this pass and renders tabs on top via the normal
+ *    widget loop, since handles need to be reachable.
  */
 @Mixin(AbstractContainerScreen.class)
 public class AbstractContainerScreenMixin {

@@ -12,7 +12,7 @@ import vodmordia.modtabs.utils.ClassCache;
  * Abstract base for icon-style integration tabs that are entirely described by a {@link TabSpec}.
  * Subclasses only implement {@link #openTargetScreen(Player)} (the click action).
  *
- * <p>Replaces the boilerplate that previously appeared verbatim in every tab class:
+ * Replaces the boilerplate that previously appeared verbatim in every tab class:
  * isEnabled / isCurrentlyUsed / getTooltip / initTabOnScreens.
  */
 @OnlyIn(Dist.CLIENT)

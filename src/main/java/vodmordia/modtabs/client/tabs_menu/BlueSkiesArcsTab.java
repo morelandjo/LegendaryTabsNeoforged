@@ -24,7 +24,7 @@ import java.lang.reflect.Field;
  * {@link net.minecraftforge.network.simple.SimpleChannel}, and the server's handler opens
  * an {@code ArcsMenu} on the player which the client renders as {@link ScreenClasses#BLUE_SKIES_ARCS_SCREEN}.
  *
- * <p>The packet class and SimpleChannel are resolved through {@link ClassCache} so this
+ * The packet class and SimpleChannel are resolved through {@link ClassCache} so this
  * class compiles and loads without a hard runtime dependency on Blue Skies.
  */
 @TabConfig(configKey = "blueSkiesArcsTab", defaultEnabled = true, defaultOrder = 0)

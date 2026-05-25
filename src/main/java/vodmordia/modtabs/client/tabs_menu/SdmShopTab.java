@@ -26,17 +26,17 @@ import java.lang.reflect.Method;
  * which on response calls the no-arg {@code SDMShopClient.openGui()} → dispatches to
  * {@code ModernShopScreen} / {@code MainShopScreen} based on the {@code GUI_STYLE} config.
  *
- * <p>Going through the round-trip (rather than the simpler no-arg {@code openGui()}) is
+ * Going through the round-trip (rather than the simpler no-arg {@code openGui()}) is
  * deliberate: the server populates {@code SDMShopClient.CurrentShop} as part of the
  * response, and the screens read it during {@code onConstruct} — skipping the round-trip
  * leaves {@code CurrentShop = null} and the screen opens empty.
  *
- * <p>The shop screen is an FTB Library {@code BaseScreen} wrapped in
+ * The shop screen is an FTB Library {@code BaseScreen} wrapped in
  * {@link ScreenClasses#FTB_LIBRARY_WRAPPER} — same host class as FTB Quests / FTB Teams.
  * {@link #isCurrentlyUsed} inspects the wrapper's {@code wrappedGui} field to distinguish
  * SDM Shop from those two so cycling skips this tab only when the shop is actually open.
  *
- * <p>Tab-bar visibility on the shop screen relies on whichever tab owns the wrapper
+ * Tab-bar visibility on the shop screen relies on whichever tab owns the wrapper
  * registration: FtbQuestsTab claims it when FTB Quests is installed; FtbTeamsTab claims
  * it as a fallback when only FTB Teams is installed. This tab adds a final fallback for
  * the case where neither FTB mod is installed but SDM Shop is — same coordination pattern,

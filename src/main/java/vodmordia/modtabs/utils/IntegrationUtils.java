@@ -87,7 +87,7 @@ public class IntegrationUtils {
     /**
      * Resolve the player's Travelers Backpack wrapper via reflection.
      *
-     * <p>The 1.21.1 NeoForge build uses {@code AttachmentUtils.getBackpackWrapper(player)}, which
+     * The 1.21.1 NeoForge build uses {@code AttachmentUtils.getBackpackWrapper(player)}, which
      * may not be the right entry point on the 1.20.1 Forge build of the mod (it historically used
      * a Forge {@link net.minecraftforge.common.capabilities.Capability Capability} on the player).
      * Try the attachment-style call first; if that class isn't there, fall back to {@code null} —

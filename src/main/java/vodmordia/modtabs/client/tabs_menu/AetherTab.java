@@ -25,7 +25,7 @@ import java.lang.reflect.Field;
  * net.minecraftforge.network.simple.SimpleChannel}, and the server opens an
  * {@code AccessoriesMenu} on the player. Same flow as pressing "I".
  *
- * <p>The packet class, screen class, and SimpleChannel are all resolved through
+ * The packet class, screen class, and SimpleChannel are all resolved through
  * {@link ClassCache} so this class compiles and loads without a hard runtime
  * dependency on The Aether.
  */

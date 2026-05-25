@@ -20,7 +20,7 @@ import java.util.List;
  * {@link InventoryScreen#init()} at TAIL and adds a {@code QuestlogOpenButton}
  * via {@code addRenderableWidget}.
  *
- * <p>We can't mix INTO Questlog's mixin (Mixin rejects mixin-targets-mixin with
+ * We can't mix INTO Questlog's mixin (Mixin rejects mixin-targets-mixin with
  * "Cannot add target ... because the target is a mixin"), so instead we also inject at
  * the TAIL of {@code InventoryScreen.init()} — injection order is unspecified but every
  * injection runs after the original method body, so by the time *both* run the children
@@ -28,7 +28,7 @@ import java.util.List;
  * {@code Screen#removeWidget} (which removes from renderables / children / narratables
  * in one shot).
  *
- * <p>Class-name matching by string keeps this mod-decoupled — if Questlog is absent the
+ * Class-name matching by string keeps this mod-decoupled — if Questlog is absent the
  * loop iterates the inventory's normal widgets and finds nothing, then exits. No
  * {@code require = 0} needed because this mixin targets vanilla {@link InventoryScreen}
  * which is always present.
@@ -44,7 +44,11 @@ public abstract class QuestlogInventoryScreenMixin extends EffectRenderingInvent
         throw new UnsupportedOperationException("Mixin constructor");
     }
 
-    @Inject(method = "init", at = @At("TAIL"))
+    // Full descriptor "init()V" — bare "init" is ambiguous on the SRG/Mojang boundary when
+    // no refmap is generated (which currently happens after a clean build; the AP silently
+    // skips writing one). The fully-qualified form lets Mixin find the no-arg lifecycle
+    // override directly without needing a name translation.
+    @Inject(method = "init()V", at = @At("TAIL"))
     private void modtabs$removeQuestlogButton(CallbackInfo ci) {
         List<GuiEventListener> toRemove = null;
         for (GuiEventListener child : this.children()) {

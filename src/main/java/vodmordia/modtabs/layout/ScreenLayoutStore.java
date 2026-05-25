@@ -99,7 +99,7 @@ public class ScreenLayoutStore {
      * Returns null if the file isn't present, the resource manager isn't ready yet, or parsing
      * fails — callers fall through to a hard-coded {@link ScreenLayout} default.
      *
-     * <p>Resource path uses lowercase + {@code $} → {@code _} because ResourceLocation paths
+     * Resource path uses lowercase + {@code $} → {@code _} because ResourceLocation paths
      * are restricted to {@code [a-z0-9_/.-]}; FQNs only ever introduce uppercase or {@code $}
      * (for inner classes), so this is a lossless flattening.
      */

@@ -53,7 +53,7 @@ public abstract class TabBase {
      * True when this tab represents the screen the user is currently viewing — used by the
      * long-press-to-edit gesture so only the home/active tab triggers it.
      *
-     * <p>Defaults to {@link #isCurrentlyUsed}; tabs that override that to always return false
+     * Defaults to {@link #isCurrentlyUsed}; tabs that override that to always return false
      * (so the tab stays clickable for "refresh" semantics — Inventory, FTB Quests, FTB Teams,
      * CustomJson) should override this method to return the actual home-screen check.
      */

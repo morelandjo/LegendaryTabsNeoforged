@@ -30,7 +30,7 @@ import java.util.Set;
  * {@link BlockState#getMenuProvider}, so any block that opens a menu on right-click —
  * vanilla or modded — is picked up without a hardcoded list.
  *
- * <p>Also exposes {@link #hasContainerSetChanged(Player)} so a tick handler can detect
+ * Also exposes {@link #hasContainerSetChanged(Player)} so a tick handler can detect
  * mid-screen world changes (chest broken/placed) and trigger a re-init, rather than the
  * bar going stale until the user closes and reopens the screen.
  */

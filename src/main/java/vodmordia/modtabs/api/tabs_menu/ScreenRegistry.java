@@ -9,7 +9,7 @@ import java.util.function.Function;
 /**
  * Centralized registry for screen-to-tab mappings.
  *
- * <p>Tabs declare only the host GUI's nominal dimensions and display mode (normal vs.
+ * Tabs declare only the host GUI's nominal dimensions and display mode (normal vs.
  * inverted background). Where the bar actually sits is decided per-screen by the
  * layout JSON ({@code anchor + offsetX/offsetY}), not at registration time.
  */

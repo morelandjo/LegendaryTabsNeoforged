@@ -263,7 +263,7 @@ public class SophisticatedBackpacksTab extends ConfigurableItemTab {
     /**
      * Returns the first backpack ItemStack found in any Curios slot, or null.
      *
-     * <p>The Curios API differs by platform: on 1.20.1 Forge {@code CuriosApi.getCuriosInventory}
+     * The Curios API differs by platform: on 1.20.1 Forge {@code CuriosApi.getCuriosInventory}
      * returns {@code LazyOptional} (which has no {@code get()}), while on 1.21.1+ NeoForge it
      * returns {@code java.util.Optional}. {@code orElse(null)} exists on both and unwraps the
      * value without needing platform-specific code paths.

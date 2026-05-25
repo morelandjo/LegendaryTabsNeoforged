@@ -18,7 +18,7 @@ import vodmordia.modtabs.utils.ScreenClasses;
  * server replies with {@code PacketOpenMenuS2C} that constructs and opens the screen with
  * proper data.
  *
- * <p>The packet class is resolved through {@link ClassCache} so this class compiles and
+ * The packet class is resolved through {@link ClassCache} so this class compiles and
  * loads without a hard runtime dependency on Jobs+. The packet extends architectury's
  * {@code BaseC2SMessage}, which exposes an instance {@code sendToServer()} method — same
  * dispatch path the mod's own keybind uses.
