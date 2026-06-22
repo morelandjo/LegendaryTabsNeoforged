@@ -30,6 +30,7 @@ public class Config
 		public static boolean pufferfishSkillsTabEnabled;
 		public static boolean passiveSkillTreeTabEnabled;
 		public static boolean sophisticatedBackpacksTabEnabled;
+		public static boolean quarkBackpackTabEnabled;
 		public static boolean cobblemonTabEnabled;
 		public static boolean arsElixirumTabEnabled;
 		public static boolean arsNouveauTabEnabled;
@@ -229,6 +230,12 @@ public class Config
 		public static int sophisticatedBackpacksTabIconNudgeDown;
 		public static int sophisticatedBackpacksTabIconNudgeLeft;
 		public static int sophisticatedBackpacksTabIconNudgeRight;
+		public static String quarkBackpackTabCustomIcon;
+		public static int quarkBackpackTabIconScale;
+		public static int quarkBackpackTabIconNudgeUp;
+		public static int quarkBackpackTabIconNudgeDown;
+		public static int quarkBackpackTabIconNudgeLeft;
+		public static int quarkBackpackTabIconNudgeRight;
 		public static String travelersBackpackTabCustomIcon;
 		public static int travelersBackpackTabIconScale;
 		public static int travelersBackpackTabIconNudgeUp;
@@ -396,6 +403,7 @@ public class Config
 		public static TabDisplayVisibility pufferfishSkillsTabDisplayVisibility;
 		public static TabDisplayVisibility reskillableReimaginedTabDisplayVisibility;
 		public static TabDisplayVisibility sophisticatedBackpacksTabDisplayVisibility;
+		public static TabDisplayVisibility quarkBackpackTabDisplayVisibility;
 		public static TabDisplayVisibility travelersBackpackTabDisplayVisibility;
 		public static TabDisplayVisibility xaerosMapTabDisplayVisibility;
 		public static TabDisplayVisibility brassworksMissionsTabDisplayVisibility;
@@ -436,6 +444,7 @@ public class Config
 		public static int pufferfishSkillsTabOrder;
 		public static int passiveSkillTreeTabOrder;
 		public static int sophisticatedBackpacksTabOrder;
+		public static int quarkBackpackTabOrder;
 		public static BackpackSlot sophisticatedBackpacksPreferredSlot;
 		public static int cobblemonTabOrder;
 		public static int modularGolemsTabOrder;
@@ -498,6 +507,7 @@ public class Config
 				pufferfishSkillsTabEnabled = ModTabsConfig.pufferfishSkillsTabEnabled;
 				passiveSkillTreeTabEnabled = ModTabsConfig.passiveSkillTreeTabEnabled;
 				sophisticatedBackpacksTabEnabled = ModTabsConfig.sophisticatedBackpacksTabEnabled;
+				quarkBackpackTabEnabled = ModTabsConfig.quarkBackpackTabEnabled;
 				cobblemonTabEnabled = ModTabsConfig.cobblemonTabEnabled;
 				arsElixirumTabEnabled = ModTabsConfig.arsElixirumTabEnabled;
 				arsNouveauTabEnabled = ModTabsConfig.arsNouveauTabEnabled;
@@ -561,6 +571,7 @@ public class Config
 				pufferfishSkillsTabOrder = ModTabsConfig.pufferfishSkillsTabOrder;
 				passiveSkillTreeTabOrder = ModTabsConfig.passiveSkillTreeTabOrder;
 				sophisticatedBackpacksTabOrder = ModTabsConfig.sophisticatedBackpacksTabOrder;
+				quarkBackpackTabOrder = ModTabsConfig.quarkBackpackTabOrder;
 				sophisticatedBackpacksPreferredSlot = ModTabsConfig.sophisticatedBackpacksPreferredSlot;
 				cobblemonTabOrder = ModTabsConfig.cobblemonTabOrder;
 				modularGolemsTabOrder = ModTabsConfig.modularGolemsTabOrder;
@@ -624,6 +635,7 @@ public class Config
 				pufferfishSkillsTabDisplayVisibility = ModTabsConfig.pufferfishSkillsTabDisplayVisibility;
 				reskillableReimaginedTabDisplayVisibility = ModTabsConfig.reskillableReimaginedTabDisplayVisibility;
 				sophisticatedBackpacksTabDisplayVisibility = ModTabsConfig.sophisticatedBackpacksTabDisplayVisibility;
+				quarkBackpackTabDisplayVisibility = ModTabsConfig.quarkBackpackTabDisplayVisibility;
 				travelersBackpackTabDisplayVisibility = ModTabsConfig.travelersBackpackTabDisplayVisibility;
 				xaerosMapTabDisplayVisibility = ModTabsConfig.xaerosMapTabDisplayVisibility;
 				rpgCraftingTabDisplayVisibility = ModTabsConfig.advancementsTabDisplayVisibility; // Shares config with advancements
@@ -809,6 +821,12 @@ public class Config
 				sophisticatedBackpacksTabIconNudgeDown = ModTabsConfig.sophisticatedBackpacksTabIconNudgeDown;
 				sophisticatedBackpacksTabIconNudgeLeft = ModTabsConfig.sophisticatedBackpacksTabIconNudgeLeft;
 				sophisticatedBackpacksTabIconNudgeRight = ModTabsConfig.sophisticatedBackpacksTabIconNudgeRight;
+				quarkBackpackTabCustomIcon = ModTabsConfig.quarkBackpackTabCustomIcon;
+				quarkBackpackTabIconScale = ModTabsConfig.quarkBackpackTabIconScale;
+				quarkBackpackTabIconNudgeUp = ModTabsConfig.quarkBackpackTabIconNudgeUp;
+				quarkBackpackTabIconNudgeDown = ModTabsConfig.quarkBackpackTabIconNudgeDown;
+				quarkBackpackTabIconNudgeLeft = ModTabsConfig.quarkBackpackTabIconNudgeLeft;
+				quarkBackpackTabIconNudgeRight = ModTabsConfig.quarkBackpackTabIconNudgeRight;
 				travelersBackpackTabCustomIcon = ModTabsConfig.travelersBackpackTabCustomIcon;
 				travelersBackpackTabIconScale = ModTabsConfig.travelersBackpackTabIconScale;
 				travelersBackpackTabIconNudgeUp = ModTabsConfig.travelersBackpackTabIconNudgeUp;

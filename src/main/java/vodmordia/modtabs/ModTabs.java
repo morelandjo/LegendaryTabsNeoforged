@@ -79,6 +79,13 @@ public class ModTabs
                 TomeConvertPayload::decode,
                 TomeConvertHandler::handle
         );
+        CHANNEL.registerMessage(
+                1,
+                vodmordia.modtabs.network.OpenQuarkBackpackPayload.class,
+                vodmordia.modtabs.network.OpenQuarkBackpackPayload::encode,
+                vodmordia.modtabs.network.OpenQuarkBackpackPayload::decode,
+                vodmordia.modtabs.network.OpenQuarkBackpackHandler::handle
+        );
 
         LOGGER.info("Registered ModTabs network packets");
     }
@@ -141,6 +148,7 @@ public class ModTabs
             TabsMenu.register(new L2AttributeTab());
             TabsMenu.register(new L2ArtifactsTab());
             TabsMenu.register(new SophisticatedBackpacksTab());
+            TabsMenu.register(new QuarkBackpackTab());
             TabsMenu.register(new CosmeticArmorTab());
             TabsMenu.register(new CobblemonTab());
             TabsMenu.register(new DraconicEvolutionTab());

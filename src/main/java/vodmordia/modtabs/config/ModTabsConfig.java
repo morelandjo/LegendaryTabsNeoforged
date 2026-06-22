@@ -65,6 +65,7 @@ public class ModTabsConfig extends MidnightConfig {
     @Entry(category = "tabs") @Hidden public static boolean runicSkillsTabSticky = false;
     @Entry(category = "tabs") @Hidden public static boolean sdmShopTabSticky = false;
     @Entry(category = "tabs") @Hidden public static boolean sophisticatedBackpacksTabSticky = false;
+    @Entry(category = "tabs") @Hidden public static boolean quarkBackpackTabSticky = false;
     @Entry(category = "tabs") @Hidden public static boolean travelersBackpackTabSticky = false;
     @Entry(category = "tabs") @Hidden public static boolean villagerRecruitsClaimMapTabSticky = false;
     @Entry(category = "tabs") @Hidden public static boolean villagerRecruitsTabSticky = false;
@@ -1274,6 +1275,31 @@ public class ModTabsConfig extends MidnightConfig {
 
     @Entry(category = "tabs") @Hidden
     public static TabDisplayVisibility sophisticatedBackpacksTabDisplayVisibility = TabDisplayVisibility.YES;
+
+    @Comment(category = "tabs") public static CommentText spacer_quark_backpack;
+
+    @Comment(category = "tabs") public static CommentText quarkBackpack;
+
+    @Entry(category = "tabs") @Hidden
+    public static boolean quarkBackpackTabEnabled = true;
+
+    @Entry(category = "tabs") @Hidden
+    public static String quarkBackpackTabCustomIcon = "";
+    @Entry(category = "tabs") @Hidden
+    public static int quarkBackpackTabIconScale = 100;
+    @Entry(category = "tabs") @Hidden
+    public static int quarkBackpackTabIconNudgeUp = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int quarkBackpackTabIconNudgeDown = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int quarkBackpackTabIconNudgeLeft = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int quarkBackpackTabIconNudgeRight = 0;
+    @Entry(category = "tabs") @Hidden
+    public static int quarkBackpackTabOrder = 0;
+
+    @Entry(category = "tabs") @Hidden
+    public static TabDisplayVisibility quarkBackpackTabDisplayVisibility = TabDisplayVisibility.YES;
 
     @Comment(category = "tabs") public static CommentText spacer20;
 

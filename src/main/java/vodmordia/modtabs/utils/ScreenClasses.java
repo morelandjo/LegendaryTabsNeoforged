@@ -47,6 +47,13 @@ public final class ScreenClasses {
     public static final String BACKPACKED_FLYWHEEL_TRANSFORM =
             "com.jozufozu.flywheel.util.transform.TransformStack";
 
+    // -- Quark Backpack (Quark "Oddities" addon, mod id "quark") -----------
+    /** Chest-slot {@code ArmorItem} that is itself a {@code MenuProvider}. */
+    public static final String QUARK_BACKPACK_ITEM =
+            "org.violetmoon.quark.addons.oddities.item.BackpackItem";
+    public static final String QUARK_BACKPACK_SCREEN =
+            "org.violetmoon.quark.addons.oddities.client.screen.BackpackInventoryScreen";
+
     // -- Better Advancements ----------------------------------------------
     public static final String BETTER_ADVANCEMENTS =
             "betteradvancements.common.gui.BetterAdvancementsScreen";
