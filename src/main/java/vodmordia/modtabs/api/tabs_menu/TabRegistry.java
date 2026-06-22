@@ -65,6 +65,27 @@ public class TabRegistry {
     }
 
     /**
+     * Whether a tab is sticky, read from the live {@code <configKey>Sticky} field on
+     * {@link ModTabsConfig} so the global-settings modal's writes are picked up immediately
+     * after a re-init. Tabs without a {@code @TabConfig} or without the field are never sticky.
+     */
+    public static boolean isTabSticky(TabBase tab) {
+        TabConfig annotation = tab.getClass().getAnnotation(TabConfig.class);
+        if (annotation == null) {
+            return false;
+        }
+        try {
+            var field = ModTabsConfig.class.getField(annotation.configKey() + "Sticky");
+            if (field.getType() == boolean.class) {
+                return field.getBoolean(null);
+            }
+        } catch (Exception e) {
+            // Field doesn't exist or can't be accessed → not sticky.
+        }
+        return false;
+    }
+
+    /**
      * Get a config value by key with fallback
      */
     private static int getConfigValueByKey(String key, int defaultValue) {

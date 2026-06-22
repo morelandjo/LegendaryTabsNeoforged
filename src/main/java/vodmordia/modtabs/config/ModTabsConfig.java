@@ -19,8 +19,56 @@ public class ModTabsConfig extends MidnightConfig {
 
     @Comment(category = "tabs") public static CommentText inventory;
 
-    @Entry(category = "tabs")
-    public static boolean stickyInventoryTab = true;
+    // --- Sticky tabs ---------------------------------------------------------
+    // Sticky tabs are pinned to the leading (left) end of the bar and stay
+    // visible across pagination. Any tab can be sticky; toggled in-game via the
+    // Global Settings "Sticky" panel. Inventory is sticky by default. Hidden
+    // from the MidnightConfig list since they're edited only through that panel.
+    @Entry(category = "tabs") @Hidden public static boolean inventoryTabSticky = true;
+    @Entry(category = "tabs") @Hidden public static boolean advancedTeamTabSticky = false;
+    @Entry(category = "tabs") @Hidden public static boolean advancementsTabSticky = false;
+    @Entry(category = "tabs") @Hidden public static boolean aetherTabSticky = false;
+    @Entry(category = "tabs") @Hidden public static boolean apothicAttributesTabSticky = false;
+    @Entry(category = "tabs") @Hidden public static boolean arsElixirumTabSticky = false;
+    @Entry(category = "tabs") @Hidden public static boolean arsNouveauTabSticky = false;
+    @Entry(category = "tabs") @Hidden public static boolean backpackedTabSticky = false;
+    @Entry(category = "tabs") @Hidden public static boolean blueSkiesArcsTabSticky = false;
+    @Entry(category = "tabs") @Hidden public static boolean blueSkiesJournalTabSticky = false;
+    @Entry(category = "tabs") @Hidden public static boolean bodyDamageTabSticky = false;
+    @Entry(category = "tabs") @Hidden public static boolean cobblemonTabSticky = false;
+    @Entry(category = "tabs") @Hidden public static boolean completionistsIndexTabSticky = false;
+    @Entry(category = "tabs") @Hidden public static boolean cosmeticArmorTabSticky = false;
+    @Entry(category = "tabs") @Hidden public static boolean curiosTabSticky = false;
+    @Entry(category = "tabs") @Hidden public static boolean dietTabSticky = false;
+    @Entry(category = "tabs") @Hidden public static boolean draconicEvolutionTabSticky = false;
+    @Entry(category = "tabs") @Hidden public static boolean eccentricTomeTabSticky = false;
+    @Entry(category = "tabs") @Hidden public static boolean epicFightTabSticky = false;
+    @Entry(category = "tabs") @Hidden public static boolean epicSkillsTabSticky = false;
+    @Entry(category = "tabs") @Hidden public static boolean fieldGuideTabSticky = false;
+    @Entry(category = "tabs") @Hidden public static boolean ftbChunksTabSticky = false;
+    @Entry(category = "tabs") @Hidden public static boolean ftbQuestsTabSticky = false;
+    @Entry(category = "tabs") @Hidden public static boolean ftbTeamsTabSticky = false;
+    @Entry(category = "tabs") @Hidden public static boolean jobsPlusTabSticky = false;
+    @Entry(category = "tabs") @Hidden public static boolean journeyMapTabSticky = false;
+    @Entry(category = "tabs") @Hidden public static boolean l2ArtifactsTabSticky = false;
+    @Entry(category = "tabs") @Hidden public static boolean l2AttributesTabSticky = false;
+    @Entry(category = "tabs") @Hidden public static boolean l2HostilityTabSticky = false;
+    @Entry(category = "tabs") @Hidden public static boolean mapAtlasesTabSticky = false;
+    @Entry(category = "tabs") @Hidden public static boolean mineAndSlashTabSticky = false;
+    @Entry(category = "tabs") @Hidden public static boolean modonomiconTabSticky = false;
+    @Entry(category = "tabs") @Hidden public static boolean modularGolemsTabSticky = false;
+    @Entry(category = "tabs") @Hidden public static boolean motpTabSticky = false;
+    @Entry(category = "tabs") @Hidden public static boolean passiveSkillTreeTabSticky = false;
+    @Entry(category = "tabs") @Hidden public static boolean pufferfishSkillsTabSticky = false;
+    @Entry(category = "tabs") @Hidden public static boolean questLogTabSticky = false;
+    @Entry(category = "tabs") @Hidden public static boolean reskillableReimaginedTabSticky = false;
+    @Entry(category = "tabs") @Hidden public static boolean runicSkillsTabSticky = false;
+    @Entry(category = "tabs") @Hidden public static boolean sdmShopTabSticky = false;
+    @Entry(category = "tabs") @Hidden public static boolean sophisticatedBackpacksTabSticky = false;
+    @Entry(category = "tabs") @Hidden public static boolean travelersBackpackTabSticky = false;
+    @Entry(category = "tabs") @Hidden public static boolean villagerRecruitsClaimMapTabSticky = false;
+    @Entry(category = "tabs") @Hidden public static boolean villagerRecruitsTabSticky = false;
+    @Entry(category = "tabs") @Hidden public static boolean xaerosMapTabSticky = false;
 
     // Modpack-maker lock. When false, all three layout-editor entry points
     // (Shift+Z, long-press on a tab, the Edit button in LayoutEditorButtons) are

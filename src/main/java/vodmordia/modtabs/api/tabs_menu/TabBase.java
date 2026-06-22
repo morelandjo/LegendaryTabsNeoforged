@@ -66,4 +66,14 @@ public abstract class TabBase {
     public int getOverrideOrder() {
         return TabRegistry.getTabOrder(this);
     }
+
+    /**
+     * True when this tab is pinned to the leading end of the bar and kept visible across
+     * pagination. Backed by the per-tab {@code <configKey>Sticky} flag, toggled via the
+     * Global Settings "Sticky" panel. Any tab can be sticky; defaults to false for tabs
+     * without the flag (e.g. dynamic nearby-container tabs).
+     */
+    public boolean isSticky() {
+        return TabRegistry.isTabSticky(this);
+    }
 }

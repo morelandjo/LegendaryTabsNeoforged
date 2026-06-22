@@ -8,7 +8,6 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.client.event.ScreenEvent;
 import vodmordia.modtabs.client.screens.NextTabsButton;
 import vodmordia.modtabs.client.screens.TabButton;
-import vodmordia.modtabs.client.tabs_menu.InventoryTab;
 import vodmordia.modtabs.config.Config;
 import vodmordia.modtabs.config.ModTabsConfig;
 import vodmordia.modtabs.config.TabDisplayVisibility;
@@ -1545,22 +1544,19 @@ public class TabsMenu {
             // is handled below by re-inserting dynamics into the page-1 tail.
             enabledTabs.addAll(dynamicTabs);
 
-            // Handle sticky inventory tab - separate inventory tab from other tabs
-            TabBase inventoryTab = null;
-            List<TabBase> nonInventoryTabs = new ArrayList<>();
-
-            if (Config.Baked.stickyInventoryTab) {
-                for (TabBase tab : enabledTabs) {
-                    if (tab instanceof InventoryTab) {
-                        inventoryTab = tab;
-                    } else {
-                        nonInventoryTabs.add(tab);
-                    }
+            // Handle sticky tabs - any tab flagged sticky is pinned to the leading end of the
+            // bar and stays visible across pagination. enabledTabs is already sorted, so sticky
+            // tabs keep their relative order among themselves, as do the non-sticky tabs.
+            List<TabBase> stickyTabs = new ArrayList<>();
+            List<TabBase> nonStickyTabs = new ArrayList<>();
+            for (TabBase tab : enabledTabs) {
+                if (tab.isSticky()) {
+                    stickyTabs.add(tab);
+                } else {
+                    nonStickyTabs.add(tab);
                 }
-                // No need to sort nonInventoryTabs again since enabledTabs is already sorted
-            } else {
-                nonInventoryTabs = enabledTabs;
             }
+            int stickyCount = stickyTabs.size();
 
 
             // Pagination is now driven purely by the per-screen layout cap
@@ -1578,27 +1574,19 @@ public class TabsMenu {
             // than buried on a later page. Static tabs that would have occupied those slots
             // are bumped to page 2+. No-op when there's no overflow (everything fits anyway).
             if (!dynamicTabs.isEmpty() && perPageCap > 0
-                    && nonInventoryTabs.size() > perPageCap - ((Config.Baked.stickyInventoryTab && inventoryTab != null) ? 1 : 0)) {
-                int reservedForSticky = (Config.Baked.stickyInventoryTab && inventoryTab != null) ? 1 : 0;
-                int nonStickyPage1Slots = Math.max(0, perPageCap - reservedForSticky);
+                    && nonStickyTabs.size() > perPageCap - stickyCount) {
+                int nonStickyPage1Slots = Math.max(0, perPageCap - stickyCount);
                 int targetPos = Math.max(0, nonStickyPage1Slots - dynamicTabs.size());
-                // Dynamics are currently at the tail of nonInventoryTabs (and of enabledTabs).
+                // Dynamics are currently at the tail of nonStickyTabs (and of enabledTabs).
                 // Pull them out and re-insert at the page-1 boundary.
-                nonInventoryTabs.removeAll(dynamicTabs);
-                targetPos = Math.min(targetPos, nonInventoryTabs.size());
-                nonInventoryTabs.addAll(targetPos, dynamicTabs);
-                // Keep enabledTabs in sync with the displayed order so cycleToNextTab and
-                // any other consumer of enabledTabs see the same sequence. In sticky mode
-                // nonInventoryTabs is a separate list, so we rebuild enabledTabs around
-                // inventoryTab; in non-sticky mode nonInventoryTabs IS enabledTabs (aliased
-                // above) and is already in sync after the mutations.
-                if (Config.Baked.stickyInventoryTab && inventoryTab != null) {
-                    int invIdx = enabledTabs.indexOf(inventoryTab);
-                    if (invIdx < 0) invIdx = 0;
-                    enabledTabs.clear();
-                    enabledTabs.addAll(nonInventoryTabs);
-                    enabledTabs.add(Math.min(invIdx, enabledTabs.size()), inventoryTab);
-                }
+                nonStickyTabs.removeAll(dynamicTabs);
+                targetPos = Math.min(targetPos, nonStickyTabs.size());
+                nonStickyTabs.addAll(targetPos, dynamicTabs);
+                // Keep enabledTabs in sync with the displayed order (sticky tabs first, then
+                // the rest) so cycleToNextTab and nextTabButtons see the same sequence.
+                enabledTabs.clear();
+                enabledTabs.addAll(stickyTabs);
+                enabledTabs.addAll(nonStickyTabs);
             }
 
 
@@ -1620,18 +1608,20 @@ public class TabsMenu {
             int buttonPosition = 0;
             boolean reverseOrder = layout.tabOrder == vodmordia.modtabs.layout.TabOrder.RIGHT_TO_LEFT;
 
-            if (Config.Baked.stickyInventoryTab && inventoryTab != null && currentTabsCount > 0) {
+            // Sticky tabs always render first, pinned to the leading slots of the bar.
+            for (TabBase stickyTab : stickyTabs) {
+                if (buttonPosition >= currentTabsCount) break;
                 int slot = reverseOrder ? (currentTabsCount - 1 - buttonPosition) : buttonPosition;
-                TabButton inventoryButton = new TabButton(inventoryTab, Minecraft.getInstance().player, event.getScreen(), slot, TabsMenu.leftScreenPos, TabsMenu.topScreenPos, effectiveDisplayMode);
-                event.addListener(inventoryButton);
+                TabButton stickyButton = new TabButton(stickyTab, Minecraft.getInstance().player, event.getScreen(), slot, TabsMenu.leftScreenPos, TabsMenu.topScreenPos, effectiveDisplayMode);
+                event.addListener(stickyButton);
                 buttonPosition++;
             }
 
-            List<TabBase> tabsToRender = Config.Baked.stickyInventoryTab ? nonInventoryTabs : enabledTabs;
-            int availableSlots = Config.Baked.stickyInventoryTab && inventoryTab != null ? currentTabsCount - 1 : currentTabsCount;
+            // Remaining slots after the sticky tabs are paginated among the non-sticky tabs.
+            int availableSlots = Math.max(0, currentTabsCount - stickyCount);
 
-            for (int tabIndex = 0; tabIndex < tabsToRender.size() && buttonPosition < currentTabsCount; tabIndex++) {
-                TabBase tabBase = tabsToRender.get(tabIndex);
+            for (int tabIndex = 0; tabIndex < nonStickyTabs.size() && buttonPosition < currentTabsCount; tabIndex++) {
+                TabBase tabBase = nonStickyTabs.get(tabIndex);
                 int tabIndexToShow = tabIndex - startTabIndex;
 
                 if (tabIndexToShow >= 0 && tabIndexToShow < availableSlots) {
@@ -1642,8 +1632,9 @@ public class TabsMenu {
                 }
             }
 
-            int totalTabsToPage = Config.Baked.stickyInventoryTab ? nonInventoryTabs.size() : enabledTabs.size();
-            int maxVisibleTabs = Config.Baked.stickyInventoryTab && inventoryTab != null ? currentTabsCount - 1 : currentTabsCount;
+            // Next button is needed when the non-sticky tabs overflow the remaining slots.
+            int totalTabsToPage = nonStickyTabs.size();
+            int maxVisibleTabs = availableSlots;
 
             if (totalTabsToPage > maxVisibleTabs) {
                 int nextSlot = reverseOrder ? -1 : currentTabsCount;
@@ -1671,60 +1662,43 @@ public class TabsMenu {
     public static void nextTabButtons(Screen screen) {
         List<? extends GuiEventListener> tabButtons = screen.children().stream().filter(button -> button instanceof TabButton).toList();
 
-        // Handle sticky inventory tab logic
-        if (Config.Baked.stickyInventoryTab) {
-            // Find inventory and non-inventory tabs
-            TabBase inventoryTab = null;
-            List<TabBase> nonInventoryTabs = new ArrayList<>();
-
-            for (TabBase tab : enabledTabs) {
-                if (tab instanceof InventoryTab) {
-                    inventoryTab = tab;
-                } else {
-                    nonInventoryTabs.add(tab);
-                }
+        // Sticky tabs occupy the first stickyCount buttons and don't paginate; only the
+        // non-sticky tabs cycle through the remaining slots. With no sticky tabs this
+        // reduces to plain pagination over the whole enabled list.
+        List<TabBase> stickyTabs = new ArrayList<>();
+        List<TabBase> nonStickyTabs = new ArrayList<>();
+        for (TabBase tab : enabledTabs) {
+            if (tab.isSticky()) {
+                stickyTabs.add(tab);
+            } else {
+                nonStickyTabs.add(tab);
             }
+        }
 
-            // Calculate pagination for non-inventory tabs only
-            int availableSlots = inventoryTab != null ? currentTabsCount - 1 : currentTabsCount;
+        int stickyCount = stickyTabs.size();
+        int availableSlots = Math.max(0, currentTabsCount - stickyCount);
+        if (availableSlots <= 0) {
+            return; // sticky tabs fill the page — nothing to page through
+        }
 
-            if (startTabIndex + availableSlots >= nonInventoryTabs.size())
-                startTabIndex = 0;
-            else
-                startTabIndex += availableSlots + Math.min(nonInventoryTabs.size() - availableSlots * 2 - startTabIndex, 0);
+        if (startTabIndex + availableSlots >= nonStickyTabs.size())
+            startTabIndex = 0;
+        else
+            startTabIndex += availableSlots + Math.min(nonStickyTabs.size() - availableSlots * 2 - startTabIndex, 0);
 
-            // Update buttons: skip first button if inventory tab is sticky
-            int buttonStartIndex = inventoryTab != null ? 1 : 0;
-            int currentTabIndex = 0;
+        // Update buttons: skip the leading sticky buttons.
+        int buttonStartIndex = stickyCount;
+        int currentTabIndex = 0;
 
-            for (TabBase tabBase: nonInventoryTabs) {
-                int tabIndexToUpdate = currentTabIndex - startTabIndex;
-                if (tabIndexToUpdate >= availableSlots)
-                    break;
+        for (TabBase tabBase: nonStickyTabs) {
+            int tabIndexToUpdate = currentTabIndex - startTabIndex;
+            if (tabIndexToUpdate >= availableSlots)
+                break;
 
-                if (tabIndexToUpdate >= 0 && buttonStartIndex + tabIndexToUpdate < tabButtons.size())
-                    ((TabButton) tabButtons.get(buttonStartIndex + tabIndexToUpdate)).setTabBase(tabBase);
+            if (tabIndexToUpdate >= 0 && buttonStartIndex + tabIndexToUpdate < tabButtons.size())
+                ((TabButton) tabButtons.get(buttonStartIndex + tabIndexToUpdate)).setTabBase(tabBase);
 
-                currentTabIndex++;
-            }
-        } else {
-            // Original logic for non-sticky mode
-            if (startTabIndex + currentTabsCount >= enabledTabs.size())
-                startTabIndex = 0;
-            else
-                startTabIndex += currentTabsCount + Math.min(enabledTabs.size() - currentTabsCount * 2 - startTabIndex, 0);
-
-            int currentTabIndex = 0;
-            for (TabBase tabBase: enabledTabs) {
-                int tabIndexToUpdate = currentTabIndex - startTabIndex;
-                if (tabIndexToUpdate >= currentTabsCount)
-                    break;
-
-                if (tabIndexToUpdate >= 0)
-                    ((TabButton) tabButtons.get(tabIndexToUpdate)).setTabBase(tabBase);
-
-                currentTabIndex++;
-            }
+            currentTabIndex++;
         }
     }
 
@@ -1812,40 +1786,29 @@ public class TabsMenu {
         int nextTabIndex = (currentTabIndex + 1) % enabledTabs.size();
         TabBase nextTab = enabledTabs.get(nextTabIndex);
 
-        // Calculate which page the next tab should be on and update startTabIndex
-        if (Config.Baked.stickyInventoryTab) {
-            // Handle sticky inventory tab pagination
-            TabBase inventoryTab = null;
-            List<TabBase> nonInventoryTabs = new ArrayList<>();
-
-            for (TabBase tab : enabledTabs) {
-                if (tab instanceof InventoryTab) {
-                    inventoryTab = tab;
-                } else {
-                    nonInventoryTabs.add(tab);
-                }
-            }
-
-            // If the next tab is the inventory tab, no pagination needed
-            if (!(nextTab instanceof InventoryTab)) {
-                // Find the index of the next tab in the non-inventory tabs list
-                int nextNonInventoryIndex = nonInventoryTabs.indexOf(nextTab);
-                if (nextNonInventoryIndex != -1) {
-                    // Calculate available slots (minus inventory tab slot if present)
-                    int availableSlots = inventoryTab != null ? currentTabsCount - 1 : currentTabsCount;
-
-                    // Calculate which page this tab should be on
-                    int targetPage = nextNonInventoryIndex / availableSlots;
-                    startTabIndex = targetPage * availableSlots;
-                }
+        // Calculate which page the next tab should be on and update startTabIndex.
+        // Sticky tabs are always visible (no pagination); only non-sticky tabs page.
+        List<TabBase> stickyTabs = new ArrayList<>();
+        List<TabBase> nonStickyTabs = new ArrayList<>();
+        for (TabBase tab : enabledTabs) {
+            if (tab.isSticky()) {
+                stickyTabs.add(tab);
             } else {
-                // If cycling to inventory tab, reset to first page
-                startTabIndex = 0;
+                nonStickyTabs.add(tab);
             }
+        }
+
+        int availableSlots = Math.max(1, currentTabsCount - stickyTabs.size());
+
+        if (nextTab.isSticky()) {
+            // Cycling to a sticky tab — it's always on the first page.
+            startTabIndex = 0;
         } else {
-            // Calculate which page the next tab should be on for non-sticky mode
-            int targetPage = nextTabIndex / currentTabsCount;
-            startTabIndex = targetPage * currentTabsCount;
+            int nextNonStickyIndex = nonStickyTabs.indexOf(nextTab);
+            if (nextNonStickyIndex != -1) {
+                int targetPage = nextNonStickyIndex / availableSlots;
+                startTabIndex = targetPage * availableSlots;
+            }
         }
 
         // Mark screen opened via tab to preserve the updated pagination

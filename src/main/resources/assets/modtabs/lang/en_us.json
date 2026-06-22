@@ -47,8 +47,6 @@
 
   "modtabs.midnightconfig.category.tabs": "Mod Tabs Settings",
   "modtabs.midnightconfig.category.customTabs": "Custom Tabs Settings",
-  "modtabs.midnightconfig.stickyInventoryTab": "Sticky Inventory Tab",
-  "modtabs.midnightconfig.stickyInventoryTab.tooltip": "Keep the inventory tab always visible as the first tab on all pages",
   "modtabs.midnightconfig.allowEditing": "Allow Layout Editing",
   "modtabs.midnightconfig.allowEditing.tooltip": "When disabled, the layout editor (Shift+Z, long-press a tab, or the Edit button) is locked. Intended for modpack makers shipping a fixed tab layout.",
   "modtabs.midnightconfig.inventory": "Inventory Tab",

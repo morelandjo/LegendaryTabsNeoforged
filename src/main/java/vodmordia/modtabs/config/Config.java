@@ -64,7 +64,6 @@ public class Config
 		public static boolean questLogTabEnabled;
 		public static boolean fieldGuideTabEnabled;
 		public static boolean modonomiconTabEnabled;
-		public static boolean stickyInventoryTab;
 		public static boolean allowEditing;
 
 		// Custom icon settings
@@ -535,7 +534,6 @@ public class Config
 				questLogTabEnabled = ModTabsConfig.questLogTabEnabled;
 				fieldGuideTabEnabled = ModTabsConfig.fieldGuideTabEnabled;
 				modonomiconTabEnabled = ModTabsConfig.modonomiconTabEnabled;
-				stickyInventoryTab = ModTabsConfig.stickyInventoryTab;
 				allowEditing = ModTabsConfig.allowEditing;
 
 				// Load custom tabs settings

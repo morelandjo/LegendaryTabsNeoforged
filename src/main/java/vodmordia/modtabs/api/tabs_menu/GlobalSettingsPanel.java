@@ -25,7 +25,7 @@ import java.util.List;
  */
 @OnlyIn(Dist.CLIENT)
 public final class GlobalSettingsPanel {
-    public enum GlobalSettingsTab { VISIBILITY, ORDER, GENERAL }
+    public enum GlobalSettingsTab { VISIBILITY, STICKY, ORDER, GENERAL }
     /** Which numeric input on the General tab currently has focus, if any. */
     private enum GsField { NONE, OFFSET_TOP, OFFSET_RIGHT, OFFSET_BOTTOM, OFFSET_LEFT }
     private static GsField gsFocusedField = GsField.NONE;
@@ -40,12 +40,15 @@ public final class GlobalSettingsPanel {
     private static GlobalSettingsTab gsActiveTab = GlobalSettingsTab.VISIBILITY;
     /** Draft state — applied to {@link ModTabsConfig} only on Save. */
     private static java.util.Map<String, Boolean> gsDraftEnabled = null;
+    /** Draft per-tab sticky state (pinned to the leading end of the bar). Committed on Save. */
+    private static java.util.Map<String, Boolean> gsDraftSticky = null;
     private static java.util.List<String> gsDraftOrder = null;
     /** Snapshot of the configurable tabs at modal-open time, keyed by short configKey.
      *  Avoids re-probing every tab's {@code isEnabled} every render frame. */
     private static java.util.Map<String, TabBase> gsTabsCache = null;
     /** Vertical pixel scroll offsets applied to slot positions in each modal tab. */
     private static int gsScrollVisibility = 0;
+    private static int gsScrollSticky = 0;
     private static int gsScrollOrder = 0;
     /** -1 when not dragging; otherwise index in {@link #gsDraftOrder}. */
     private static int gsDraggingIndex = -1;
@@ -141,6 +144,14 @@ public final class GlobalSettingsPanel {
         try { ModTabsConfig.class.getField(shortKey + "TabOrder").setInt(null, value); }
         catch (Exception ignored) {}
     }
+    private static boolean readStickyField(String shortKey) {
+        try { return ModTabsConfig.class.getField(shortKey + "TabSticky").getBoolean(null); }
+        catch (Exception ignored) { return false; }
+    }
+    private static void writeStickyField(String shortKey, boolean value) {
+        try { ModTabsConfig.class.getField(shortKey + "TabSticky").setBoolean(null, value); }
+        catch (Exception ignored) {}
+    }
 
     private static int parseSafeInt(String s, int fallback) {
         if (s == null || s.isEmpty() || s.equals("-")) return fallback;
@@ -150,6 +161,7 @@ public final class GlobalSettingsPanel {
 
     public static void open() {
         gsDraftEnabled = new java.util.LinkedHashMap<>();
+        gsDraftSticky = new java.util.LinkedHashMap<>();
         gsDraftOrder = new java.util.ArrayList<>();
         gsTabsCache = new java.util.LinkedHashMap<>();
         java.util.List<TabBase> tabs = collectConfigurableTabs();
@@ -160,6 +172,7 @@ public final class GlobalSettingsPanel {
             String k = shortConfigKey(t);
             if (k == null) continue;
             gsDraftEnabled.put(k, readEnabledField(k));
+            gsDraftSticky.put(k, readStickyField(k));
             gsDraftOrder.add(k);
             gsTabsCache.put(k, t);
         }
@@ -180,6 +193,11 @@ public final class GlobalSettingsPanel {
             for (var entry : gsDraftEnabled.entrySet()) {
                 writeEnabledField(entry.getKey(), entry.getValue());
             }
+            if (gsDraftSticky != null) {
+                for (var entry : gsDraftSticky.entrySet()) {
+                    writeStickyField(entry.getKey(), entry.getValue());
+                }
+            }
             // Write 1-based indices: the existing sort comparator treats order==0 as
             // "no explicit override" and banishes the tab to an alphabetical bucket.
             for (int i = 0; i < gsDraftOrder.size(); i++) {
@@ -197,10 +215,12 @@ public final class GlobalSettingsPanel {
         }
         globalSettingsOpen = false;
         gsDraftEnabled = null;
+        gsDraftSticky = null;
         gsDraftOrder = null;
         gsTabsCache = null;
         gsDraggingIndex = -1;
         gsScrollVisibility = 0;
+        gsScrollSticky = 0;
         gsScrollOrder = 0;
         gsFocusedField = GsField.NONE;
         // Force a re-init of the current screen so its tab row picks up the new
@@ -262,8 +282,8 @@ public final class GlobalSettingsPanel {
         return new int[]{x, y, GS_FOOTER_BTN_W, GS_FOOTER_BTN_H};
     }
 
-    /** Slot rect for icon at index within the visibility column (0=visible, 1=hidden). */
-    private static int[] gsVisibilitySlotRect(Screen screen, int column, int slotIndex) {
+    /** Slot rect for icon at index within a two-column panel, offset by the given scroll. */
+    private static int[] gsTwoColSlotRect(Screen screen, int column, int slotIndex, int scroll) {
         int[] cr = gsContentRect(screen);
         int colW = cr[2] / 2;
         int colX = cr[0] + column * colW + GS_PAD;
@@ -271,7 +291,17 @@ public final class GlobalSettingsPanel {
         int cellsPerRow = Math.max(1, (colW - GS_PAD * 2) / GS_CELL);
         int row = slotIndex / cellsPerRow;
         int col = slotIndex % cellsPerRow;
-        return new int[]{colX + col * GS_CELL, colY + row * GS_CELL - gsScrollVisibility, GS_CELL, GS_CELL};
+        return new int[]{colX + col * GS_CELL, colY + row * GS_CELL - scroll, GS_CELL, GS_CELL};
+    }
+
+    /** Slot rect for icon at index within the visibility column (0=visible, 1=hidden). */
+    private static int[] gsVisibilitySlotRect(Screen screen, int column, int slotIndex) {
+        return gsTwoColSlotRect(screen, column, slotIndex, gsScrollVisibility);
+    }
+
+    /** Slot rect for icon at index within the sticky column (0=not sticky, 1=sticky). */
+    private static int[] gsStickySlotRect(Screen screen, int column, int slotIndex) {
+        return gsTwoColSlotRect(screen, column, slotIndex, gsScrollSticky);
     }
 
     private static int[] gsOrderSlotRect(Screen screen, int slotIndex) {
@@ -297,6 +327,20 @@ public final class GlobalSettingsPanel {
             if (Boolean.TRUE.equals(gsDraftEnabled.get(key))) visCount++; else hidCount++;
         }
         int rows = Math.max(rowsFor(visCount, cellsPerRow), rowsFor(hidCount, cellsPerRow));
+        int viewportH = cr[3] - GS_HEADER_H;
+        return Math.max(0, rows * GS_CELL - viewportH);
+    }
+
+    private static int gsMaxScrollSticky(Screen screen) {
+        if (gsDraftOrder == null || gsDraftSticky == null) return 0;
+        int[] cr = gsContentRect(screen);
+        int colW = cr[2] / 2;
+        int cellsPerRow = Math.max(1, (colW - GS_PAD * 2) / GS_CELL);
+        int stickyCount = 0, notCount = 0;
+        for (String key : gsDraftOrder) {
+            if (Boolean.TRUE.equals(gsDraftSticky.get(key))) stickyCount++; else notCount++;
+        }
+        int rows = Math.max(rowsFor(stickyCount, cellsPerRow), rowsFor(notCount, cellsPerRow));
         int viewportH = cr[3] - GS_HEADER_H;
         return Math.max(0, rows * GS_CELL - viewportH);
     }
@@ -355,6 +399,15 @@ public final class GlobalSettingsPanel {
             for (String key : gsDraftOrder) {
                 boolean enabled = Boolean.TRUE.equals(gsDraftEnabled.get(key));
                 int[] slot = gsVisibilitySlotRect(screen, enabled ? 0 : 1, enabled ? visIdx++ : hidIdx++);
+                if (mx >= slot[0] && mx < slot[0] + slot[2] && my >= slot[1] && my < slot[1] + slot[3]) {
+                    return key;
+                }
+            }
+        } else if (gsActiveTab == GlobalSettingsTab.STICKY) {
+            int notIdx = 0, stickyIdx = 0;
+            for (String key : gsDraftOrder) {
+                boolean sticky = Boolean.TRUE.equals(gsDraftSticky.get(key));
+                int[] slot = gsStickySlotRect(screen, sticky ? 1 : 0, sticky ? stickyIdx++ : notIdx++);
                 if (mx >= slot[0] && mx < slot[0] + slot[2] && my >= slot[1] && my < slot[1] + slot[3]) {
                     return key;
                 }
@@ -418,7 +471,7 @@ public final class GlobalSettingsPanel {
         gui.fill(wx + GS_NAV_W, wy + GS_HEADER_H, wx + GS_NAV_W + 1, wy + wh, border);
 
         // Nav buttons
-        String[] navLabels = { "Visibility", "Order", "General" };
+        String[] navLabels = { "Visibility", "Sticky", "Order", "General" };
         for (int i = 0; i < navLabels.length; i++) {
             int[] r = gsNavButtonRect(screen, i);
             boolean active = (gsActiveTab == GlobalSettingsTab.values()[i]);
@@ -435,6 +488,8 @@ public final class GlobalSettingsPanel {
         // Content
         if (gsActiveTab == GlobalSettingsTab.VISIBILITY) {
             renderVisibilityTab(gui, screen);
+        } else if (gsActiveTab == GlobalSettingsTab.STICKY) {
+            renderStickyTab(gui, screen);
         } else if (gsActiveTab == GlobalSettingsTab.ORDER) {
             renderOrderTab(gui, screen, mouseX, mouseY);
         } else {
@@ -518,6 +573,31 @@ public final class GlobalSettingsPanel {
         for (String key : gsDraftOrder) {
             boolean enabled = Boolean.TRUE.equals(gsDraftEnabled.get(key));
             int[] slot = gsVisibilitySlotRect(screen, enabled ? 0 : 1, enabled ? visIdx++ : hidIdx++);
+            renderTabIconAt(gui, key, slot[0], slot[1]);
+        }
+        gui.disableScissor();
+    }
+
+    private static void renderStickyTab(GuiGraphics gui, Screen screen) {
+        int[] cr = gsContentRect(screen);
+        int colW = cr[2] / 2;
+        int leftColX = cr[0];
+        int rightColX = cr[0] + colW;
+        // Sticky column (right) gets a gold tint to mark the pinned side.
+        gui.fill(rightColX, cr[1], cr[0] + cr[2], cr[1] + cr[3], 0x30FFAA00);
+        // Headers (drawn outside the scroll area so they stay pinned)
+        gui.drawString(Minecraft.getInstance().font, "Not Sticky", leftColX + GS_PAD, cr[1] + 4, 0xFFAAAAAA, false);
+        gui.drawString(Minecraft.getInstance().font, "Sticky", rightColX + GS_PAD, cr[1] + 4, 0xFFFFDD55, false);
+        gui.fill(leftColX, cr[1] + GS_HEADER_H - 4, cr[0] + cr[2], cr[1] + GS_HEADER_H - 3, 0xFF44FF66);
+
+        // Clamp scroll to current bounds (recomputes when icons move between columns).
+        gsScrollSticky = Math.max(0, Math.min(gsScrollSticky, gsMaxScrollSticky(screen)));
+
+        gui.enableScissor(cr[0], cr[1] + GS_HEADER_H, cr[0] + cr[2], cr[1] + cr[3]);
+        int notIdx = 0, stickyIdx = 0;
+        for (String key : gsDraftOrder) {
+            boolean sticky = Boolean.TRUE.equals(gsDraftSticky.get(key));
+            int[] slot = gsStickySlotRect(screen, sticky ? 1 : 0, sticky ? stickyIdx++ : notIdx++);
             renderTabIconAt(gui, key, slot[0], slot[1]);
         }
         gui.disableScissor();
@@ -713,6 +793,7 @@ public final class GlobalSettingsPanel {
                 gsActiveTab = GlobalSettingsTab.values()[i];
                 gsDraggingIndex = -1;
                 gsScrollVisibility = 0;
+                gsScrollSticky = 0;
                 gsScrollOrder = 0;
                 gsFocusedField = GsField.NONE;
                 return true;
@@ -741,7 +822,17 @@ public final class GlobalSettingsPanel {
                     return true;
                 }
             }
-        } else {
+        } else if (gsActiveTab == GlobalSettingsTab.STICKY) {
+            int notIdx = 0, stickyIdx = 0;
+            for (String key : gsDraftOrder) {
+                boolean sticky = Boolean.TRUE.equals(gsDraftSticky.get(key));
+                int[] slot = gsStickySlotRect(screen, sticky ? 1 : 0, sticky ? stickyIdx++ : notIdx++);
+                if (mx >= slot[0] && mx < slot[0] + slot[2] && my >= slot[1] && my < slot[1] + slot[3]) {
+                    gsDraftSticky.put(key, !sticky);
+                    return true;
+                }
+            }
+        } else if (gsActiveTab == GlobalSettingsTab.ORDER) {
             int idx = gsOrderHitTest(screen, mx, my);
             if (idx >= 0) {
                 gsDraggingIndex = idx;
@@ -794,6 +885,9 @@ public final class GlobalSettingsPanel {
         if (gsActiveTab == GlobalSettingsTab.VISIBILITY) {
             int max = gsMaxScrollVisibility(screen);
             gsScrollVisibility = Math.max(0, Math.min(max, gsScrollVisibility - (int) (dy * step)));
+        } else if (gsActiveTab == GlobalSettingsTab.STICKY) {
+            int max = gsMaxScrollSticky(screen);
+            gsScrollSticky = Math.max(0, Math.min(max, gsScrollSticky - (int) (dy * step)));
         } else {
             int max = gsMaxScrollOrder(screen);
             gsScrollOrder = Math.max(0, Math.min(max, gsScrollOrder - (int) (dy * step)));
