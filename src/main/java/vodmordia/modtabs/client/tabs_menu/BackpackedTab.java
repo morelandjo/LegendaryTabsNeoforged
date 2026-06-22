@@ -47,10 +47,13 @@ public class BackpackedTab extends ConfigurableItemTab {
      * currently selected backpack" sentinel that {@code ServerPlayHandler.handleOpenBackpack}
      * resolves server-side via {@code BackpackHelper.getSelectedBackpackIndex(player)}.
      *
-     * {@code sendToServer}'s parameter type is {@code com.mrcrayfish.framework.network.message.IMessage}
-     * — NOT {@code Object} — so {@code getMethod("sendToServer", Object.class)} throws
-     * {@code NoSuchMethodException}. Resolve {@code IMessage} explicitly and look up the
-     * method with the correct signature.
+     * The {@code sendToServer} parameter type changed across MrCrayfish Framework versions:
+     * older builds take {@code com.mrcrayfish.framework.network.message.IMessage}, while the
+     * build shipped with Backpacked 3.x takes plain {@code java.lang.Object} and dropped
+     * {@code IMessage} entirely (messages are now records). Hard-coding either parameter type
+     * breaks on the other — {@code Class.forName(...IMessage)} throws {@code ClassNotFoundException}
+     * on the new framework. Resolve the single-arg {@code sendToServer} method by name instead,
+     * which works regardless of its declared parameter type.
      */
     @Override
     public void openTargetScreen(Player player) {
@@ -62,9 +65,18 @@ public class BackpackedTab extends ConfigurableItemTab {
             Class<?> messageClass = Class.forName("com.mrcrayfish.backpacked.network.message.MessageOpenBackpack");
             Object message = messageClass.getDeclaredConstructor().newInstance();
 
-            Class<?> iMessageClass = Class.forName("com.mrcrayfish.framework.network.message.IMessage");
-            Method sendToServer = networkClass.getMethod("getPlay").getReturnType()
-                    .getMethod("sendToServer", iMessageClass);
+            Method sendToServer = null;
+            for (Method m : networkInstance.getClass().getMethods()) {
+                if (m.getName().equals("sendToServer") && m.getParameterCount() == 1) {
+                    sendToServer = m;
+                    break;
+                }
+            }
+            if (sendToServer == null) {
+                ModTabs.LOGGER.warn("[Backpacked] open failed: no single-arg sendToServer on {}",
+                        networkInstance.getClass().getName());
+                return;
+            }
             sendToServer.invoke(networkInstance, message);
         } catch (Exception e) {
             ModTabs.LOGGER.warn("[Backpacked] open failed: {} - {}", e.getClass().getName(), e.getMessage());
