@@ -1,0 +1,20 @@
+{
+  "tabId": "ars_nouveau_worn_notebook",
+  "enabled": false,
+  "icon": {
+    "item": "ars_nouveau:worn_notebook",
+    "fallbackItem": "minecraft:book",
+    "patchouliBook": "ars_nouveau:worn_notebook",
+    "scale": 1.0
+  },
+  "tooltip": "Ars Nouveau - Worn Notebook",
+  "order": 45,
+  "action": {
+    "type": "open_patchouli_book",
+    "bookId": "ars_nouveau:worn_notebook"
+  },
+  "requiredMods": [
+    "patchouli",
+    "ars_nouveau"
+  ]
+}

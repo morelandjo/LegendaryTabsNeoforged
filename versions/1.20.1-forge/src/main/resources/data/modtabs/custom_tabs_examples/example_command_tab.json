@@ -1,0 +1,16 @@
+{
+  "tabId": "example_command_tab",
+  "enabled": false,
+  "icon": {
+    "item": "minecraft:command_block",
+    "fallbackItem": "minecraft:redstone",
+    "scale": 1.0
+  },
+  "tooltip": "Example Command Tab",
+  "order": 102,
+  "action": {
+    "type": "run_command",
+    "command": "/time query daytime"
+  },
+  "requiredMods": []
+}

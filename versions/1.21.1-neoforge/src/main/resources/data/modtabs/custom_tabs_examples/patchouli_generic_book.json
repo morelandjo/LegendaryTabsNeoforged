@@ -1,0 +1,20 @@
+{
+  "tabId": "generic_mod_book",
+  "enabled": false,
+  "icon": {
+    "item": "patchouli:guide_book",
+    "fallbackItem": "minecraft:written_book",
+    "patchouliBook": "mymod:guide",
+    "scale": 1.0
+  },
+  "tooltip": "My Mod's Guide Book",
+  "order": 100,
+  "action": {
+    "type": "open_patchouli_book",
+    "bookId": "mymod:guide"
+  },
+  "requiredMods": [
+    "patchouli",
+    "mymod"
+  ]
+}

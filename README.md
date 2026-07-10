@@ -2,7 +2,32 @@
 
 A Minecraft mod that adds a tab menu to the inventory screen for quick navigation between different mod interfaces.
 
-Originally developed by Sfiomn as "Legendary Tabs", this mod has been rewritten and enhanced by myself for NeoForge 1.21.1 and hopefully future versions.
+Originally developed by Sfiomn as "Legendary Tabs", this mod is maintained across several Minecraft versions and loaders from one Stonecutter workspace.
+
+## Supported targets
+
+| Stonecutter project | Minecraft | Loader | Java |
+|---|---:|---|---:|
+| `1.21.1-neoforge` | 1.21.1 | NeoForge | 21 |
+| `1.20.1-forge` | 1.20.1 | Forge | 17 |
+| `1.20.1-fabric` | 1.20.1 | Fabric | 17 |
+
+Each former Git branch is preserved under `versions/<minecraft>-<loader>/src`. This keeps the
+loader-specific integrations intact while Stonecutter provides one project graph and one set of
+top-level commands.
+
+## Building
+
+```sh
+./gradlew projects
+./gradlew :1.21.1-neoforge:build
+./gradlew :1.20.1-forge:build
+./gradlew :1.20.1-fabric:build
+./gradlew chiseledBuild
+```
+
+The active development target is recorded in `.sc_active_version`. Use Stonecutter's generated
+`Set active project to ...` tasks to switch it.
 
 ## Features
 
@@ -23,4 +48,3 @@ Originally developed by Sfiomn as "Legendary Tabs", this mod has been rewritten 
   - Modular Golems
   - Ars Elixirium
   - Reskillable Reimagined
-

@@ -1,9 +1,9 @@
 plugins {
+    id 'java'
     id 'eclipse'
     id 'idea'
     id 'maven-publish'
-    id 'net.minecraftforge.gradle' version '[6.0,6.2)'
-    id 'org.spongepowered.mixin' version '0.7.+'
+    id 'net.neoforged.moddev.legacyforge'
 }
 
 version = mod_version
@@ -16,58 +16,14 @@ base {
 // 1.20.1 targets Java 17.
 java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 
-println "Java: ${System.getProperty 'java.version'}, JVM: ${System.getProperty 'java.vm.version'} (${System.getProperty 'java.vendor'}), Arch: ${System.getProperty 'os.arch'}"
-minecraft {
-    mappings channel: mapping_channel, version: mapping_version
-
-    // Required by ForgeGradle 6 to copy resources to IDE output before launching.
-    copyIdeResources = true
-
-    // accessTransformer = file('src/main/resources/META-INF/accesstransformer.cfg')
-
+legacyForge {
+    version = "${minecraft_version}-${forge_version}"
     runs {
-        configureEach {
-            workingDirectory project.file('run')
-
-            property 'forge.logging.markers', 'REGISTRIES'
-            property 'forge.logging.console.level', 'debug'
-
-            // Mixin refmap remap for the dev environment.
-            //
-            // Production mods (Xaero's World Map, Selene/Moonlight, l2library, etc.) ship their
-            // mixin refmap JSONs containing only SRG names like 'm_91383_'. The dev environment
-            // uses Mojang official names ('runTick'), so without remapping, every mixin from those
-            // mods fails with "Critical injection failure: ... could not find any targets".
-            //
-            // Pointing Mixin at the SRG→official mapping file ForgeGradle generates fixes all of
-            // them at once.
-            property 'mixin.env.remapRefMap', 'true'
-            property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
-
-            mods {
-                "${mod_id}" {
-                    source sourceSets.main
-                }
-            }
-        }
-
-        client {
-            property 'forge.enabledGameTestNamespaces', mod_id
-        }
-
-        server {
-            property 'forge.enabledGameTestNamespaces', mod_id
-            args '--nogui'
-        }
-
-        gameTestServer {
-            property 'forge.enabledGameTestNamespaces', mod_id
-        }
-
-        data {
-            workingDirectory project.file('run-data')
-            args '--mod', mod_id, '--all', '--output', file('src/generated/resources/'), '--existing', file('src/main/resources/')
-        }
+        client { client(); gameDirectory = file('run/') }
+        server { server(); gameDirectory = file('run/'); programArgument('--nogui') }
+    }
+    mods {
+        register(mod_id) { sourceSet(sourceSets.main) }
     }
 }
 
@@ -102,7 +58,7 @@ repositories {
         url = "https://maven.shadowsoffire.dev/releases"
     }
     flatDir {
-        dirs 'libs'
+        dirs rootProject.file('libs')
     }
 }
 
@@ -124,8 +80,6 @@ repositories {
 //   - Bulking (1233813) — neirenoir; mandatory hard-dep on Diet, swaps DietScreen for BulkingScreen via mixins
 // =============================================================================
 dependencies {
-    minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
-
     // MixinGradle's `mixin { add ... }` block registers the source set with the plugin but does
     // not add the Mixin annotation-processor jar to the `annotationProcessor` configuration. The
     // AP is what writes the refmap (Mojang → SRG name translations) that production Forge needs
@@ -139,7 +93,7 @@ dependencies {
     // refmap. Without that, MidnightLib's MixinOptionsScreen targets the production SRG name
     // 'm_7856_' which doesn't exist in the dev environment, and the dev client crashes during
     // the title-screen resource reload.
-    implementation fg.deobf("maven.modrinth:midnightlib:${project.midnightlib_version}")
+    implementation "maven.modrinth:midnightlib:${project.midnightlib_version}"
 
     // -------------------------------------------------------------------------
     // TEST SET (May 2026): minimal mod set focused on the MapAtlas long-press +
@@ -150,9 +104,9 @@ dependencies {
     // -------------------------------------------------------------------------
 
     // ENABLED at runtime — direct testing targets.
-    implementation fg.deobf("curse.maven:curios-309927:6418456")
-    implementation fg.deobf("curse.maven:sophisticated-core-618298:8014107")
-    implementation fg.deobf("curse.maven:sophisticated-backpacks-422301:8007547")
+    implementation "curse.maven:curios-309927:6418456"
+    implementation "curse.maven:sophisticated-core-618298:8014107"
+    implementation "curse.maven:sophisticated-backpacks-422301:8007547"
     // Travelers Backpack: demoted to compileOnly while Epic Fight is loaded at runtime.
     // Epic Fight's ClientConfig.onLoad walks every registered item and calls
     // EpicFightCapabilities.getItemStackCapability, which triggers the backpack item's
@@ -160,24 +114,24 @@ dependencies {
     // Travelers Backpack's own ConfigSpec hasn't loaded yet at that point, so the dev client
     // crashes on the title-screen resource reload ("Cannot get config value before config is
     // loaded"). Switch back to implementation when not testing Epic Fight.
-    compileOnly fg.deobf("curse.maven:travelers-backpack-321117:7816782")
-    implementation fg.deobf("curse.maven:map-atlases-forge-519759:7660146")
+    compileOnly "curse.maven:travelers-backpack-321117:7816782"
+    implementation "curse.maven:map-atlases-forge-519759:7660146"
 
     // Core libs / equipment / books.
-    compileOnly fg.deobf("curse.maven:patchouli-306770:7731017")
+    compileOnly "curse.maven:patchouli-306770:7731017"
     // Promoted to implementation so SDM Shop's runtime architectury hard-dep resolves in
     // dev — revert to compileOnly when SDM Shop is also reverted (see comment below).
-    implementation fg.deobf("curse.maven:architectury-api-419699:5137938")
-    compileOnly fg.deobf("curse.maven:better-advancements-272515:5454907")
-    compileOnly fg.deobf("curse.maven:eccentric-tome-597522:7285203")
-    compileOnly fg.deobf("curse.maven:cloth-config-348521:5729105")
+    implementation "curse.maven:architectury-api-419699:5137938"
+    compileOnly "curse.maven:better-advancements-272515:5454907"
+    compileOnly "curse.maven:eccentric-tome-597522:7285203"
+    compileOnly "curse.maven:cloth-config-348521:5729105"
 
     // Skills / progression.
-    compileOnly fg.deobf("curse.maven:puffish-skills-835091:7672794")
-    compileOnly fg.deobf("curse.maven:reskillable-reimagined-1170464:7958820")
+    compileOnly "curse.maven:puffish-skills-835091:7672794"
+    compileOnly "curse.maven:reskillable-reimagined-1170464:7958820"
     // Project 1079687 was renamed from "memories-of-the-past" → "rpg-attribute-system" on CurseForge.
-    compileOnly fg.deobf("curse.maven:rpg-attribute-system-1079687:8008921")
-    compileOnly fg.deobf("curse.maven:jauml-1281310:7835241")
+    compileOnly "curse.maven:rpg-attribute-system-1079687:8008921"
+    compileOnly "curse.maven:jauml-1281310:7835241"
     // Curse Maven blocks direct download of the runic-skills artifact (403 Forbidden),
     // so we vendor the jar in libs/runicskills-1.0.0.jar and resolve it through the
     // flatDir repo above. The "blank" group is required by ForgeGradle's deobf cache key.
@@ -185,100 +139,100 @@ dependencies {
     // target (com.otectus.runicskills.client.gui.DrawTabs). Not on the runtime classpath
     // because its bundled l2tabs 0.3.3 conflicts with the L2 stack's TabRegistry API; the
     // mixin itself uses require=0 and is a no-op when Runic Skills isn't installed.
-    compileOnly fg.deobf("blank:runicskills:1.0.0")
+    compileOnly "blank:runicskills:1.0.0"
     // Required by Runic Skills (yet_another_config_lib_v3 >= 3.4.2).
-    // implementation fg.deobf("curse.maven:yacl-667299:6336646")
+    // implementation "curse.maven:yacl-667299:6336646"
 
     // Other backpack mods (compile-only — not part of this test pass).
-    compileOnly fg.deobf("curse.maven:backpacked-352835:7866682")
-    compileOnly fg.deobf("curse.maven:cosmetic-armor-reworked-237307:4600191")
+    compileOnly "curse.maven:backpacked-352835:7866682"
+    compileOnly "curse.maven:cosmetic-armor-reworked-237307:4600191"
 
     // FTB suite.
-    compileOnly fg.deobf("curse.maven:ftb-quests-forge-289412:7909594")
-    compileOnly fg.deobf("curse.maven:ftb-teams-forge-404468:7499810")
-    compileOnly fg.deobf("curse.maven:ftb-chunks-forge-314906:7880858")
+    compileOnly "curse.maven:ftb-quests-forge-289412:7909594"
+    compileOnly "curse.maven:ftb-teams-forge-404468:7499810"
+    compileOnly "curse.maven:ftb-chunks-forge-314906:7880858"
     // Promoted to implementation so SDM Shop's runtime ftblibrary hard-dep resolves in
     // dev — revert to compileOnly when SDM Shop is also reverted.
-    implementation fg.deobf("curse.maven:ftb-library-forge-404465:7296748")
-    compileOnly fg.deobf("curse.maven:framework-549225:7573740")
+    implementation "curse.maven:ftb-library-forge-404465:7296748"
+    compileOnly "curse.maven:framework-549225:7573740"
 
     // Advanced Team (clefal) — separate teams mod with its own HasTeam/NoTeam screens.
     // Curse Maven blocks direct download of this artifact (403 Forbidden), same as Runic Skills,
     // so we vendor the jar in libs/advanced-team-1.4.6.jar and resolve it through the flatDir
     // repo above. The "blank" group is required by ForgeGradle's deobf cache key.
-    compileOnly fg.deobf("blank:advanced-team:1.4.6")
+    compileOnly "blank:advanced-team:1.4.6"
     // Nirvana Library — required by Advanced Team (com.clefal.nirvana_lib.* packages).
-    compileOnly fg.deobf("curse.maven:nirvana-library-1164411:7986008")
+    compileOnly "curse.maven:nirvana-library-1164411:7986008"
     // Required transitive deps of Nirvana Library.
-    compileOnly fg.deobf("curse.maven:common-network-806044:5486134")
-    compileOnly fg.deobf("curse.maven:fzzy-config-1005914:7568893")
+    compileOnly "curse.maven:common-network-806044:5486134"
+    compileOnly "curse.maven:fzzy-config-1005914:7568893"
 
     // Other map mods (Map Atlases is enabled above as a direct test target).
-    compileOnly fg.deobf("curse.maven:journeymap-32274:5789363")
-    compileOnly fg.deobf("curse.maven:xaeros-world-map-317780:7598469")
+    compileOnly "curse.maven:journeymap-32274:5789363"
+    compileOnly "curse.maven:xaeros-world-map-317780:7598469"
 
     // L2 stack (xkmc) + Modular Golems.
-    compileOnly fg.deobf("curse.maven:l2library-620203:6806000")
-    compileOnly fg.deobf("curse.maven:l2hostility-909207:7815389")
-    compileOnly fg.deobf("curse.maven:l2-complements-758349:7606338")
-    compileOnly fg.deobf("curse.maven:l2-artifacts-659547:6801939")
-    compileOnly fg.deobf("curse.maven:modulargolems-690937:7948763")
+    compileOnly "curse.maven:l2library-620203:6806000"
+    compileOnly "curse.maven:l2hostility-909207:7815389"
+    compileOnly "curse.maven:l2-complements-758349:7606338"
+    compileOnly "curse.maven:l2-artifacts-659547:6801939"
+    compileOnly "curse.maven:modulargolems-690937:7948763"
 
     // Cobblemon (+ Kotlin for Forge runtime requirement).
-    compileOnly fg.deobf("curse.maven:kotlin-for-forge-351264:7291067")
-    compileOnly fg.deobf("curse.maven:cobblemon-687131:5375390")
+    compileOnly "curse.maven:kotlin-for-forge-351264:7291067"
+    compileOnly "curse.maven:cobblemon-687131:5375390"
 
     // Magic / spellcasting.
-    compileOnly fg.deobf("curse.maven:geckolib-388172:7553267")
-    compileOnly fg.deobf("curse.maven:ars-nouveau-401955:6688854")
+    compileOnly "curse.maven:geckolib-388172:7553267"
+    compileOnly "curse.maven:ars-nouveau-401955:6688854"
     // Ars Elixirum on 1.20.1 lives at ars-elixirum-forge (project 620870), not the NeoForge slug.
-    compileOnly fg.deobf("curse.maven:ars-elixirum-forge-620870:7985649")
-    compileOnly fg.deobf("curse.maven:fragmentum-1123970:7983969")
+    compileOnly "curse.maven:ars-elixirum-forge-620870:7985649"
+    compileOnly "curse.maven:fragmentum-1123970:7983969"
 
     // Tech / automation.
-    compileOnly fg.deobf("curse.maven:create-328085:7178761")
-    compileOnly fg.deobf("curse.maven:brandons-core-231382:5422013")
-    compileOnly fg.deobf("curse.maven:codechicken-lib-1-8-242818:5753868")
-    compileOnly fg.deobf("curse.maven:draconic-evolution-223565:6793843")
+    compileOnly "curse.maven:create-328085:7178761"
+    compileOnly "curse.maven:brandons-core-231382:5422013"
+    compileOnly "curse.maven:codechicken-lib-1-8-242818:5753868"
+    compileOnly "curse.maven:draconic-evolution-223565:6793843"
 
     // Misc.
     // Selene (Moonlight) — required at RUNTIME by Map Atlases. Its mods.toml marks moonlight
     // optional, but MapAtlasesMod.<clinit> references moonlight's RegHelper directly, so
     // dropping it from the runtime classpath crashes mod loading with NoClassDefFoundError.
-    implementation fg.deobf("curse.maven:selene-499980:7945711")
-    compileOnly fg.deobf("curse.maven:archivist-1513409:7979569")
+    implementation "curse.maven:selene-499980:7945711"
+    compileOnly "curse.maven:archivist-1513409:7979569"
 
     // Diet (illusivesoulworks) + Bulking (neirenoir). Bulking is a hard dependency on Diet
     // and swaps DietScreen for BulkingScreen via mixins targeting DietClientEvents — so when
     // both are loaded, our tab opens BulkingScreen directly to keep the stomach UI active.
-    compileOnly fg.deobf("curse.maven:diet-443570:4813904")
-    compileOnly fg.deobf("curse.maven:bulking-1233813:6411901")
+    compileOnly "curse.maven:diet-443570:4813904"
+    compileOnly "curse.maven:bulking-1233813:6411901"
 
     // Villager Recruits — faction screen (U key by default).
-    implementation fg.deobf("curse.maven:recruits-523860:7906232")
+    implementation "curse.maven:recruits-523860:7906232"
 
     // Apothic Attributes (+ Placebo, its hard runtime dep). Reflection-only integration on
     // our side; both jars need to be on the runtime classpath for AttributesGui to load.
     // Sourced from Shadows_of_Fire's official maven; bump versions in gradle.properties.
-    compileOnly fg.deobf("dev.shadowsoffire:Placebo:${minecraft_version}-${project.placebo_version}")
-    compileOnly fg.deobf("dev.shadowsoffire:ApothicAttributes:${minecraft_version}-${project.apothic_attributes_version}")
+    compileOnly "dev.shadowsoffire:Placebo:${minecraft_version}-${project.placebo_version}"
+    compileOnly "dev.shadowsoffire:ApothicAttributes:${minecraft_version}-${project.apothic_attributes_version}"
 
     // The Aether (Forge 1.20.1). Reflection-only integration: AetherTab reuses the
     // mod's own packet path — sends an OpenAccessoriesPacket through Forge's
     // SimpleChannel exposed at AetherPacketHandler.INSTANCE, same as the "I" keybind.
     // Default file id is sourced from gradle.properties; override with -PaetherFileId=<id>.
-    compileOnly fg.deobf("curse.maven:aether-255308:${project.findProperty('aetherFileId') ?: '6134920'}")
+    compileOnly "curse.maven:aether-255308:${project.findProperty('aetherFileId') ?: '6134920'}"
 
     // Epic Fight (Forge 1.20.1). Reflection-only integration — EpicFightTab mirrors
     // ControlEngine.openSkillEditor() via getLocalPlayerPatch / getSkillCapability,
     // then constructs SkillEditScreen directly. Loaded at runtime so the tab can be
     // tested in dev. Override file id via -PepicFightFileId=<id>.
-    implementation fg.deobf("curse.maven:epic-fight-mod-405076:${project.findProperty('epicFightFileId') ?: '8049910'}")
+    implementation "curse.maven:epic-fight-mod-405076:${project.findProperty('epicFightFileId') ?: '8049910'}"
 
     // Epic Fight Skill Tree (epicskills, Antikythera-Studios). Hard-deps Epic Fight at
     // runtime; the SkillTreeScreen constructor takes a LocalPlayerPatch from Epic Fight.
     // Reflection-only on our side — same as EpicFightTab.
-    implementation fg.deobf("curse.maven:epic-fight-skill-tree-1295882:${project.findProperty('epicSkillsFileId') ?: '7916852'}")
+    implementation "curse.maven:epic-fight-skill-tree-1295882:${project.findProperty('epicSkillsFileId') ?: '7916852'}"
 
     // Mine and Slash Rework (Forge 1.20.1). Reflection-only integration — MineAndSlashTab
     // mirrors the mod's hub-button path and constructs TalentsScreen() directly.
@@ -289,12 +243,12 @@ dependencies {
     // ModSorter check on file 7190361:
     //   library_of_exile [2.1.5,) · the_harvest [1.1.3,) · dungeon_realm [1.1.6,)
     //   ancient_obelisks [1.2.3,) · playeranimator [0,)
-    implementation fg.deobf("curse.maven:mine-and-slash-reloaded-306575:${project.findProperty('mineAndSlashFileId') ?: '7190361'}")
-    implementation fg.deobf("curse.maven:library-of-exile-398780:7167023")        // v2.1.5
-    implementation fg.deobf("curse.maven:dungeon-realm-1200770:7190357")          // v1.1.7
-    implementation fg.deobf("curse.maven:the-harvest-1201731:7186998")            // v1.1.3
-    implementation fg.deobf("curse.maven:ancient-obelisks-1186288:7186996")       // v1.2.3
-    implementation fg.deobf("curse.maven:playeranimator-658587:4587214")          // v1.0.2-rc1
+    implementation "curse.maven:mine-and-slash-reloaded-306575:${project.findProperty('mineAndSlashFileId') ?: '7190361'}"
+    implementation "curse.maven:library-of-exile-398780:7167023"        // v2.1.5
+    implementation "curse.maven:dungeon-realm-1200770:7190357"          // v1.1.7
+    implementation "curse.maven:the-harvest-1201731:7186998"            // v1.1.3
+    implementation "curse.maven:ancient-obelisks-1186288:7186996"       // v1.2.3
+    implementation "curse.maven:playeranimator-658587:4587214"          // v1.0.2-rc1
 
     // Blue Skies (Forge 1.20.1). Reflection-only integration — BlueSkiesArcsTab sends
     // the mod's own OpenInventoryPacket$Arcs through PacketHandler.INSTANCE (same path
@@ -302,10 +256,10 @@ dependencies {
     // BlueJournalScreen.open(boolean) (same path as the journal button). The mod's
     // built-in inventory tabs are suppressed via SkiesClientEventsMixin.
     // Override file id via -PblueSkiesFileId=<id>.
-    implementation fg.deobf("curse.maven:blue-skies-312918:${project.findProperty('blueSkiesFileId') ?: '5010316'}")
+    implementation "curse.maven:blue-skies-312918:${project.findProperty('blueSkiesFileId') ?: '5010316'}"
     // Structure Gel API — hard runtime dep of Blue Skies (mandatory, [2.13.0,]).
     // 5278429 = v2.16.2 for 1.20.1 Forge, the latest at the time the 1.20.1 branch was cut.
-    implementation fg.deobf("curse.maven:structure-gel-api-378802:5278429")
+    implementation "curse.maven:structure-gel-api-378802:5278429"
 
     // Completionist's Index (Fuzs, Forge 1.20.1). Reflection-only integration —
     // CompletionistsIndexTab opens ModsIndexViewScreen(Screen) directly, same path as
@@ -313,7 +267,7 @@ dependencies {
     // button is suppressed via IndexButtonHandlerMixin so the tab is the only entry
     // point. Hard-deps puzzleslib at runtime — kept compileOnly here so swapping to
     // `implementation` also requires pinning a puzzleslib file id.
-    compileOnly fg.deobf("curse.maven:completionists-index-852667:4613443")
+    compileOnly "curse.maven:completionists-index-852667:4613443"
 
     // SDM Shop (sdmshoprework, DeusSixik / Architectury, Forge 1.20.1). Reflection-only —
     // SdmShopTab invokes SDMShopClient.openGui(boolean) via Class.forName, same path the
@@ -321,7 +275,7 @@ dependencies {
     // dev for live tab testing; revert to compileOnly (and re-revert architectury, ftb-
     // library, sdm-economy, sdm-ui-lib above) once testing is done. Hard-deps on
     // ftblibrary, architectury, sdm_economy, sdm_ui_lib — all listed alongside.
-    implementation fg.deobf("curse.maven:sdm-shop-948942:7935087")
+    implementation "curse.maven:sdm-shop-948942:7935087"
     // SDM Shop's mandatory companion mods (both author DeusSixik / Sixik). Versions
     // picked to match what SDM Shop 7.2.x for 1.20.1 Forge declares in its mods.toml:
     //   ftblibrary  [2001.2.9,)   → 7296748 = 2001.2.12 above
@@ -329,8 +283,8 @@ dependencies {
     //   sdmeconomy  [2.2.0,)      → 6689080 = SDMEconomy 2.2.0 (rebranded modid + jar
     //                                          name; pre-2.x is `sdm_economy`)
     //   sdm_ui_lib  [1.20.1-1.8.3,) → 6086204 = sdm_ui_lib 1.8.3
-    implementation fg.deobf("curse.maven:sdm-economy-1102542:6689080")
-    implementation fg.deobf("curse.maven:sdm-ui-lib-1095061:6086204")
+    implementation "curse.maven:sdm-economy-1102542:6689080"
+    implementation "curse.maven:sdm-ui-lib-1095061:6086204"
 
     // Jobs+ (DAQEM, Forge 1.20.1). Reflection-only integration — JobsPlusTab sends an
     // empty PacketOpenMenuC2S (the mod's own keybind path); the server replies with
@@ -339,7 +293,7 @@ dependencies {
     // sendToServer() — same dispatch path the mod's keybind uses. Hard-deps
     // architectury + uilib + arc at runtime; kept compileOnly here so swapping to
     // `implementation` also requires pinning those file ids.
-    compileOnly fg.deobf("curse.maven:jobsplus-916985:7239650")
+    compileOnly "curse.maven:jobsplus-916985:7239650"
 
     // Questlog (Infernal Studios, Forge 1.20.1). Reflection-only integration — QuestLogTab
     // opens QuestlogScreen(Screen) directly, the same path the mod's own keybind and its
@@ -347,7 +301,7 @@ dependencies {
     // (targeting the mod's own InventoryScreenMixin.injectQuestlogButton). The dep MUST be
     // resolvable at compile time on this branch — Forge's Mixin AP (0.8.5) errors if a
     // string-targeted mixin can't load its target class (newer NeoForge versions only warn).
-    compileOnly fg.deobf("curse.maven:questlog-1202066:8034389")
+    compileOnly "curse.maven:questlog-1202066:8034389"
 
     // Modonomicon (klikli-dev, Forge 1.20.1). Reflection-only — ModonomiconTab finds the
     // first ModonomiconItem in the player's inventory and opens its book via
@@ -356,7 +310,7 @@ dependencies {
     // doesn't exist on this branch yet.) The mod adds no inventory button so no
     // suppression mixin is needed. compileOnly because we never reference Modonomicon
     // types at compile time.
-    compileOnly fg.deobf("curse.maven:modonomicon-538392:7446143")
+    compileOnly "curse.maven:modonomicon-538392:7446143"
 
     // Field Guide (evanbones, Forge 1.20.1). Reflection-only integration — FieldGuideTab
     // mirrors the mod's inventory-button path in InventoryScreenMixin: open
@@ -366,7 +320,7 @@ dependencies {
     // button by its texture ResourceLocation namespace ("fieldguide") so we never touch
     // the recipe-book button. compileOnly because we never reference Field Guide types
     // at compile time.
-    compileOnly fg.deobf("curse.maven:field-guide-1470590:8046081")
+    compileOnly "curse.maven:field-guide-1470590:8046081"
 }
 
 tasks.named('processResources', ProcessResources).configure {

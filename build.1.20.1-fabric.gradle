@@ -1,0 +1,201 @@
+plugins {
+	id 'fabric-loom' version '1.13.6'
+	id 'maven-publish'
+}
+
+version = project.mod_version
+group = project.maven_group
+
+base {
+	archivesName = project.archives_base_name
+}
+
+// Minecraft 1.20.1 requires Java 17
+java {
+	toolchain.languageVersion = JavaLanguageVersion.of(17)
+	sourceCompatibility = JavaVersion.VERSION_17
+	targetCompatibility = JavaVersion.VERSION_17
+
+	withSourcesJar()
+}
+
+// Force Java 17 for all tasks
+tasks.withType(JavaCompile).configureEach {
+	options.release = 17
+	options.encoding = 'UTF-8'
+}
+
+repositories {
+	// Add repositories to retrieve artifacts from in here.
+	// You should only use this when depending on other mods because
+	// Loom adds the essential maven repositories to download Minecraft and libraries from automatically.
+	// See https://docs.gradle.org/current/userguide/declaring_repositories.html
+	// for more information about repositories.
+
+	// Curseforge repository
+	maven {
+		url = "https://www.cursemaven.com"
+		content {
+			includeGroup "curse.maven"
+		}
+	}
+
+	maven {
+		name = "CurseForge"
+		url = "https://minecraft.curseforge.com/api/maven/"
+	}
+
+	maven { url "https://api.modrinth.com/maven" }
+
+	// Midnight Lib repository
+	maven {
+		url "https://maven.terraformersmc.com/releases/"
+	}
+
+	// Fiber API repository for Patchouli
+	maven {
+		url "https://maven.modmuss50.me/"
+	}
+
+	// Ladysnake Maven for Cardinal Components API
+	maven {
+		name = "Ladysnake Libs"
+		url = "https://maven.ladysnake.org/releases"
+	}
+
+	// Porting Lib Maven (must be before TechReborn to resolve correctly)
+	maven {
+		name = "Porting Lib"
+		url = "https://mvn.devos.one/releases/"
+	}
+
+	// Jamies White Shirt Maven for reach-entity-attributes (required by Porting Lib)
+	maven {
+		name = "Jamies White Shirt"
+		url = "https://maven.jamieswhiteshirt.com/libs-release/"
+	}
+
+	// TechReborn Maven for Team Reborn Energy (required by Sophisticated mods)
+	maven {
+		name = "TechReborn"
+		url = "https://maven.techreborn.ovh/"
+	}
+
+
+	// JitPack repository for GitHub dependencies
+	maven { url 'https://jitpack.io' }
+
+	// Impact Dev repository for Cobblemon
+	maven { url "https://maven.impactdev.net/repository/development/" }
+
+	// GeckoLib repository for Cobblemon dependencies
+	maven { url "https://dl.cloudsmith.io/public/geckolib3/geckolib/maven/" }
+
+	// Local flat directory for external JARs
+	flatDir {
+		dirs rootProject.file('libs')
+	}
+}
+
+loom {
+	runtimeOnlyLog4j = true
+	splitEnvironmentSourceSets()
+
+	mods {
+		modtabs {
+			sourceSet sourceSets.main
+			sourceSet sourceSets.client
+		}
+	}
+}
+
+dependencies {
+	// To change the versions see the gradle.properties file
+	minecraft "com.mojang:minecraft:${project.minecraft_version}"
+	mappings "net.fabricmc:yarn:${project.yarn_version}:v2"
+	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+
+	// Fabric API. This is technically optional, but you probably want it anyway.
+	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fapi_version}"
+
+	// Midnight Lib - Required dependency for in-game config
+	modImplementation "curse.maven:midnightlib-488090:4576371"
+
+	// Essential mod integrations for tabs
+	modImplementation "curse.maven:patchouli-fabric-393236:6164574"
+	modImplementation "me.zeroeightsix:fiber:0.23.0-2" // Fiber API for Patchouli
+	modImplementation "curse.maven:ftb-library-fabric-438495:6807422"
+	modImplementation "curse.maven:ftb-quests-fabric-438496:6829211"
+	modImplementation "curse.maven:ftb-teams-fabric-438497:6130783"
+	modImplementation "curse.maven:architectury-api-419699:5137936"
+	modImplementation "curse.maven:travelers-backpack-fabric-541171:7004783" // Traveler's Backpack Fabric
+	modImplementation "curse.maven:map-atlases-436298:6807695" // Map Atlases
+	modImplementation "curse.maven:xaeros-world-map-317780:6778093" // Xaero's World Map
+	//modImplementation "curse.maven:journeymap-32274:5789354" // JourneyMap
+	modImplementation "curse.maven:puffish-skills-835091:7029394" // Pufferfish's Skills
+	// modImplementation "curse.maven:l2-hostility-fabricated-1062258:6612970" // L2 Hostility - disabled: requires leobrary dependency not ready for Fabric
+	modImplementation "curse.maven:sophisticated-backpacks-unofficial-fabric-port-979322:6627540" // Sophisticated Backpacks Fabric
+	modImplementation "curse.maven:sophisticated-core-unofficial-fabric-port-979317:6931949" // Sophisticated Core Fabric
+	// Cobblemon disabled: contains hardcoded obfuscated class references incompatible with dev environment
+	// Issue: ClassNotFoundException for net.minecraft.class_2960 (Identifier) - not remapped by Fabric Loom
+	// modImplementation "com.cobblemon:fabric:1.5.2+1.20.1"
+	modImplementation "curse.maven:cloth-config-348521:5729104"
+	modImplementation "curse.maven:modmenu-308702:5162837" // Mod Menu - required for config GUI on Fabric
+	modImplementation "curse.maven:trinkets-341284:5173501"
+	modImplementation "curse.maven:enchantment-infusion-1061777:6698239"
+	modImplementation "curse.maven:selene-499980:7027390"
+	modImplementation "curse.maven:forge-config-api-port-fabric-547434:6325013"
+	
+
+	// Cardinal Components API - Required dependencies
+	modImplementation "dev.onyxstudios.cardinal-components-api:cardinal-components-base:5.2.1"
+	modImplementation "dev.onyxstudios.cardinal-components-api:cardinal-components-entity:5.2.1"
+	modImplementation "dev.onyxstudios.cardinal-components-api:cardinal-components-item:5.2.1"
+
+
+	// Team Reborn Energy (required by Sophisticated Backpacks and Sophisticated Core)
+	modImplementation "teamreborn:energy:3.0.0"
+
+	// L2Serial Fabricated (required by L2 Hostility) - disabled with L2 Hostility
+	// modImplementation name: 'l2serial-1.2.2', version: null
+
+	// Porting Lib modules (required for Sophisticated Backpacks and other mods)
+	modImplementation "io.github.fabricators_of_create.Porting-Lib:loot:2.3.9+1.20.1"
+	modImplementation "io.github.fabricators_of_create.Porting-Lib:model_loader:2.3.9+1.20.1"
+	modImplementation "io.github.fabricators_of_create.Porting-Lib:tool_actions:2.3.9+1.20.1"
+	modImplementation "io.github.fabricators_of_create.Porting-Lib:networking:2.3.9+1.20.1"
+	modImplementation "io.github.fabricators_of_create.Porting-Lib:transfer:2.3.9+1.20.1"
+	modImplementation "io.github.fabricators_of_create.Porting-Lib:extensions:2.3.9+1.20.1"
+	modImplementation "io.github.fabricators_of_create.Porting-Lib:fluids:2.3.9+1.20.1"
+
+	//modImplementation "curse.maven:ars-elixirum-1107849:5827509" 1.21.1 only
+}
+
+processResources {
+	inputs.property "version", project.version
+	inputs.property "minecraft_version", project.minecraft_version
+
+	filesMatching("fabric.mod.json") {
+		expand "version": project.version
+	}
+}
+
+tasks.withType(JavaCompile).configureEach {
+	it.options.release = 17
+	options.encoding = 'UTF-8'
+}
+
+publishing {
+	publications {
+		maven(MavenPublication) {
+			from components.java
+		}
+	}
+
+	// See https://docs.gradle.org/current/userguide/publishing_maven.html for information on how to set up publishing.
+	repositories {
+		maven {
+			url "file://${project.projectDir}/mcmodsrepo"
+		}
+	}
+}

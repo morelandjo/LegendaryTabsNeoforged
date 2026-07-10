@@ -1,0 +1,15 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "vodmordia.modtabs.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "client": [
+    "AbstractContainerScreenMixin",
+    "FieldGuideInventoryScreenMixin",
+    "IndexButtonHandlerMixin",
+    "QuestlogInventoryScreenMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

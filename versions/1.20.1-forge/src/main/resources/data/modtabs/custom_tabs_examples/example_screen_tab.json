@@ -1,0 +1,18 @@
+{
+  "tabId": "example_screen_tab",
+  "enabled": false,
+  "icon": {
+    "item": "minecraft:ender_eye",
+    "fallbackItem": "minecraft:ender_pearl",
+    "scale": 1.0
+  },
+  "tooltip": "Example Screen Tab",
+  "order": 101,
+  "action": {
+    "type": "open_screen",
+    "screenClass": "com.example.mod.client.gui.ExampleScreen"
+  },
+  "requiredMods": [
+    "examplemod"
+  ]
+}

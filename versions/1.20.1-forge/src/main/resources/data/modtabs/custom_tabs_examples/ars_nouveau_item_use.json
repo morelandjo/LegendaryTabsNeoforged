@@ -1,0 +1,18 @@
+{
+  "tabId": "ars_nouveau_worn_notebook_item_use",
+  "enabled": false,
+  "icon": {
+    "item": "ars_nouveau:worn_notebook",
+    "fallbackItem": "minecraft:book",
+    "scale": 1.0
+  },
+  "tooltip": "Ars Nouveau - Worn Notebook (Item Use)",
+  "order": 46,
+  "action": {
+    "type": "use_item",
+    "item": "ars_nouveau:worn_notebook"
+  },
+  "requiredMods": [
+    "ars_nouveau"
+  ]
+}
