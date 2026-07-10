@@ -31,3 +31,13 @@ tasks.register("chiseledBuild") {
         ":1.20.1-fabric:build",
     )
 }
+
+tasks.register("integrationTest") {
+    group = "verification"
+    description = "Run contract and Minecraft-backed integration tests for every target"
+    dependsOn(
+        ":1.21.1-neoforge:test",
+        ":1.20.1-forge:test",
+        ":1.20.1-fabric:test",
+    )
+}

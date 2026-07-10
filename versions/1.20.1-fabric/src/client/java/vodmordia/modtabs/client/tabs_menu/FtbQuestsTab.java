@@ -36,11 +36,10 @@ public class FtbQuestsTab extends TabBase {
                 }
             }
 
-            // Fallback: Use reflection to open the quest screen directly
-            Class<?> questsScreenClass = Class.forName("dev.ftb.mods.ftbquests.client.gui.quests.QuestScreen");
-            Object questsScreen = questsScreenClass.getConstructor().newInstance();
-
-            minecraft.setScreen((Screen) questsScreen);
+            // Fallback: use FTB Quests' public client entrypoint. QuestScreen no longer has a
+            // no-arg constructor in the supported artifact, so constructing it directly is unsafe.
+            Class<?> questsClient = Class.forName("dev.ftb.mods.ftbquests.client.FTBQuestsClient");
+            questsClient.getMethod("openGui").invoke(null);
         } catch (Exception e) {
             // Log error for debugging
             vodmordia.modtabs.ModTabs.LOGGER.warn("Failed to open FTB Quests screen: " + e.getMessage());

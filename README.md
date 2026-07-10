@@ -24,10 +24,16 @@ top-level commands.
 ./gradlew :1.20.1-forge:build
 ./gradlew :1.20.1-fabric:build
 ./gradlew chiseledBuild
+./gradlew integrationTest
 ```
 
 The active development target is recorded in `.sc_active_version`. Use Stonecutter's generated
 `Set active project to ...` tasks to switch it.
+
+Compatibility integrations are guarded by bytecode contract tests and Minecraft-backed resolver
+tests. When adding an integration, update its target's `integration-contracts.txt`; the test suite
+fails if `ModIntegration` and the manifest differ. See `test-support/README.md` for the required
+workflow.
 
 ## Features
 

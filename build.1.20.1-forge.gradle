@@ -323,6 +323,20 @@ dependencies {
     compileOnly "curse.maven:field-guide-1470590:8046081"
 }
 
+sourceSets.test.java.srcDir(rootProject.file('test-support/src/test/java'))
+dependencies {
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.11.4'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.11.4'
+    testImplementation 'org.ow2.asm:asm:9.7.1'
+}
+tasks.named('test', Test) {
+    useJUnitPlatform()
+    classpath += configurations.compileClasspath
+    systemProperty 'modtabs.contracts', file('src/test/resources/integration-contracts.txt').absolutePath
+    systemProperty 'modtabs.integrationEnum', file('src/main/java/vodmordia/modtabs/integration/ModIntegration.java').absolutePath
+    systemProperty 'modtabs.screenClass', 'net.minecraft.client.gui.screens.Screen'
+}
+
 tasks.named('processResources', ProcessResources).configure {
     var replaceProperties = [
             minecraft_version: minecraft_version, minecraft_version_range: minecraft_version_range,

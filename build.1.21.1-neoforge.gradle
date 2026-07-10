@@ -359,6 +359,20 @@ dependencies {
 
 }
 
+sourceSets.test.java.srcDir(rootProject.file('test-support/src/test/java'))
+dependencies {
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.11.4'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.11.4'
+    testImplementation 'org.ow2.asm:asm:9.7.1'
+}
+tasks.named('test', Test) {
+    useJUnitPlatform()
+    classpath += configurations.compileClasspath
+    systemProperty 'modtabs.contracts', file('src/test/resources/integration-contracts.txt').absolutePath
+    systemProperty 'modtabs.integrationEnum', file('src/main/java/vodmordia/modtabs/integration/ModIntegration.java').absolutePath
+    systemProperty 'modtabs.screenClass', 'net.minecraft.client.gui.screens.Screen'
+}
+
 // This block of code expands all declared replace properties in the specified resource targets.
 // A missing property will result in an error. Properties are expanded using ${} Groovy notation.
 // When "copyIdeResources" is enabled, this will also run before the game launches in IDE environments.

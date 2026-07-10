@@ -171,6 +171,21 @@ dependencies {
 	//modImplementation "curse.maven:ars-elixirum-1107849:5827509" 1.21.1 only
 }
 
+sourceSets.test.java.srcDir(rootProject.file('test-support/src/test/java'))
+dependencies {
+	testImplementation 'org.junit.jupiter:junit-jupiter:5.11.4'
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.11.4'
+	testImplementation 'org.ow2.asm:asm:9.7.1'
+	testImplementation sourceSets.client.output
+}
+tasks.named('test', Test) {
+	useJUnitPlatform()
+	classpath += configurations.compileClasspath + sourceSets.client.output
+	systemProperty 'modtabs.contracts', file('src/test/resources/integration-contracts.txt').absolutePath
+	systemProperty 'modtabs.integrationEnum', file('src/main/java/vodmordia/modtabs/integration/ModIntegration.java').absolutePath
+	systemProperty 'modtabs.screenClass', 'net.minecraft.client.gui.screen.Screen'
+}
+
 processResources {
 	inputs.property "version", project.version
 	inputs.property "minecraft_version", project.minecraft_version

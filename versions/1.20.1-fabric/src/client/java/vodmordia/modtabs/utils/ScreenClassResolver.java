@@ -29,7 +29,7 @@ public class ScreenClassResolver {
         }
 
         try {
-            Class<?> clazz = Class.forName(className);
+            Class<?> clazz = Class.forName(className, false, ScreenClassResolver.class.getClassLoader());
             if (Screen.class.isAssignableFrom(clazz)) {
                 Class<? extends Screen> screenClass = (Class<? extends Screen>) clazz;
                 classCache.put(className, screenClass);
@@ -62,7 +62,7 @@ public class ScreenClassResolver {
      */
     public static boolean screenClassExists(String className) {
         try {
-            Class.forName(className);
+            Class.forName(className, false, ScreenClassResolver.class.getClassLoader());
             return true;
         } catch (ClassNotFoundException e) {
             return false;

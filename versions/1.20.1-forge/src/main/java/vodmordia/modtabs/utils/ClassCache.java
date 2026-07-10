@@ -28,7 +28,7 @@ public final class ClassCache {
             return cached == MISSING ? null : cached;
         }
         try {
-            Class<?> c = Class.forName(fqn);
+            Class<?> c = Class.forName(fqn, false, ClassCache.class.getClassLoader());
             CACHE.put(fqn, c);
             return c;
         } catch (ClassNotFoundException e) {

@@ -1,0 +1,49 @@
+# MODE|mod id|class|member|descriptor|note
+REQUIRED|ftbquests|dev.ftb.mods.ftbquests.client.gui.quests.QuestScreen|||Target screen
+REQUIRED|journeymap|journeymap.client.ui.fullscreen.Fullscreen|||Target screen
+REQUIRED|map_atlases|pepjebs.mapatlases.item.MapAtlasItem|||Atlas item detection
+REQUIRED|puffish_skills|net.puffish.skillsmod.client.SkillsClientMod|getInstance||Client API
+REQUIRED|sophisticatedbackpacks|net.p3pp3rf1y.sophisticatedbackpacks.client.gui.BackpackScreen|||Target screen
+REQUIRED|travelersbackpack|com.tiviacz.travelersbackpack.capability.CapabilityUtils|||Backpack capability API
+REQUIRED|xaeroworldmap|xaero.map.WorldMapSession|getCurrentSession||Map session API
+DEFERRED|aether||||Directly compiled integration; covered by compileJava
+DEFERRED|ars_nouveau||||Directly compiled integration; covered by compileJava
+DEFERRED|attributeslib||||Presence-only integration
+DEFERRED|backpacked||||Directly compiled integration; covered by compileJava
+DEFERRED|betteradvancements||||Mixin startup coverage remains future client-smoke work
+DEFERRED|blue_skies||||Dependency unavailable in current test set
+DEFERRED|bulking||||Optional screen substitution
+DEFERRED|cobblemon||||Directly compiled integration; covered by compileJava
+DEFERRED|completionistsindex||||Mixin startup coverage remains future client-smoke work
+DEFERRED|cosmeticarmorreworked||||Directly compiled integration; covered by compileJava
+DEFERRED|curios||||Directly compiled integration; covered by compileJava
+DEFERRED|diet||||Directly compiled integration; covered by compileJava
+DEFERRED|draconicevolution||||Directly compiled integration; covered by compileJava
+DEFERRED|eccentrictome||||Server interaction needs a loaded game
+DEFERRED|elixirum||||No supported 1.20.1 artifact contract
+DEFERRED|epicfight||||Directly compiled integration; covered by compileJava
+DEFERRED|epicskills||||Optional companion integration
+DEFERRED|fieldguide||||Mixin startup coverage remains future client-smoke work
+DEFERRED|ftbchunks||||Directly compiled integration; covered by compileJava
+DEFERRED|ftbteams||||Directly compiled integration; covered by compileJava
+DEFERRED|jobsplus||||Mixin startup coverage remains future client-smoke work
+DEFERRED|l2artifacts||||Directly compiled integration; covered by compileJava
+DEFERRED|l2complements||||Presence-only integration
+DEFERRED|l2hostility||||Directly compiled integration; covered by compileJava
+DEFERRED|l2library||||Directly compiled integration; covered by compileJava
+DEFERRED|l2tabs||||Presence-only integration
+DEFERRED|legendarysurvivaloverhaul||||Presence-only integration
+DEFERRED|memory_of_the_past||||Directly compiled integration; covered by compileJava
+DEFERRED|mmorpg||||Dependency unavailable in current test set
+DEFERRED|modonomicon||||Directly compiled integration; covered by compileJava
+DEFERRED|modulargolems||||Directly compiled integration; covered by compileJava
+DEFERRED|quark||||Network integration needs a loaded game
+DEFERRED|quarkoddities||||Presence-only integration
+DEFERRED|questlog||||Mixin startup coverage remains future client-smoke work
+DEFERRED|recruits||||Directly compiled integration; covered by compileJava
+DEFERRED|rereskillable||||Presence-only integration
+DEFERRED|reskillable||||Directly compiled integration; covered by compileJava
+DEFERRED|runicskills||||Vendored dependency is compile coverage only
+DEFERRED|sdmshop||||Directly compiled integration; covered by compileJava
+DEFERRED|skilltree||||Directly compiled integration; covered by compileJava
+DEFERRED|teams||||Presence-only integration

@@ -1,0 +1,26 @@
+# MODE|mod id|class|member|descriptor|note
+REQUIRED|patchouli|vazkii.patchouli.api.PatchouliAPI|get||Public API used reflectively
+REQUIRED|ftbquests|dev.ftb.mods.ftbquests.client.FTBQuestsClient|openGui|()V|Public client entrypoint
+REQUIRED|ftbteams|dev.ftb.mods.ftbteams.net.OpenGUIMessage|||Network entrypoint
+DEFERRED|travelersbackpack||||The supported Fabric artifact lacks AttachmentUtils; integration repair is tracked explicitly
+REQUIRED|map_atlases|pepjebs.mapatlases.item.MapAtlasItem|||Atlas item detection
+REQUIRED|puffish_skills|net.puffish.skillsmod.client.SkillsClientMod|getInstance||Client API
+REQUIRED|sophisticatedbackpacks|net.p3pp3rf1y.sophisticatedbackpacks.client.gui.BackpackScreen|||Target screen
+REQUIRED|xaeroworldmap|xaero.map.WorldMapSession|getCurrentSession||Map session API
+DEFERRED|ars_elixirum||||No 1.20.1 Fabric artifact in this target
+DEFERRED|ars_nouveau||||Integration currently uses item fallback only
+DEFERRED|backpacked||||No resolvable contract selected yet
+DEFERRED|cosmeticarmor||||No resolvable contract selected yet
+DEFERRED|diet||||No resolvable contract selected yet
+DEFERRED|emi||||Registration-only integration
+DEFERRED|jei||||Registration-only integration
+DEFERRED|journeymap||||Dependency intentionally disabled in build script
+DEFERRED|l2artifacts||||Dependency intentionally disabled in build script
+DEFERRED|l2hostility||||Dependency intentionally disabled in build script
+DEFERRED|l2library||||Dependency intentionally disabled in build script
+DEFERRED|levelz||||No resolvable contract selected yet
+DEFERRED|modulargolems||||Dependency intentionally disabled in build script
+DEFERRED|origins||||Registration-only integration
+DEFERRED|roughlyenoughitems||||Registration-only integration
+DEFERRED|trinkets||||Presence-only integration
+DEFERRED|xaerominimap||||Presence-only integration
