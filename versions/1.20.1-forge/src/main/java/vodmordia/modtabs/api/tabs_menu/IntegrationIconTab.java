@@ -25,6 +25,12 @@ public abstract class IntegrationIconTab extends ConfigurableIconTab {
         this.spec = spec;
     }
 
+    protected IntegrationIconTab(TabSpec spec, ResourceLocation defaultIcon, String customIconConfig,
+                                 int u, int v, int width, int height, int textureWidth, int textureHeight) {
+        super(defaultIcon, customIconConfig, spec.iconKey(), u, v, width, height, textureWidth, textureHeight);
+        this.spec = spec;
+    }
+
     @Override
     public boolean isEnabled(Player player) {
         return spec.enabledFlag().getAsBoolean() && spec.modLoaded();

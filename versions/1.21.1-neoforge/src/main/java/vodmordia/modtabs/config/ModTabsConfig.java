@@ -358,7 +358,7 @@ public class ModTabsConfig extends MidnightConfig {
     @Entry(category = "tabs") @Hidden
     public static String curiosTabCustomIcon = "";
     @Entry(category = "tabs") @Hidden
-    public static int curiosTabIconScale = 100;
+    public static int curiosTabIconScale = 63;
     @Entry(category = "tabs") @Hidden
     public static int curiosTabIconNudgeUp = 0;
     @Entry(category = "tabs") @Hidden

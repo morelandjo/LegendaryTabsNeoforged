@@ -2,9 +2,9 @@ package vodmordia.modtabs.client.tabs_menu;
 
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
+import net.minecraft.resources.ResourceLocation;
 import vodmordia.modtabs.ModTabs;
-import vodmordia.modtabs.api.tabs_menu.IntegrationItemTab;
+import vodmordia.modtabs.api.tabs_menu.IntegrationIconTab;
 import vodmordia.modtabs.api.tabs_menu.TabConfig;
 import vodmordia.modtabs.api.tabs_menu.TabSpec;
 import vodmordia.modtabs.config.Config;
@@ -27,7 +27,10 @@ import java.lang.reflect.Field;
  * dependency on Curios.
  */
 @TabConfig(configKey = "curiosTab", defaultEnabled = true, defaultOrder = 0)
-public class CuriosTab extends IntegrationItemTab {
+public class CuriosTab extends IntegrationIconTab {
+
+    private static final ResourceLocation CURIOS_INVENTORY =
+            new ResourceLocation("curios", "textures/gui/inventory.png");
 
     // Both V1 (CuriosScreen, legacy) and V2 (CuriosScreenV2, default) need tabs — the
     // server picks V2 by default; V1 only opens when CuriosConfig.SERVER.enableLegacyMenu
@@ -49,7 +52,9 @@ public class CuriosTab extends IntegrationItemTab {
     );
 
     public CuriosTab() {
-        super(SPEC, () -> new ItemStack(Items.NETHER_STAR), Config.Baked.curiosTabCustomIcon);
+        // Curios 1.20.1 keeps the same 10x10 highlighted symbol inside its inventory atlas.
+        super(SPEC, CURIOS_INVENTORY, Config.Baked.curiosTabCustomIcon,
+                52, 2, 10, 10, 256, 256);
     }
 
     @Override

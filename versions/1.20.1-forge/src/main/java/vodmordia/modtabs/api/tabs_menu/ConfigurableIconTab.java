@@ -23,13 +23,30 @@ public abstract class ConfigurableIconTab extends SimpleTextureTab {
 
     private final ResourceLocation defaultIcon;
     private final String tabId;
+    private final int defaultU;
+    private final int defaultV;
+    private final int defaultWidth;
+    private final int defaultHeight;
+    private final int defaultTextureWidth;
+    private final int defaultTextureHeight;
     private String lastResolvedFor;
     private ResourceLocation lastResolved;
 
     protected ConfigurableIconTab(ResourceLocation defaultIcon, String customIconConfig, String tabId) {
+        this(defaultIcon, customIconConfig, tabId, 0, 0, 16, 16, 16, 16);
+    }
+
+    protected ConfigurableIconTab(ResourceLocation defaultIcon, String customIconConfig, String tabId,
+                                  int u, int v, int width, int height, int textureWidth, int textureHeight) {
         super(defaultIcon);
         this.defaultIcon = defaultIcon;
         this.tabId = tabId;
+        this.defaultU = u;
+        this.defaultV = v;
+        this.defaultWidth = width;
+        this.defaultHeight = height;
+        this.defaultTextureWidth = textureWidth;
+        this.defaultTextureHeight = textureHeight;
         // customIconConfig is captured-at-construction and therefore stale after a runtime
         // config change. We keep the parameter for API compatibility but do the lookup
         // dynamically in currentIcon().
@@ -61,9 +78,15 @@ public abstract class ConfigurableIconTab extends SimpleTextureTab {
     @Override
     public void render(@NotNull GuiGraphics gui, int x, int y, boolean hover) {
         int[] nudge = currentIconNudge();
-        TabRenderer.builder()
-                .withBackground()
-                .withTextureIcon(currentIcon(), 5, 4, 16, 16)
+        ResourceLocation icon = currentIcon();
+        TabRenderer renderer = TabRenderer.builder().withBackground();
+        if (icon.equals(defaultIcon)) {
+            renderer.withTextureIcon(icon, 5, 4, defaultU, defaultV, defaultWidth, defaultHeight,
+                    defaultTextureWidth, defaultTextureHeight);
+        } else {
+            renderer.withTextureIcon(icon, 5, 4, 16, 16);
+        }
+        renderer
                 .withIconScale(currentIconScale())
                 .withIconNudge(nudge[0], nudge[1])
                 .render(gui, x, y, hover, false);
@@ -72,9 +95,15 @@ public abstract class ConfigurableIconTab extends SimpleTextureTab {
     @Override
     protected void renderInverted(@NotNull GuiGraphics gui, int x, int y, boolean hover) {
         int[] nudge = currentIconNudge();
-        TabRenderer.builder()
-                .withBackground()
-                .withTextureIcon(currentIcon(), 5, 4, 16, 16)
+        ResourceLocation icon = currentIcon();
+        TabRenderer renderer = TabRenderer.builder().withBackground();
+        if (icon.equals(defaultIcon)) {
+            renderer.withTextureIcon(icon, 5, 4, defaultU, defaultV, defaultWidth, defaultHeight,
+                    defaultTextureWidth, defaultTextureHeight);
+        } else {
+            renderer.withTextureIcon(icon, 5, 4, 16, 16);
+        }
+        renderer
                 .withIconScale(currentIconScale())
                 .withIconNudge(nudge[0], nudge[1])
                 .render(gui, x, y, hover, true);
