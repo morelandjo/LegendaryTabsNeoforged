@@ -61,12 +61,12 @@ public class WildexTab extends IntegrationItemTab {
     }
 
     /**
-     * Creative players bypass the book gate (matches mod intent). When the synced
-     * server config has {@code requireBookForKeybind=false}, the tab shows for everyone;
-     * otherwise the {@code wildex:wildex_book} item must be present in inventory or offhand.
+     * Mirrors Wildex's keybind gate exactly: when the synced server config has
+     * {@code requireBookForKeybind=false}, the tab shows for everyone; otherwise the
+     * {@code wildex:wildex_book} item must be present in the player's inventory.
+     * Wildex does not grant creative players a bypass.
      */
     private static boolean canOpenBook(Player player) {
-        if (player.getAbilities().instabuild) return true;
         if (!requireBookForKeybind()) return true;
         return hasBook(player);
     }
@@ -92,11 +92,7 @@ public class WildexTab extends IntegrationItemTab {
         Item book = BuiltInRegistries.ITEM.get(WILDEX_BOOK_ID);
         if (book == null || book == Items.AIR) return false;
 
-        for (ItemStack stack : player.getInventory().items) {
-            if (!stack.isEmpty() && stack.getItem() == book) return true;
-        }
-        ItemStack offhand = player.getOffhandItem();
-        return !offhand.isEmpty() && offhand.getItem() == book;
+        return player.getInventory().contains(new ItemStack(book));
     }
 
     @Override
