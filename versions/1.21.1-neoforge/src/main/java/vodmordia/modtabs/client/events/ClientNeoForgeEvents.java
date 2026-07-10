@@ -435,6 +435,17 @@ public class ClientNeoForgeEvents {
 
     @SubscribeEvent
     public static void onScreenRender(ScreenEvent.Render.Pre event) {
+        // NeoOrigins switches between its Origin and Class panes by calling clearWidgets()
+        // and rebuilding its own controls on the same screen. That also removes our tab row,
+        // so re-run screen initialization only when that specific rebuild is detected.
+        if (event.getScreen().getClass().getName().equals(
+                "com.cyberday1.neoorigins.screen.OriginInfoScreen")
+                && event.getScreen().children().stream().noneMatch(child ->
+                    child instanceof vodmordia.modtabs.client.screens.TabButton
+                    || child instanceof vodmordia.modtabs.client.screens.NextTabsButton)) {
+            TabsMenu.reinitCurrentScreen();
+        }
+
         // Hide L2Library tabs when L2 mods are loaded and we're managing tabs
         if (ModIntegrationManager.isModLoaded(ModIntegration.L2_LIBRARY) ||
             ModIntegrationManager.isModLoaded(ModIntegration.L2_HOSTILITY) ||

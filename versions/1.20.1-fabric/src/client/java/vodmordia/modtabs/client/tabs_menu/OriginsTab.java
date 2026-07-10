@@ -37,7 +37,7 @@ public final class OriginsTab extends SimpleTextureTab {
     }
 
     @Override public boolean isCurrentlyUsed(Screen screen) {
-        return screen != null && screen.getClass().getName().startsWith("io.github.apace100.origins.screen.");
+        return screen != null && screen.getClass().getName().equals(VIEW_SCREEN);
     }
 
     @Override public Text getTooltip() {
@@ -45,9 +45,6 @@ public final class OriginsTab extends SimpleTextureTab {
     }
 
     @Override public void initTabOnScreens() {
-        ScreenRegistry.builder().withStandardDimensions().registerAllTabs(
-                VIEW_SCREEN,
-                "io.github.apace100.origins.screen.ChooseOriginScreen",
-                "io.github.apace100.origins.screen.WaitForNextLayerScreen");
+        ScreenRegistry.builder().withStandardDimensions().registerAllTabs(VIEW_SCREEN);
     }
 }

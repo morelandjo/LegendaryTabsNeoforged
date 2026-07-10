@@ -15,13 +15,12 @@ import vodmordia.modtabs.utils.ClassCache;
 @TabConfig(configKey = "originsTab", defaultEnabled = true, defaultOrder = 0)
 public final class OriginsTab extends IntegrationIconTab {
     private static final String INFO_SCREEN = "com.cyberday1.neoorigins.screen.OriginInfoScreen";
-    private static final String SELECTION_SCREEN = "com.cyberday1.neoorigins.screen.OriginSelectionScreen";
 
     private static final TabSpec SPEC = new TabSpec(
             "originsTab", ModIntegration.NEO_ORIGINS, () -> ModTabsConfig.originsTabEnabled,
             "origins", "origins", TabSpec.Layout.guiRelative(),
-            new String[]{INFO_SCREEN, SELECTION_SCREEN},
-            new String[]{INFO_SCREEN, SELECTION_SCREEN});
+            new String[]{INFO_SCREEN},
+            new String[]{INFO_SCREEN});
 
     public OriginsTab() {
         super(SPEC, ResourceLocation.fromNamespaceAndPath("neoorigins", "textures/item/orb_of_origin.png"),

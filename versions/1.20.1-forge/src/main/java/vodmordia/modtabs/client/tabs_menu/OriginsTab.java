@@ -16,13 +16,12 @@ import vodmordia.modtabs.utils.ClassCache;
 @TabConfig(configKey = "originsTab", defaultEnabled = true, defaultOrder = 0)
 public final class OriginsTab extends IntegrationIconTab {
     private static final String VIEW_SCREEN = "io.github.apace100.origins.screen.ViewOriginScreen";
-    private static final String CHOOSE_SCREEN = "io.github.apace100.origins.screen.ChooseOriginScreen";
 
     private static final TabSpec SPEC = new TabSpec(
             "originsTab", ModIntegration.ORIGINS, () -> ModTabsConfig.originsTabEnabled,
             "origins", "origins", TabSpec.Layout.guiRelative(),
-            new String[]{VIEW_SCREEN, CHOOSE_SCREEN},
-            new String[]{VIEW_SCREEN, CHOOSE_SCREEN});
+            new String[]{VIEW_SCREEN},
+            new String[]{VIEW_SCREEN});
 
     public OriginsTab() {
         super(SPEC, new ResourceLocation("origins", "icon.png"), ModTabsConfig.originsTabCustomIcon);
