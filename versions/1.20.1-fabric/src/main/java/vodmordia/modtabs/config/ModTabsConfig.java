@@ -129,6 +129,13 @@ public class ModTabsConfig extends MidnightConfig {
     @Entry(category = "1_modTabsSettings")
     public static TabDisplayVisibility travelersBackpackTabDisplayVisibility = TabDisplayVisibility.YES;
 
+    @Comment(category = "1_modTabsSettings") public static CommentText spacerOrigins;
+    @Comment(category = "1_modTabsSettings") public static CommentText origins;
+    @Entry(category = "1_modTabsSettings") public static boolean originsTabEnabled = true;
+    @Entry(category = "1_modTabsSettings") public static int originsTabOrder = 0;
+    @Entry(category = "1_modTabsSettings")
+    public static TabDisplayVisibility originsTabDisplayVisibility = TabDisplayVisibility.YES;
+
     // ========== CUSTOM TAB ==========
 
     @Comment(category = "2_customTab") public static CommentText spacer9;

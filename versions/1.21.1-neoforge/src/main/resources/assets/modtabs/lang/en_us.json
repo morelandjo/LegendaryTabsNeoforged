@@ -44,6 +44,7 @@
   "tooltip.modtabs.tab.field_guide.description": "Field Guide",
   "tooltip.modtabs.tab.modonomicon.description": "Modonomicon",
   "tooltip.modtabs.tab.cosmetic_armor.description": "Cosmetic Armor",
+  "tooltip.modtabs.tab.origins.description": "Origins",
 
   "modtabs.midnightconfig.category.tabs": "Mod Tabs Settings",
   "modtabs.midnightconfig.category.customTabs": "Custom Tabs Settings",

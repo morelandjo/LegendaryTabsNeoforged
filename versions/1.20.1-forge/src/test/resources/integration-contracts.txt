@@ -1,5 +1,6 @@
 # MODE|mod id|class|member|descriptor|note
 REQUIRED|ftbquests|dev.ftb.mods.ftbquests.client.gui.quests.QuestScreen|||Target screen
+REQUIRED|origins|io.github.apace100.origins.screen.ViewOriginScreen|<init>|()V|O-key screen constructor
 REQUIRED|journeymap|journeymap.client.ui.fullscreen.Fullscreen|||Target screen
 REQUIRED|map_atlases|pepjebs.mapatlases.item.MapAtlasItem|||Atlas item detection
 REQUIRED|puffish_skills|net.puffish.skillsmod.client.SkillsClientMod|getInstance||Client API

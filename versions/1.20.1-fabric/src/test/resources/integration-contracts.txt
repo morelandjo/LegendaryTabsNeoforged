@@ -20,7 +20,7 @@ DEFERRED|l2hostility||||Dependency intentionally disabled in build script
 DEFERRED|l2library||||Dependency intentionally disabled in build script
 DEFERRED|levelz||||No resolvable contract selected yet
 DEFERRED|modulargolems||||Dependency intentionally disabled in build script
-DEFERRED|origins||||Registration-only integration
+REQUIRED|origins|io.github.apace100.origins.screen.ViewOriginScreen|<init>|()V|O-key screen constructor
 DEFERRED|roughlyenoughitems||||Registration-only integration
 DEFERRED|trinkets||||Presence-only integration
 DEFERRED|xaerominimap||||Presence-only integration

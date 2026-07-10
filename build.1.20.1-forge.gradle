@@ -80,6 +80,7 @@ repositories {
 //   - Bulking (1233813) — neirenoir; mandatory hard-dep on Diet, swaps DietScreen for BulkingScreen via mixins
 // =============================================================================
 dependencies {
+    compileOnly "curse.maven:origins-391943:7149659"
     // MixinGradle's `mixin { add ... }` block registers the source set with the plugin but does
     // not add the Mixin annotation-processor jar to the `annotationProcessor` configuration. The
     // AP is what writes the refmap (Mojang → SRG name translations) that production Forge needs

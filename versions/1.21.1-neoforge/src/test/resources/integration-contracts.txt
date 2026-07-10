@@ -1,5 +1,6 @@
 # MODE|mod id|class|member|descriptor|note
 REQUIRED|elixirum|dev.obscuria.elixirum.client.screen.ElixirumScreen|<init>|()V|Target screen constructor
+REQUIRED|neoorigins|com.cyberday1.neoorigins.client.ClientOriginState|openInfoScreen|()V|Public O-key entrypoint
 REQUIRED|ftbquests|dev.ftb.mods.ftbquests.client.gui.quests.QuestScreen|||Target screen
 REQUIRED|journeymap|journeymap.client.ui.fullscreen.Fullscreen|||Target screen
 REQUIRED|map_atlases|pepjebs.mapatlases.item.MapAtlasItem|||Atlas item detection

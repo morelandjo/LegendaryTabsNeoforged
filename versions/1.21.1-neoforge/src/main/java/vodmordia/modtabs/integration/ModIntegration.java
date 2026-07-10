@@ -4,6 +4,7 @@ package vodmordia.modtabs.integration;
  * Enum for all mod integrations with their mod IDs and human-readable names
  */
 public enum ModIntegration {
+    NEO_ORIGINS("neoorigins", "NeoOrigins"),
     BACKPACKED("backpacked", "Backpacked"),
     TRAVELERS_BACKPACK("travelersbackpack", "Traveler's Backpack"),
     LEGENDARY_SURVIVAL_OVERHAUL("legendarysurvivaloverhaul", "Legendary Survival Overhaul"),

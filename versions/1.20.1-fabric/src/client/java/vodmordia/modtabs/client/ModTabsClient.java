@@ -99,6 +99,7 @@ public class ModTabsClient implements ClientModInitializer {
 
         TabsMenu.register(new ArsNouveauTab());
         TabsMenu.register(new AdvancementsTab());
+        TabsMenu.register(new OriginsTab());
 
         // Wait for Patchouli books to load, then load custom tabs
         waitForPatchouliAndLoadCustomTabs();

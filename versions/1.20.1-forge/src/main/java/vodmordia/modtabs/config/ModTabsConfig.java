@@ -39,6 +39,7 @@ public class ModTabsConfig extends MidnightConfig {
     @Entry(category = "tabs") @Hidden public static boolean completionistsIndexTabSticky = false;
     @Entry(category = "tabs") @Hidden public static boolean cosmeticArmorTabSticky = false;
     @Entry(category = "tabs") @Hidden public static boolean curiosTabSticky = false;
+    @Entry(category = "tabs") @Hidden public static boolean originsTabSticky = false;
     @Entry(category = "tabs") @Hidden public static boolean dietTabSticky = false;
     @Entry(category = "tabs") @Hidden public static boolean draconicEvolutionTabSticky = false;
     @Entry(category = "tabs") @Hidden public static boolean eccentricTomeTabSticky = false;
@@ -685,6 +686,19 @@ public class ModTabsConfig extends MidnightConfig {
 
     @Entry(category = "tabs") @Hidden
     public static TabDisplayVisibility curiosTabDisplayVisibility = TabDisplayVisibility.YES;
+
+    @Comment(category = "tabs") public static CommentText spacer_origins;
+    @Comment(category = "tabs") public static CommentText origins;
+    @Entry(category = "tabs") @Hidden public static boolean originsTabEnabled = true;
+    @Entry(category = "tabs") @Hidden public static String originsTabCustomIcon = "";
+    @Entry(category = "tabs") @Hidden public static int originsTabIconScale = 100;
+    @Entry(category = "tabs") @Hidden public static int originsTabIconNudgeUp = 0;
+    @Entry(category = "tabs") @Hidden public static int originsTabIconNudgeDown = 0;
+    @Entry(category = "tabs") @Hidden public static int originsTabIconNudgeLeft = 0;
+    @Entry(category = "tabs") @Hidden public static int originsTabIconNudgeRight = 0;
+    @Entry(category = "tabs") @Hidden public static int originsTabOrder = 0;
+    @Entry(category = "tabs") @Hidden
+    public static TabDisplayVisibility originsTabDisplayVisibility = TabDisplayVisibility.YES;
 
     @Comment(category = "tabs") public static CommentText spacer_epic_fight;
 

@@ -199,6 +199,11 @@
   "modtabs.midnightconfig.customTabsDebugLogging": "Custom Tabs Debug Logging",
   "modtabs.midnightconfig.customTabsDebugLogging.tooltip": "Enable detailed logging for custom tab loading and actions",
 
+  "tooltip.modtabs.tab.origins.description": "Origins",
+  "modtabs.midnightconfig.origins": "Origins",
+  "modtabs.midnightconfig.originsTabEnabled": "Enable Origins Tab",
+  "modtabs.midnightconfig.originsTabOrder": "Origins Tab Order",
+  "modtabs.midnightconfig.originsTabDisplayVisibility": "Display Tab Bar in Origins",
   "tooltip.modtabs.custom_tab.default": "Custom Tab",
   "tooltip.modtabs.custom_tab.error": "Custom Tab (Error)",
   "tooltip.modtabs.custom_tab.patchouli_book": "Patchouli Book"

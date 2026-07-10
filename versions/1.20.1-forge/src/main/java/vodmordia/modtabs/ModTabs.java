@@ -163,6 +163,7 @@ public class ModTabs
             TabsMenu.register(new ApothicAttributesTab());
             TabsMenu.register(new AetherTab());
             TabsMenu.register(new CuriosTab());
+            TabsMenu.register(new OriginsTab());
             TabsMenu.register(new EpicFightTab());
             TabsMenu.register(new EpicSkillsTab());
             TabsMenu.register(new MineAndSlashTab());

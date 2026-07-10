@@ -149,6 +149,7 @@ dependencies {
 
     // Midnight Lib - Required dependency for in-game config
     implementation "maven.modrinth:midnightlib:${project.midnightlib_version}"
+    compileOnly "maven.modrinth:neo-origins:NcG2MRiz"
 
     // === Aether testing run: only The Aether + midnightlib load at runtime. ===
     // The mods below are kept on the *compile* classpath because tab classes
